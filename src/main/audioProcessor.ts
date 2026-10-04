@@ -1,7 +1,8 @@
 /**
  * 音频 PCM 处理与编解码（对应 PyQt6 版 audio_processor.py）。
  *
- * 依赖：ffmpeg-static（打包时随应用分发）
+ * 依赖：随安装包分发的 ffmpeg（resources/ffmpeg，见 ffmpegResolver.ts）；
+ * 开发环境直接使用 ffmpeg-static 下载的当前平台二进制。
  */
 
 import { spawn } from 'child_process'
@@ -9,10 +10,10 @@ import { randomUUID } from 'crypto'
 import { mkdir, readFile, unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { dirname, join } from 'path'
-import ffmpegPath from 'ffmpeg-static'
 import { createT } from '../shared/i18n'
+import { resolveFfmpegPath } from './ffmpegResolver'
 
-const FFMPEG = ffmpegPath ?? 'ffmpeg'
+const FFMPEG = resolveFfmpegPath()
 
 /** 双声道 PCM（planar：左右声道各一个 Float32Array，对应 numpy 的 (N, 2) 结构） */
 export interface StereoPcm {

@@ -132,12 +132,20 @@ npm run format
 ```bash
 npm run build            # typecheck + electron-vite build (bundles into out/)
 npm run build:unpack     # unpacked app in dist/ (fast local test)
-npm run build:win        # Windows installer (NSIS)
-npm run build:mac        # macOS DMG
-npm run build:linux      # AppImage + snap + deb
+npm run build:linux      # Linux x64 + arm64: AppImage, deb, rpm
+npm run build:win        # Windows x64 + arm64: NSIS installers
+npm run build:mac        # macOS x64 + arm64: DMG + ZIP (run on macOS)
+npm run build:mac:zip    # macOS x64 + arm64 ZIP only (can run on Linux/Windows)
 ```
 
-`npm run build` runs both TypeScript projects with `noUnusedLocals` / strict settings before bundling, so it is the authoritative check. ffmpeg is fetched via `ffmpeg-static` at install time (`postinstall` also rebuilds native app dependencies); no separate ffmpeg installation is needed.
+Each platform script automatically runs `prepare:ffmpeg`, which downloads the FFmpeg binaries for **all** target platforms (Linux x64/arm64, Windows x64, macOS x64/arm64, ~320 MB in total) into `resources/ffmpeg/` (git-ignored). They are the same GPL builds used by ffmpeg-static (release `b6.1.1`) and are placed into `resources/ffmpeg/<platform>-<arch>/` by electron-builder; the app selects the matching binary at runtime. If GitHub is slow, override the source with `FFMPEG_BINARIES_URL` (the script also falls back to the npmmirror binary mirror automatically).
+
+Platform notes:
+
+- Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages, Windows NSIS installers (Wine is used automatically by electron-builder), and macOS ZIP archives, but **DMG creation requires macOS**. For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS (a CI matrix is recommended).
+- The NSIS installer is an assisted (non-one-click) installer that displays the full **GNU AGPL v3** license page and lets users choose the installation directory.
+- There is no native FFmpeg build for Windows on ARM. The arm64 installer ships the x64 `ffmpeg.exe`, which runs via Windows 11 on ARM's built-in x64 emulation; if it is absent, the app falls back to a system `ffmpeg` on `PATH`.
+- `npm run build` runs both TypeScript projects with `noUnusedLocals` / strict settings before bundling, so it is the authoritative check. Development itself needs no FFmpeg installation (ffmpeg-static fetches the current platform's binary during `npm install`).
 
 ## Internationalization
 

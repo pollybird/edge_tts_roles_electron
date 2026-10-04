@@ -9,37 +9,78 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  # 跨平台 ffmpeg 由 extraResources 单独按架构提供，禁止进入 app.asar
+  - '!resources/ffmpeg'
+  - '!resources/.ffmpeg-stage-*'
+  # 开发时 ffmpeg-static 自带的当前平台二进制也不应进入打包产物
+  - '!**/node_modules/ffmpeg-static/ffmpeg'
+  - '!**/node_modules/ffmpeg-static/ffmpeg.exe'
+# 跨平台 ffmpeg（scripts/download-ffmpeg-binaries.mjs 下载）→ 安装包 resources/ffmpeg/
+extraResources:
+  - from: resources/ffmpeg
+    to: ffmpeg
+    filter:
+      - '**/*'
 asarUnpack:
-  - resources/**
+  - 'resources/icon.png'
+  - '!resources/ffmpeg'
+  - '!resources/.ffmpeg-stage-*'
 win:
   icon: build/icon.ico
   executableName: edge-tts-roles
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  oneClick: false # 辅助安装器：显示 AGPL 许可协议页（oneClick 安装器无协议页）
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  license: LICENSE # GNU AGPL v3 全文（安装向导许可页）
+  artifactName: ${name}-${version}-${arch}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
 mac:
   icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  artifactName: ${name}-${version}-${arch}.${ext}
   extendInfo:
     - NSCameraUsageDescription: Application requests access to device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to device's microphone.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
-dmg:
-  artifactName: ${name}-${version}.${ext}
 linux:
   icon: build/icon.png
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: tzzhy.cn
+  maintainer: "泰州姜堰钟毓信息技术有限公司 <44961355+pollybird@users.noreply.github.com>"
   category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+    - target: deb
+      arch:
+        - x64
+        - arm64
+    - target: rpm
+      arch:
+        - x64
+        - arm64
+  artifactName: ${name}-${version}-${arch}.${ext}
 npmRebuild: false
 publish:
   provider: generic
