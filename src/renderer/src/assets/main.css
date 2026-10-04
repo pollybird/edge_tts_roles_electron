@@ -1,0 +1,538 @@
+:root {
+  --border-color: #d0d0d0;
+  --bg-panel: #fafafa;
+  --text-primary: #222;
+  --text-secondary: #777;
+  --accent: #3a7bd5;
+  --danger: #d9534f;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text-primary);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 12px;
+  gap: 12px;
+}
+
+.main {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 右栏：角色设置（占满剩余并内部滚动）+ 附加音频面板（固定高度，置于底部） */
+.side-column {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  min-height: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+.config-actions {
+  display: inline-flex;
+  gap: 6px;
+  font-weight: 400;
+}
+
+.config-btn {
+  padding: 3px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-panel, #fff);
+  color: inherit;
+  cursor: pointer;
+}
+
+.config-btn:hover {
+  border-color: var(--accent-color, #3b82f6);
+  color: var(--accent-color, #3b82f6);
+}
+
+.config-btn:active {
+  background: var(--hover-bg, #f0f0f0);
+}
+
+/* 查找 / 替换栏 */
+.find-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel);
+}
+
+.find-input {
+  width: 160px;
+  padding: 3px 8px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: inherit;
+  color: inherit;
+}
+
+.find-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.find-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.find-count {
+  min-width: 44px;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  text-align: center;
+}
+
+.find-close {
+  margin-left: auto;
+}
+
+.panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.copyright {
+  color: #999;
+}
+
+.editor-panel {
+  flex: 3;
+}
+
+/* ===== 高亮编辑器（backdrop + 透明 textarea 叠放） ===== */
+.editor-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+}
+
+.highlight-backdrop,
+.editor-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.highlight-backdrop {
+  overflow: hidden;
+  color: var(--text-primary);
+  background: #fff;
+  pointer-events: none;
+}
+
+.editor-input {
+  resize: none;
+  outline: none;
+  overflow: auto;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-primary);
+}
+
+.editor-input::placeholder {
+  color: #aaa;
+}
+
+.highlight-backdrop mark {
+  background: transparent;
+  font-weight: 700;
+  padding: 0;
+}
+
+mark.hl-role {
+  color: #0000ff;
+}
+
+mark.hl-pause {
+  color: #ff0000;
+}
+
+mark.hl-beep {
+  color: #008000;
+}
+
+/* ===== 工具栏 ===== */
+.toolbar {
+  border-top: 1px solid var(--border-color);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f4f4f4;
+}
+
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tool-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.tool-spacer {
+  flex: 1;
+}
+
+.pause-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pause-input input {
+  width: 80px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.save-hint {
+  color: #008000;
+  font-size: 12px;
+}
+
+.roles-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ===== 前奏 / 尾声 / 背景音乐面板 ===== */
+.extras-panel {
+  flex: none;
+}
+
+.extras-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 10px;
+}
+
+.extra-row {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.extra-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.extra-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.extra-name {
+  min-width: 56px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.extra-file {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.extra-volume {
+  margin: 2px 0;
+}
+
+.extra-volume span {
+  min-width: 64px;
+  font-size: 12px;
+}
+
+.extra-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.role-card {
+  padding: 8px 12px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.role-title {
+  margin: 4px 0 8px;
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.field span {
+  min-width: 72px;
+  color: var(--text-secondary);
+}
+
+.field select {
+  flex: 1;
+  min-width: 0;
+}
+
+.field input[type='range'] {
+  flex: 1;
+}
+
+.output-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.output-path {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.format-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.1);
+}
+
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn.danger:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.08);
+}
+
+.btn.small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn.quick {
+  max-width: 90px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.progress {
+  flex: 1;
+  height: 8px;
+}
+
+.progress-message {
+  min-width: 160px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ===== 试听弹窗（对应原版 PreviewDialog） ===== */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.preview-dialog {
+  width: 500px;
+  max-width: calc(100vw - 40px);
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-title {
+  margin: 0;
+  text-align: center;
+  font-size: 17px;
+}
+
+.seek-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.seek-bar,
+.volume-bar {
+  width: 100%;
+}
+
+.time-label {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.player-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.volume-row .volume-bar {
+  flex: 1;
+}
+
+.volume-value {
+  min-width: 40px;
+  text-align: right;
+}
+
+.player-status {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.modal-error {
+  color: var(--danger);
+  font-size: 13px;
+  text-align: center;
+}
+
+.close-btn {
+  align-self: center;
+  min-width: 100px;
+}
