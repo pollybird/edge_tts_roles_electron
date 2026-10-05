@@ -46,6 +46,7 @@ const esES: LocalePack = {
       replace: 'R&eemplazar...',
       helpItem: 'A&yuda',
       agreement: 'Acuerdo de &usuario',
+      checkUpdate: 'Buscar &actualizaciones',
       website: '&Sitio web',
       about: 'Acerca &de'
     },
@@ -153,6 +154,17 @@ const esES: LocalePack = {
       textEmpty: 'El texto está vacío, no hay nada que guardar.',
       textSaved: 'Texto guardado: {path}',
       opened: 'Abierto: {path}'
+    },
+
+    update: {
+      checking: 'Buscando actualizaciones...',
+      available: 'Nueva versión {version} disponible, descargando...',
+      notAvailable: 'Ya utiliza la última versión.',
+      downloadProgress: 'Descargando actualización... {percent}%',
+      downloaded: 'Versión {version} descargada. ¿Reiniciar para instalar?',
+      install: 'Reiniciar e instalar',
+      later: 'Más tarde',
+      checkFailed: 'Error al buscar actualizaciones.'
     },
 
     tts: {

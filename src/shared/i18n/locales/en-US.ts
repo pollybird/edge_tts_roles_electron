@@ -43,6 +43,7 @@ const enUS: LocalePack = {
       replace: '&Replace...',
       helpItem: '&Help',
       agreement: 'User &Agreement',
+      checkUpdate: 'Check for &Updates',
       website: '&Website',
       about: '&About'
     },
@@ -149,6 +150,17 @@ const enUS: LocalePack = {
       textEmpty: 'Text is empty, nothing to save.',
       textSaved: 'Text saved: {path}',
       opened: 'Opened: {path}'
+    },
+
+    update: {
+      checking: 'Checking for updates...',
+      available: 'New version {version} is available, downloading...',
+      notAvailable: 'You are already using the latest version.',
+      downloadProgress: 'Downloading update... {percent}%',
+      downloaded: 'Version {version} downloaded. Restart to install?',
+      install: 'Restart & Install',
+      later: 'Later',
+      checkFailed: 'Failed to check for updates.'
     },
 
     tts: {

@@ -140,6 +140,22 @@ npm run build:mac:zip    # macOS x64 + arm64 ZIP only (can run on Linux/Windows)
 
 Each platform script automatically runs `prepare:ffmpeg`, which downloads the FFmpeg binaries for **all** target platforms (Linux x64/arm64, Windows x64, macOS x64/arm64, ~320 MB in total) into `resources/ffmpeg/` (git-ignored). They are the same GPL builds used by ffmpeg-static (release `b6.1.1`) and are placed into `resources/ffmpeg/<platform>-<arch>/` by electron-builder; the app selects the matching binary at runtime. If GitHub is slow, override the source with `FFMPEG_BINARIES_URL` (the script also falls back to the npmmirror binary mirror automatically).
 
+### Auto-Update
+
+The app checks for updates automatically on startup (5 s delay) and supports a manual check from **Help → Check for Updates**.
+
+- **Primary feed**: [GitHub Releases](https://github.com/pollybird/edge_tts_roles_electron/releases) (`/releases/latest/download/latest*.yml`).
+- **Fallback feed**: GitCode raw files in the repository root (`latest.yml`, `latest-mac.yml`, `latest-linux.yml`). If GitHub is unreachable within 3.5 s, the app falls back to GitCode automatically.
+
+Release workflow for maintainers:
+
+1. Build all platform installers (`build:linux`, `build:win`, `build:mac:zip`). electron-builder generates `latest.yml` (Windows), `latest-mac.yml` (macOS), and `latest-linux.yml` (Linux) in `dist/`.
+2. Upload the installer artifacts to **both** GitHub and GitCode Releases.
+3. Copy the three `latest*.yml` files from `dist/` to the repository **root** and commit them. This makes the GitCode fallback feed available at `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml`.
+4. Push to all three remotes (GitHub / Gitee / GitCode).
+
+`electron-builder.yml` is configured with `publish.provider: github`; running `electron-builder --publish always` (requires `GH_TOKEN`) uploads artifacts and the `latest*.yml` files to GitHub Releases automatically.
+
 Platform notes:
 
 - Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages, Windows NSIS installers (Wine is used automatically by electron-builder), and macOS ZIP archives, but **DMG creation requires macOS**. For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS (a CI matrix is recommended).

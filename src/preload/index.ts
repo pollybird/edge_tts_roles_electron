@@ -9,6 +9,7 @@ import type {
   PreviewRequest,
   ProgressPayload,
   RoleVoiceSettings,
+  UpdateEvent,
   VoiceInfo
 } from '../shared/types'
 
@@ -53,6 +54,30 @@ const api = {
 
   // 界面语言切换
   setLocale: (code: string): Promise<void> => ipcRenderer.invoke(IpcChannels.localeSet, code),
+
+  // 自动更新
+  checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateCheck),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateInstall),
+  onUpdateEvent: (cb: (event: UpdateEvent) => void): (() => void) => {
+    const channels: Array<[string, UpdateEvent['type']]> = [
+      [IpcChannels.updateChecking, 'checking'],
+      [IpcChannels.updateAvailable, 'available'],
+      [IpcChannels.updateNotAvailable, 'not-available'],
+      [IpcChannels.updateDownloadProgress, 'download-progress'],
+      [IpcChannels.updateDownloaded, 'downloaded'],
+      [IpcChannels.updateError, 'error']
+    ]
+    const listeners = channels.map(([channel, type]) => {
+      const listener = (_e: Electron.IpcRendererEvent, payload: unknown): void => {
+        cb({ type, ...(payload as object) } as UpdateEvent)
+      }
+      ipcRenderer.on(channel, listener)
+      return { channel, listener }
+    })
+    return () => {
+      listeners.forEach(({ channel, listener }) => ipcRenderer.removeListener(channel, listener))
+    }
+  },
 
   // 主菜单动作
   onMenuAction: (cb: (actionId: string) => void): (() => void) =>

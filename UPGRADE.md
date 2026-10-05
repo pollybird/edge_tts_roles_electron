@@ -1,5 +1,28 @@
 # Upgrade Log
 
+## v2.0.2
+
+### New Features
+
+- **Arabic (ar-SA) translation** with full RTL layout support.
+- **Traditional Chinese (zh-TW) translation** (Taiwan terminology).
+- **Runtime language switcher**: a language dropdown in the editor header supports instant switching across 9 languages. The app follows the system language on startup; switching only affects the current session.
+- **Auto-update**: the app checks for updates 5 seconds after launch, with a manual trigger under **Help → Check for Updates**. The primary feed is GitHub Releases; if GitHub is unreachable, it falls back to the `latest*.yml` files hosted on GitCode.
+
+### Bug Fixes
+
+- **Auto-update error handling**: when a feed returned an unexpected response (e.g. GitCode served an HTML page because `latest.yml` did not exist yet), the raw HTML/error text was written into the main window status bar. Update errors now show only a generic "Update check failed" dialog — no error content ever appears in the main window.
+
+### Legal
+
+- **User agreement clause 4 revised**: the original prohibition on reverse engineering/cracking conflicted with the AGPL-3.0 open-source nature. It now states compliance with the AGPL-3.0 license and prohibits infringing the rights of Microsoft and other service providers.
+
+### Internal
+
+- Added `electron-updater` dependency and the `src/main/updater.ts` module.
+- CSS migrated to logical properties (`margin-inline-start/end`, `text-align: end`) for RTL compatibility.
+- Updated user agreement clause 4 across all 9 language packs.
+
 ## v2.0.1
 
 ### Bug Fixes

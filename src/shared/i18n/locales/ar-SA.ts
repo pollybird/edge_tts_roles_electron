@@ -62,6 +62,7 @@ const arSA: LocalePack = {
       replace: 'است&بدال...',
       helpItem: '&مساعدة',
       agreement: 'اتفاقية &المستخدم',
+      checkUpdate: 'التحقق من التحديثات(&U)',
       website: '&الموقع الإلكتروني',
       about: '&حول'
     },
@@ -167,6 +168,17 @@ const arSA: LocalePack = {
       textEmpty: 'النص فارغ، لا يوجد شيء لحفظه.',
       textSaved: 'تم حفظ النص: {path}',
       opened: 'تم الفتح: {path}'
+    },
+
+    update: {
+      checking: 'جارٍ التحقق من التحديثات...',
+      available: 'يتوفر إصدار جديد {version}، جارٍ التنزيل...',
+      notAvailable: 'أنت تستخدم بالفعل أحدث إصدار.',
+      downloadProgress: 'جارٍ تنزيل التحديث... {percent}%',
+      downloaded: 'تم تنزيل الإصدار {version}. هل تريد إعادة التشغيل للتثبيت؟',
+      install: 'إعادة التشغيل والتثبيت',
+      later: 'لاحقاً',
+      checkFailed: 'فشل التحقق من التحديثات.'
     },
 
     tts: {

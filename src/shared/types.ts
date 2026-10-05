@@ -113,6 +113,12 @@ export interface RendererApi {
   loadRoleSettings(): Promise<RoleVoiceSettings | null>
   /** 切换界面语言：主进程重建原生菜单并持久化到设置 */
   setLocale(code: string): Promise<void>
+  /** 手动检查更新 */
+  checkForUpdates(): Promise<void>
+  /** 下载完成后立即安装并重启 */
+  installUpdate(): Promise<void>
+  /** 订阅更新状态事件，返回取消订阅函数 */
+  onUpdateEvent(cb: (event: UpdateEvent) => void): () => void
   /** 订阅主菜单动作（文件/编辑/帮助中需渲染进程处理的项），返回取消订阅函数 */
   onMenuAction(cb: (actionId: string) => void): () => void
   /** 订阅事件，返回取消订阅函数 */
@@ -120,3 +126,18 @@ export interface RendererApi {
   onFinished(cb: (payload: FinishedPayload) => void): () => void
   onError(cb: (payload: ErrorPayload) => void): () => void
 }
+
+/** 自动更新事件（主进程→渲染进程） */
+export type UpdateEvent =
+  | { type: 'checking' }
+  | { type: 'available'; version: string; releaseDate?: string }
+  | { type: 'not-available'; version: string }
+  | {
+      type: 'download-progress'
+      percent: number
+      bytesPerSecond: number
+      total: number
+      transferred: number
+    }
+  | { type: 'downloaded'; version: string }
+  | { type: 'error'; message: string }

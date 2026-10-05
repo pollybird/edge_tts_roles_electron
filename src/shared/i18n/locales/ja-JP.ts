@@ -46,6 +46,7 @@ const jaJP: LocalePack = {
       replace: '置換(&H)...',
       helpItem: 'ヘルプ(&H)',
       agreement: '利用規約(&U)',
+      checkUpdate: '更新を確認(&U)',
       website: '公式サイト(&W)',
       about: 'バージョン情報(&A)'
     },
@@ -151,6 +152,18 @@ const jaJP: LocalePack = {
       textEmpty: 'テキストが空です。保存するものがありません。',
       textSaved: 'テキストを保存しました: {path}',
       opened: '開きました: {path}'
+    },
+
+    update: {
+      checking: '更新を確認しています...',
+      available: '新バージョン {version} が見つかりました。ダウンロード中...',
+      notAvailable: 'お使いのバージョンは最新です。',
+      downloadProgress: '更新をダウンロード中... {percent}%',
+      downloaded:
+        'バージョン {version} のダウンロードが完了しました。再起動してインストールしますか？',
+      install: '再起動してインストール',
+      later: '後で',
+      checkFailed: '更新の確認に失敗しました。'
     },
 
     tts: {

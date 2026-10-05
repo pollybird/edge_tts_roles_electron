@@ -82,6 +82,8 @@ linux:
         - arm64
   artifactName: ${name}-${version}-${arch}.${ext}
 npmRebuild: false
+# 自动更新：GitHub Releases 为主源；运行时若 GitHub 不可达则回退到 GitCode 托管的 latest*.yml
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: pollybird
+  repo: edge_tts_roles_electron

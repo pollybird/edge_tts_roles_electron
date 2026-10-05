@@ -2,6 +2,7 @@ import { app, dialog, Menu, shell } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { IpcChannels } from '../shared/ipc'
 import { createT } from '../shared/i18n'
+import { checkForUpdates } from './updater'
 
 /** 菜单动作 id（渲染进程据此分发） */
 export type MenuActionId =
@@ -83,6 +84,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
           click: () => showHelp(getWindow())
         },
         { label: t('menu.agreement'), click: () => showAgreement(getWindow()) },
+        { label: t('menu.checkUpdate'), click: () => checkForUpdates() },
         { type: 'separator' },
         { label: t('menu.website'), click: () => void shell.openExternal(WEBSITE_URL) },
         { label: t('menu.about'), click: () => showAbout(getWindow()) }

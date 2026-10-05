@@ -6,6 +6,7 @@ import { registerIpcHandlers } from './ipc'
 import { buildMenu } from './menu'
 import { setLocale } from '../shared/i18n'
 import { IpcChannels } from '../shared/ipc'
+import { initAutoUpdater } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -70,6 +71,9 @@ app.whenReady().then(() => {
   registerIpcHandlers(() => mainWindow)
 
   createWindow()
+
+  // 自动更新：GitHub Releases 主源 + GitCode 回退（开发环境跳过）
+  void initAutoUpdater(() => mainWindow)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

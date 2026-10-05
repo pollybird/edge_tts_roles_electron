@@ -46,6 +46,7 @@ const ruRU: LocalePack = {
       replace: 'Замени&ть...',
       helpItem: '&Справка',
       agreement: 'Пользовательское согла&шение',
+      checkUpdate: 'Проверить &обновления',
       website: '&Веб-сайт',
       about: 'О &программе'
     },
@@ -152,6 +153,17 @@ const ruRU: LocalePack = {
       textEmpty: 'Текст пуст, сохранять нечего.',
       textSaved: 'Текст сохранён: {path}',
       opened: 'Открыт: {path}'
+    },
+
+    update: {
+      checking: 'Проверка обновлений...',
+      available: 'Доступна новая версия {version}, загрузка...',
+      notAvailable: 'У вас уже установлена последняя версия.',
+      downloadProgress: 'Загрузка обновления... {percent}%',
+      downloaded: 'Версия {version} загружена. Перезапустить для установки?',
+      install: 'Перезапустить и установить',
+      later: 'Позже',
+      checkFailed: 'Не удалось проверить обновления.'
     },
 
     tts: {

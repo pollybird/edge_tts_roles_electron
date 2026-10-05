@@ -140,6 +140,22 @@ npm run build:mac:zip    # 仅 macOS x64 + arm64 ZIP（可在 Linux/Windows 上�
 
 各平台脚本会自动先执行 `prepare:ffmpeg`，下载**全部**目标平台的 FFmpeg 二进制（Linux x64/arm64、Windows x64、macOS x64/arm64，合计约 320MB）到 `resources/ffmpeg/`（已被 git 忽略）。二进制与 ffmpeg-static 同源同版本（release `b6.1.1`，GPL 构建），打包时由 electron-builder 放入 `resources/ffmpeg/<platform>-<arch>/`，应用运行时按当前平台选择对应文件。GitHub 较慢时可用环境变量 `FFMPEG_BINARIES_URL` 指定镜像（脚本也会自动回退到 npmmirror 二进制镜像）。
 
+### 自动更新
+
+应用启动 5 秒后自动检查更新，也可通过菜单 **帮助 → 检查更新** 手动触发。
+
+- **主更新源**：[GitHub Releases](https://github.com/pollybird/edge_tts_roles_electron/releases)（`/releases/latest/download/latest*.yml`）。
+- **回退源**：GitCode 仓库根目录的原始文件（`latest.yml`、`latest-mac.yml`、`latest-linux.yml`）。若 GitHub 在 3.5 秒内不可达，应用自动回退到 GitCode。
+
+维护者发版流程：
+
+1. 构建全部平台安装包（`build:linux`、`build:win`、`build:mac:zip`）。electron-builder 会在 `dist/` 生成 `latest.yml`（Windows）、`latest-mac.yml`（macOS）、`latest-linux.yml`（Linux）。
+2. 将安装包产物上传到 **GitHub 和 GitCode** 的 Release。
+3. 把 `dist/` 中上述三个 `latest*.yml` 复制到仓库**根目录**并提交，使 GitCode 回退源可通过 `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml` 访问。
+4. 推送到三个远端（GitHub / Gitee / GitCode）。
+
+`electron-builder.yml` 已配置 `publish.provider: github`；执行 `electron-builder --publish always`（需 `GH_TOKEN`）可自动将产物和 `latest*.yml` 上传到 GitHub Releases。
+
 平台说明：
 
 - 原生安装包原则上需在对应系统上构建。Linux 主机可以构建 Linux 安装包、Windows NSIS 安装包（electron-builder 会自动使用 Wine）以及 macOS ZIP 压缩包，但**生成 DMG 必须在 macOS 上**；需要 macOS 公证或 Windows 代码签名时，请在对应系统执行（建议配置 CI 多平台矩阵）。

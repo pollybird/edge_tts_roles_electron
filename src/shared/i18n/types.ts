@@ -35,6 +35,7 @@ export interface Messages {
   output: Record<string, string>
   preview: Record<string, string>
   message: Record<string, string>
+  update: Record<string, string>
   tts: Record<string, string>
   dialog: Record<string, string>
   help: Record<string, string>

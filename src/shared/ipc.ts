@@ -16,6 +16,15 @@ export const IpcChannels = {
   configLoadRoleSettings: 'config:load-role-settings',
   localeSet: 'locale:set',
   menuAction: 'menu:action',
+  // 自动更新（invoke：渲染→主；send：主→渲染推送状态）
+  updateCheck: 'update:check',
+  updateInstall: 'update:install',
+  updateChecking: 'update:checking',
+  updateAvailable: 'update:available',
+  updateNotAvailable: 'update:not-available',
+  updateDownloadProgress: 'update:download-progress',
+  updateDownloaded: 'update:downloaded',
+  updateError: 'update:error',
   // send（主 → 渲染，事件推送）
   progress: 'tts:progress',
   finished: 'tts:finished',

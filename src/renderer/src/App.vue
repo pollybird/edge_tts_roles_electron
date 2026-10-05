@@ -234,6 +234,35 @@ onMounted(async () => {
     progressMessage.value = t('message.errorPrefix', { msg: e.message })
   })
 
+  // 自动更新状态反馈
+  window.api.onUpdateEvent((event) => {
+    switch (event.type) {
+      case 'checking':
+        progressMessage.value = t('update.checking')
+        break
+      case 'available':
+        progressMessage.value = t('update.available', { version: event.version })
+        break
+      case 'not-available':
+        // 静默：已是最新版本，不打扰用户
+        break
+      case 'download-progress':
+        progressMessage.value = t('update.downloadProgress', {
+          percent: Math.round(event.percent)
+        })
+        break
+      case 'downloaded':
+        if (window.confirm(t('update.downloaded', { version: event.version }))) {
+          void window.api.installUpdate()
+        }
+        break
+      case 'error':
+        // 更新错误不写入主界面状态栏，仅弹出通用提示
+        window.alert(t('update.checkFailed'))
+        break
+    }
+  })
+
   // 主菜单动作分发
   window.api.onMenuAction((actionId) => {
     switch (actionId) {

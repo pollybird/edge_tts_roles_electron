@@ -46,7 +46,8 @@ const frFR: LocalePack = {
       replace: 'Rem&placer...',
       helpItem: '&Aide',
       agreement: "Conditions d'uti&lisation",
-      website: '&Site Web',
+      checkUpdate: 'Rechercher des mises &à jour',
+      website: '&Site web',
       about: 'À &propos'
     },
 
@@ -154,6 +155,17 @@ const frFR: LocalePack = {
       textEmpty: 'Le texte est vide, rien à enregistrer.',
       textSaved: 'Texte enregistré : {path}',
       opened: 'Ouvert : {path}'
+    },
+
+    update: {
+      checking: 'Recherche de mises à jour...',
+      available: 'La nouvelle version {version} est disponible, téléchargement...',
+      notAvailable: 'Vous utilisez déjà la dernière version.',
+      downloadProgress: 'Téléchargement de la mise à jour... {percent}%',
+      downloaded: 'La version {version} est téléchargée. Redémarrer pour installer ?',
+      install: 'Redémarrer et installer',
+      later: 'Plus tard',
+      checkFailed: 'Échec de la recherche de mise à jour.'
     },
 
     tts: {

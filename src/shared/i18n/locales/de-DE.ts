@@ -46,6 +46,7 @@ const deDE: LocalePack = {
       replace: 'Erset&zen...',
       helpItem: '&Hilfe',
       agreement: '&Nutzungsvereinbarung',
+      checkUpdate: 'Nach Aktualisierungen &suchen',
       website: '&Webseite',
       about: '&Über'
     },
@@ -153,6 +154,17 @@ const deDE: LocalePack = {
       textEmpty: 'Text ist leer, nichts zu speichern.',
       textSaved: 'Text gespeichert: {path}',
       opened: 'Geöffnet: {path}'
+    },
+
+    update: {
+      checking: 'Suche nach Aktualisierungen...',
+      available: 'Neue Version {version} verfügbar, wird heruntergeladen...',
+      notAvailable: 'Sie verwenden bereits die neueste Version.',
+      downloadProgress: 'Aktualisierung wird heruntergeladen... {percent}%',
+      downloaded: 'Version {version} heruntergeladen. Jetzt neu starten zum Installieren?',
+      install: 'Neu starten & installieren',
+      later: 'Später',
+      checkFailed: 'Suche nach Aktualisierungen fehlgeschlagen.'
     },
 
     tts: {

@@ -206,6 +206,7 @@ const zhCN: LocalePack = {
       replace: '替换(&H)...',
       helpItem: '使用帮助(&H)',
       agreement: '用户协议(&U)',
+      checkUpdate: '检查更新(&U)',
       website: '官方网站(&W)',
       about: '关于(&A)'
     },
@@ -311,6 +312,17 @@ const zhCN: LocalePack = {
       textEmpty: '文本为空，无需保存！',
       textSaved: '文本已保存：{path}',
       opened: '已打开：{path}'
+    },
+
+    update: {
+      checking: '正在检查更新...',
+      available: '发现新版本 {version}，正在下载...',
+      notAvailable: '当前已是最新版本。',
+      downloadProgress: '正在下载更新... {percent}%',
+      downloaded: '新版本 {version} 已下载，是否立即重启安装？',
+      install: '重启并安装',
+      later: '稍后',
+      checkFailed: '检查更新失败。'
     },
 
     tts: {

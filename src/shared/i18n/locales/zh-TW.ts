@@ -205,6 +205,7 @@ const zhTW: LocalePack = {
       replace: '取代(&H)...',
       helpItem: '使用說明(&H)',
       agreement: '使用者協議(&U)',
+      checkUpdate: '檢查更新(&U)',
       website: '官方網站(&W)',
       about: '關於(&A)'
     },
@@ -310,6 +311,17 @@ const zhTW: LocalePack = {
       textEmpty: '文字為空，無需儲存！',
       textSaved: '文字已儲存：{path}',
       opened: '已開啟：{path}'
+    },
+
+    update: {
+      checking: '正在檢查更新...',
+      available: '發現新版本 {version}，正在下載...',
+      notAvailable: '目前已是最新版本。',
+      downloadProgress: '正在下載更新... {percent}%',
+      downloaded: '新版本 {version} 已下載，是否立即重啟安裝？',
+      install: '重啟並安裝',
+      later: '稍後',
+      checkFailed: '檢查更新失敗。'
     },
 
     tts: {
