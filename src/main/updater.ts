@@ -1,16 +1,19 @@
 /**
  * 自动更新模块
  *
- * 更新源策略：GitHub Releases 为主，GitCode 原始文件为回退。
+ * 更新源策略：GitHub Releases 为主，GitCode Release 附件为回退。
  * 原因：GitHub 在国内访问不稳定，需要一个可达的镜像源。
  *
  * 实现方式：
- * 1. 启动时按当前平台生成对应的 latest*.yml 文件名（win=latest.yml, mac=latest-mac.yml, linux=latest-linux.yml）
+ * 1. 按当前平台生成对应的 latest*.yml 文件名（win=latest.yml, mac=latest-mac.yml, linux=latest-linux.yml）
  * 2. 用 fetch 探测 GitHub Releases 的 /releases/latest/download/{file}，设短超时
- * 3. 探测成功 → 用 GitHub 作为 feed；失败 → 用 GitCode 仓库 main 分支 raw 地址作为 feed
+ * 3. 探测失败 → 调用 GitCode 公开 API 获取最新 Release 的 tag，
+ *    再以 /releases/download/{tag}/ 作为 generic feed base（GitCode 不支持 latest 别名，
+ *    且其仓库 raw 地址对缺失/受限文件返回 HTML 页面，不能直接用作 feed）
  * 4. 调用 electron-updater 的 autoUpdater.setFeedURL 指向选定的 generic 源
  *
- * 发版时需手动将 latest*.yml 同步到 GitCode 仓库 main 分支根目录（GitHub Releases 由 electron-builder 自动上传）。
+ * 发版时需把安装包与 latest*.yml 同时作为附件上传到两个平台的 Release
+ *（附件 yml 中文件名为相对路径，相对 feed base 解析）。
  */
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
@@ -31,7 +34,9 @@ function getFeedFileName(): string {
 const FEED_FILE = getFeedFileName()
 const GITHUB_LATEST_BASE =
   'https://github.com/pollybird/edge_tts_roles_electron/releases/latest/download/'
-const GITCODE_RAW_BASE = 'https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/'
+const GITCODE_API_LATEST =
+  'https://api.gitcode.com/api/v5/repos/pollybird/edge_tts_roles_electron/releases/latest'
+const GITCODE_DOWNLOAD_BASE = 'https://gitcode.com/pollybird/edge_tts_roles_electron/releases/download/'
 
 /** 探测 URL 是否可达且返回的是 YAML 而非 HTML 错误页 */
 async function probeUrl(url: string, timeoutMs: number): Promise<boolean> {
@@ -57,22 +62,48 @@ async function probeUrl(url: string, timeoutMs: number): Promise<boolean> {
 }
 
 /**
- * 选择可用的更新源：优先 GitHub Releases，失败回退 GitCode raw。
+ * 解析 GitCode 回退源：
+ * GitCode 不支持 GitHub 的 /releases/latest/download/ 别名，需先通过公开 API
+ * 获取最新 Release 的 tag，再拼出该版本附件所在的 generic feed base。
+ */
+async function resolveGitCodeFeedUrl(): Promise<string | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 3500)
+  let tag: string | undefined
+  try {
+    const res = await fetch(GITCODE_API_LATEST, { signal: controller.signal })
+    if (res.ok) {
+      const info = (await res.json()) as { tag_name?: string }
+      tag = info.tag_name
+    }
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+  if (!tag) return null
+
+  const base = `${GITCODE_DOWNLOAD_BASE}${tag}/`
+  const ok = await probeUrl(base + FEED_FILE, 3500)
+  if (ok) {
+    console.log(`[updater] GitHub feed unreachable, falling back to GitCode: ${base}`)
+    return base
+  }
+  return null
+}
+
+/**
+ * 选择可用的更新源：优先 GitHub Releases，失败回退 GitCode Release 附件。
  * 返回 electron-updater generic provider 需要的 base URL；若两者均不可达返回 null。
  */
 async function resolveFeedUrl(): Promise<string | null> {
-  const githubUrl = GITHUB_LATEST_BASE + FEED_FILE
-  const githubOk = await probeUrl(githubUrl, 3500)
+  const githubOk = await probeUrl(GITHUB_LATEST_BASE + FEED_FILE, 3500)
   if (githubOk) {
     console.log(`[updater] using GitHub feed: ${GITHUB_LATEST_BASE}`)
     return GITHUB_LATEST_BASE
   }
-  const gitcodeUrl = GITCODE_RAW_BASE + FEED_FILE
-  const gitcodeOk = await probeUrl(gitcodeUrl, 3500)
-  if (gitcodeOk) {
-    console.log(`[updater] GitHub feed unreachable, falling back to GitCode: ${GITCODE_RAW_BASE}`)
-    return GITCODE_RAW_BASE
-  }
+  const gitcodeBase = await resolveGitCodeFeedUrl()
+  if (gitcodeBase) return gitcodeBase
   console.log('[updater] neither GitHub nor GitCode feed reachable, skipping update check')
   return null
 }

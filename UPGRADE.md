@@ -7,7 +7,7 @@
 - **Arabic (ar-SA) translation** with full RTL layout support.
 - **Traditional Chinese (zh-TW) translation** (Taiwan terminology).
 - **Runtime language switcher**: a language dropdown in the editor header supports instant switching across 9 languages. The app follows the system language on startup; switching only affects the current session.
-- **Auto-update**: the app checks for updates 5 seconds after launch, with a manual trigger under **Help → Check for Updates**. The primary feed is GitHub Releases; if GitHub is unreachable, it falls back to the `latest*.yml` files hosted on GitCode.
+- **Auto-update**: the app checks for updates 5 seconds after launch, with a manual trigger under **Help → Check for Updates**. The primary feed is GitHub Releases; if GitHub is unreachable, it resolves the latest GitCode Release via the public API and falls back to the attached `latest*.yml`.
 
 ### Bug Fixes
 
