@@ -45,6 +45,7 @@ body {
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  min-width: 0; /* 防止长文件名等 min-content 撑宽右栏 */
 }
 
 .panel {
@@ -234,7 +235,7 @@ mark.hl-beep {
 .tool-label {
   color: var(--text-secondary);
   font-size: 12px;
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 
 .tool-spacer {
@@ -274,30 +275,38 @@ mark.hl-beep {
 
 .extras-body {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  gap: 8px;
   padding: 8px 12px 10px;
 }
 
 .extra-row {
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-color);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
 }
 
-.extra-row:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
+.extra-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .extra-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
   font-size: 13px;
 }
 
 .extra-name {
-  min-width: 56px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -311,19 +320,38 @@ mark.hl-beep {
   color: var(--text-secondary);
 }
 
+.extra-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 按钮占满卡片主区宽度，避免长译文挤压/遮盖右侧音量滑块 */
+.extra-actions .btn {
+  width: 100%;
+}
+
+/* 纵向音量滑块：节省横向空间，三路并排时仍能放下 */
 .extra-volume {
-  margin: 2px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
-.extra-volume span {
-  min-width: 64px;
-  font-size: 12px;
-}
-
-.extra-hint {
+.extra-volume-slider {
+  writing-mode: vertical-lr;
+  direction: rtl; /* 使 100% 在上、0% 在下 */
+  width: 22px;
+  height: 64px;
   margin: 0;
+}
+
+.extra-volume-value {
   font-size: 11px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .role-card {

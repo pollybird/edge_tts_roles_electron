@@ -14,6 +14,7 @@ export const IpcChannels = {
   readAudioFile: 'file:read-audio',
   configSaveRoleSettings: 'config:save-role-settings',
   configLoadRoleSettings: 'config:load-role-settings',
+  localeSet: 'locale:set',
   menuAction: 'menu:action',
   // send（主 → 渲染，事件推送）
   progress: 'tts:progress',

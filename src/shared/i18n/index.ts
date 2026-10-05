@@ -9,11 +9,13 @@
  */
 import enUS from './locales/en-US'
 import zhCN from './locales/zh-CN'
+import zhTW from './locales/zh-TW'
 import frFR from './locales/fr-FR'
 import deDE from './locales/de-DE'
 import esES from './locales/es-ES'
 import ruRU from './locales/ru-RU'
 import jaJP from './locales/ja-JP'
+import arSA from './locales/ar-SA'
 import type { LocalePack, Messages, PartialLocalePack, VoiceNamespace } from './types'
 
 /** 基准语言包（任何缺失 key 的最终兜底，必须包含全部 messages） */
@@ -23,22 +25,28 @@ const BASE_PACK: LocalePack = enUS
 const LOCALE_PACKS: Record<string, LocalePack> = {
   'en-US': enUS,
   'zh-CN': zhCN,
+  'zh-TW': zhTW,
   'fr-FR': frFR,
   'de-DE': deDE,
   'es-ES': esES,
   'ru-RU': ruRU,
-  'ja-JP': jaJP
+  'ja-JP': jaJP,
+  'ar-SA': arSA
 }
 
-/** 语言前缀（zh-CN / zh-TW / zh-HK 共享中文译名）→ 语言包 */
+/**
+ * 语言前缀（zh-CN / zh-TW / zh-HK 共享中文译名）→ 语言包。
+ * zh-CN 与 zh-TW 已精确匹配；其余 zh-*（如 zh-HK、zh-MO）默认回退繁体（港澳台习惯）。
+ */
 const LANGUAGE_PREFIX_PACKS: Record<string, LocalePack> = {
-  zh: zhCN,
+  zh: zhTW,
   en: enUS,
   fr: frFR,
   de: deDE,
   es: esES,
   ru: ruRU,
-  ja: jaJP
+  ja: jaJP,
+  ar: arSA
 }
 
 /** 运行时动态注册的语言包（未来可从外部 JSON 加载语言文件） */
@@ -150,13 +158,20 @@ function collectKeys(obj: Record<string, unknown>, prefix: string): string[] {
 export function availableLocales(): Array<{ code: string; label: string }> {
   return [
     { code: 'zh-CN', label: '简体中文' },
+    { code: 'zh-TW', label: '繁體中文' },
     { code: 'en-US', label: 'English' },
     { code: 'fr-FR', label: 'Français' },
     { code: 'de-DE', label: 'Deutsch' },
     { code: 'es-ES', label: 'Español' },
     { code: 'ru-RU', label: 'Русский' },
-    { code: 'ja-JP', label: '日本語' }
+    { code: 'ja-JP', label: '日本語' },
+    { code: 'ar-SA', label: 'العربية' }
   ]
+}
+
+/** 判断是否为从右到左（RTL）书写的语言（当前仅阿拉伯语） */
+export function isRtlLocale(locale: string): boolean {
+  return /^ar([-_]|$)/i.test(String(locale ?? ''))
 }
 
 export type { LocalePack, Messages, PartialLocalePack }

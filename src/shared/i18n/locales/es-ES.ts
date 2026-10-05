@@ -231,8 +231,7 @@ const esES: LocalePack = {
         'se requiere conexión a Internet. No se garantiza la disponibilidad del servicio.\n' +
         '3. El Software se proporciona «tal cual», sin garantías de ningún tipo sobre ' +
         'la exactitud o idoneidad de los resultados generados. Usted asume todas las consecuencias de su uso.\n' +
-        '4. No realice ingeniería inversa ni descifre el Software, ni perjudique los derechos ' +
-        'legítimos del proveedor del servicio.\n' +
+        '4. Este Software se publica bajo la licencia de código abierto GNU AGPL v3; puede usarlo, modificarlo y distribuirlo libremente de conformidad con dicha licencia. No puede utilizar el Software para infringir los derechos legítimos de Microsoft u otros proveedores de servicios, ni para violar ninguna ley o normativa aplicable.\n' +
         '5. Usted es plenamente responsable del contenido de audio que genere, guarde y distribuya.\n\n' +
         'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. Todos los derechos reservados.'
     },

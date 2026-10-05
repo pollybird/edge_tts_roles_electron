@@ -226,8 +226,7 @@ const enUS: LocalePack = {
         'an internet connection is required. Service availability is not guaranteed.\n' +
         '3. The Software is provided "as is", without warranties of any kind regarding ' +
         'accuracy or fitness of the generated results. You bear all consequences of its use.\n' +
-        '4. Do not reverse engineer or crack the Software, or harm the legitimate rights ' +
-        'of the service provider.\n' +
+        '4. This software is released under the GNU AGPL v3 open-source license; you may freely use, modify and distribute it in accordance with that license. You may not use the software to infringe the legitimate rights of Microsoft or other service providers, nor to violate any applicable laws or regulations.\n' +
         '5. You are fully responsible for the audio content you generate, store and distribute.\n\n' +
         'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.'
     },

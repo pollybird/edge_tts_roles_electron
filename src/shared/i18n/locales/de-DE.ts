@@ -232,8 +232,7 @@ const deDE: LocalePack = {
         'eine Internetverbindung ist erforderlich. Die Verfügbarkeit des Dienstes wird nicht garantiert.\n' +
         '3. Die Software wird „wie besehen“ ohne jegliche Gewährleistung hinsichtlich ' +
         'Genauigkeit oder Eignung der erzeugten Ergebnisse bereitgestellt. Sie tragen alle Folgen der Verwendung.\n' +
-        '4. Nehmen Sie kein Reverse-Engineering und keine Crackversuche an der Software vor und schädigen Sie nicht ' +
-        'die berechtigten Rechte des Dienstanbieters.\n' +
+        '4. Diese Software wird unter der Open-Source-Lizenz GNU AGPL v3 veröffentlicht; Sie dürfen sie gemäß dieser Lizenz frei nutzen, modifizieren und weitergeben. Sie dürfen die Software nicht dazu verwenden, die berechtigten Rechte von Microsoft oder anderen Dienstanbietern zu verletzen oder geltendes Recht zu missachten.\n' +
         '5. Sie tragen die volle Verantwortung für die Audioinhalte, die Sie erzeugen, speichern und verbreiten.\n\n' +
         'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. Alle Rechte vorbehalten.'
     },

@@ -51,6 +51,9 @@ const api = {
   loadRoleSettings: (): Promise<RoleVoiceSettings | null> =>
     ipcRenderer.invoke(IpcChannels.configLoadRoleSettings),
 
+  // 界面语言切换
+  setLocale: (code: string): Promise<void> => ipcRenderer.invoke(IpcChannels.localeSet, code),
+
   // 主菜单动作
   onMenuAction: (cb: (actionId: string) => void): (() => void) =>
     subscribe(IpcChannels.menuAction, cb),

@@ -111,6 +111,8 @@ export interface RendererApi {
   saveRoleSettings(settings: RoleVoiceSettings): Promise<string | null>
   /** 从 JSON 配置文件加载角色语音设置（取消或校验失败返回 null） */
   loadRoleSettings(): Promise<RoleVoiceSettings | null>
+  /** 切换界面语言：主进程重建原生菜单并持久化到设置 */
+  setLocale(code: string): Promise<void>
   /** 订阅主菜单动作（文件/编辑/帮助中需渲染进程处理的项），返回取消订阅函数 */
   onMenuAction(cb: (actionId: string) => void): () => void
   /** 订阅事件，返回取消订阅函数 */

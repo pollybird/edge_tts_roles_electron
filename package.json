@@ -1,6 +1,6 @@
 {
   "name": "edge-tts-roles",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Edge-TTS 多角色音频生成器",
   "license": "AGPL-3.0-only",
   "main": "./out/main/index.js",

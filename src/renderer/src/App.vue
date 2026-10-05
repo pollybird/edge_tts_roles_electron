@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import TextEditor from './components/TextEditor.vue'
 import RoleSettings from './components/RoleSettings.vue'
 import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
-import type { AudioExtras, AudioFormat, RoleVoiceSettings, VoiceInfo } from '../../shared/types'
+import type {
+  AudioExtras,
+  AudioFormat,
+  RoleId,
+  RoleVoiceSettings,
+  VoiceInfo
+} from '../../shared/types'
 import { ROLE_IDS, createDefaultAudioExtras } from '../../shared/types'
 import { useI18n } from './composables/useI18n'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const text = ref('')
 const voices = ref<VoiceInfo[]>([])
@@ -126,6 +132,32 @@ async function handleSaveConfig(): Promise<void> {
   }
 }
 
+/** 角色字段更新（子组件 RoleSettings 通过事件上报，此处为唯一写入口） */
+function handleUpdateRole(
+  id: RoleId,
+  field: 'voice' | 'rate' | 'volume' | 'pitch',
+  value: string | number
+): void {
+  if (field === 'voice') {
+    roleSettings[id].voice = String(value)
+  } else {
+    roleSettings[id][field] = Number(value)
+  }
+}
+
+/** 附加音频轨道更新（子组件 AudioExtrasPanel 通过事件上报） */
+function handleUpdateTrack(
+  key: 'intro' | 'outro' | 'bgm',
+  field: 'path' | 'volume',
+  value: string | number
+): void {
+  if (field === 'path') {
+    audioExtras[key].path = String(value)
+  } else {
+    audioExtras[key].volume = Number(value)
+  }
+}
+
 /** 从 JSON 文件加载角色语音配置（逐字段写回以保持响应式） */
 async function handleLoadConfig(): Promise<void> {
   try {
@@ -168,8 +200,17 @@ async function handleSaveText(): Promise<void> {
 }
 
 onMounted(async () => {
-  // 窗口标题随系统语言
+  // 窗口标题与初始状态栏随系统语言
   document.title = t('app.title')
+  progressMessage.value = t('message.ready')
+
+  // 语言切换时同步窗口标题；未在生成时把状态栏恢复为“就绪”
+  watch(locale, () => {
+    document.title = t('app.title')
+    if (!running.value) {
+      progressMessage.value = t('message.ready')
+    }
+  })
 
   voices.value = await window.api.listVoices()
 
@@ -235,8 +276,9 @@ onMounted(async () => {
           :voices="voices"
           @save-config="handleSaveConfig"
           @load-config="handleLoadConfig"
+          @update-role="handleUpdateRole"
         />
-        <AudioExtrasPanel :extras="audioExtras" />
+        <AudioExtrasPanel :extras="audioExtras" @update-track="handleUpdateTrack" />
       </div>
     </main>
     <OutputPanel

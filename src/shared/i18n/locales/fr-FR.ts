@@ -233,8 +233,7 @@ const frFR: LocalePack = {
         'une connexion Internet est requise. La disponibilité du service n’est pas garantie.\n' +
         '3. Le Logiciel est fourni « tel quel », sans garantie d’aucune sorte quant à ' +
         'l’exactitude ou l’adéquation des résultats générés. Vous assumez toutes les conséquences de son utilisation.\n' +
-        '4. Ne procédez pas à de l’ingénierie inverse ou au piratage du Logiciel, et ne portez pas atteinte aux droits ' +
-        'légitimes du fournisseur de service.\n' +
+        '4. Ce Logiciel est distribué sous la licence open-source GNU AGPL v3 ; vous pouvez librement l’utiliser, le modifier et le distribuer conformément à cette licence. Vous ne pouvez pas utiliser le Logiciel pour porter atteinte aux droits légitimes de Microsoft ou d’autres fournisseurs de service, ni pour enfreindre toute loi ou réglementation applicable.\n' +
         '5. Vous êtes entièrement responsable du contenu audio que vous générez, enregistrez et diffusez.\n\n' +
         'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. Tous droits réservés.'
     },

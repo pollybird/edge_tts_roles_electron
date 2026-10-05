@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const { t } = useI18n()
 
@@ -246,7 +247,7 @@ defineExpose({ openFindBar })
   <section class="panel editor-panel">
     <header class="panel-header">
       <span>{{ t('editor.header') }}</span>
-      <button class="btn small" @click="openFile">{{ t('editor.open') }}</button>
+      <LanguageSwitcher />
     </header>
 
     <!-- 查找 / 替换栏（Ctrl+F / Ctrl+H） -->

@@ -19,7 +19,7 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 - **Four output formats** — WAV (32-bit float), MP3, OGG Vorbis and FLAC, all processed through a bundled ffmpeg binary (no system ffmpeg required).
 - **Voice config import/export** — save the four roles' voice / rate / volume / pitch to a JSON file and reuse it across scripts.
 - **Editor conveniences** — find & replace, one-click marker insertion, quick-pause buttons, live character count, open/save text files.
-- **7 built-in languages** — English, Simplified Chinese, French, German, Spanish, Russian and Japanese; the UI follows the system language automatically.
+- **8 built-in languages** — English, Simplified Chinese, French, German, Spanish, Russian, Japanese and Arabic; the UI follows the system language automatically.
 - The main window opens maximized by default.
 
 ## Marker Syntax
@@ -149,7 +149,7 @@ Platform notes:
 
 ## Internationalization
 
-All UI strings live in typed locale packs under [src/shared/i18n/locales](./src/shared/i18n/locales): English (base/fallback), Simplified Chinese, French, German, Spanish, Russian and Japanese. The renderer follows `navigator.language` and the main process follows the system locale; missing keys transparently fall back to English. Adding a language is a single new pack plus one registration entry.
+All UI strings live in typed locale packs under [src/shared/i18n/locales](./src/shared/i18n/locales): English (base/fallback), Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese and Arabic. The renderer follows `navigator.language` and the main process follows the system locale; missing keys transparently fall back to English. Adding a language is a single new pack plus one registration entry.
 
 ## License
 
