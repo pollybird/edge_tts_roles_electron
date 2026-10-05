@@ -150,8 +150,8 @@ The app checks for updates automatically on startup (5 s delay) and supports a m
 Release workflow for maintainers:
 
 1. Build all platform installers (`build:linux`, `build:win`, `build:mac:zip`). electron-builder generates `latest.yml` (Windows), `latest-mac.yml` (macOS), and `latest-linux.yml` (Linux) in `dist/`.
-2. Upload the installer artifacts to **both** GitHub and GitCode Releases.
-3. Copy the three `latest*.yml` files from `dist/` to the repository **root** and commit them. This makes the GitCode fallback feed available at `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml`.
+2. Create and push the version tag, then upload the installer artifacts **and the three `latest*.yml`** to **both** GitHub and GitCode Releases. The files uploaded to the GitHub Release keep their relative filenames (resolved against `/releases/latest/download/`).
+3. Copy the three `latest*.yml` files from `dist/` to the repository **root**, but rewrite every `files[].url` (and top-level `path`) in the root copies to an **absolute GitCode release URL** (`https://gitcode.com/<owner>/<repo>/releases/download/<tag>/<file>`). Relative filenames would resolve against `raw/main/`, where the binaries do not exist. Then commit and push — this makes the GitCode fallback feed available at `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml`.
 4. Push to all three remotes (GitHub / Gitee / GitCode).
 
 `electron-builder.yml` is configured with `publish.provider: github`; running `electron-builder --publish always` (requires `GH_TOKEN`) uploads artifacts and the `latest*.yml` files to GitHub Releases automatically.

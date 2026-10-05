@@ -1,0 +1,11 @@
+version: 2.0.2
+files:
+- url: https://gitcode.com/pollybird/edge_tts_roles_electron/releases/download/v2.0.2/edge-tts-roles-2.0.2-x64-setup.exe
+  sha512: Z7biZ8WwWe9eUEF5pooL2lDulF8rQEfQcwREL+ffIVobTAa/VvJaEiWXFxy2L7ZfFw0Hfv6tg8vfTioVsPbgww==
+  size: 126231175
+- url: https://gitcode.com/pollybird/edge_tts_roles_electron/releases/download/v2.0.2/edge-tts-roles-2.0.2-arm64-setup.exe
+  sha512: w00qfOqaiPJdzwsDAvVbKO7knlEOIYUkcI+zwMandwTZ8ygeyfwucB+SJaTYeAeCiGHEe9gz7j+0nPviNh5tuA==
+  size: 122026133
+path: https://gitcode.com/pollybird/edge_tts_roles_electron/releases/download/v2.0.2/edge-tts-roles-2.0.2-x64-setup.exe
+sha512: Z7biZ8WwWe9eUEF5pooL2lDulF8rQEfQcwREL+ffIVobTAa/VvJaEiWXFxy2L7ZfFw0Hfv6tg8vfTioVsPbgww==
+releaseDate: '2026-10-05T13:33:11.979Z'

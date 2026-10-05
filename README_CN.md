@@ -150,8 +150,8 @@ npm run build:mac:zip    # 仅 macOS x64 + arm64 ZIP（可在 Linux/Windows 上�
 维护者发版流程：
 
 1. 构建全部平台安装包（`build:linux`、`build:win`、`build:mac:zip`）。electron-builder 会在 `dist/` 生成 `latest.yml`（Windows）、`latest-mac.yml`（macOS）、`latest-linux.yml`（Linux）。
-2. 将安装包产物上传到 **GitHub 和 GitCode** 的 Release。
-3. 把 `dist/` 中上述三个 `latest*.yml` 复制到仓库**根目录**并提交，使 GitCode 回退源可通过 `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml` 访问。
+2. 创建并推送版本 tag，然后把安装包产物**连同三个 `latest*.yml`** 上传到 **GitHub 和 GitCode** 的 Release；上传到 GitHub Release 的 yml 保持相对文件名（相对 `/releases/latest/download/` 解析）。
+3. 把 `dist/` 中上述三个 `latest*.yml` 复制到仓库**根目录**，但根目录副本中的每个 `files[].url`（以及顶层 `path`）必须改写为 **GitCode Release 附件绝对地址**（`https://gitcode.com/<owner>/<repo>/releases/download/<tag>/<file>`）——相对文件名会解析到 `raw/main/` 目录，而安装包不在仓库中。随后提交推送，使 GitCode 回退源可通过 `https://gitcode.com/pollybird/edge_tts_roles_electron/raw/main/latest*.yml` 访问。
 4. 推送到三个远端（GitHub / Gitee / GitCode）。
 
 `electron-builder.yml` 已配置 `publish.provider: github`；执行 `electron-builder --publish always`（需 `GH_TOKEN`）可自动将产物和 `latest*.yml` 上传到 GitHub Releases。
