@@ -24,8 +24,7 @@ function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
 const api = {
   // TTS
   listVoices: (): Promise<VoiceInfo[]> => ipcRenderer.invoke(IpcChannels.listVoices),
-  generate: (req: GenerateRequest): Promise<void> =>
-    ipcRenderer.invoke(IpcChannels.generate, req),
+  generate: (req: GenerateRequest): Promise<void> => ipcRenderer.invoke(IpcChannels.generate, req),
   preview: (req: PreviewRequest): Promise<void> => ipcRenderer.invoke(IpcChannels.preview, req),
   stop: (): Promise<void> => ipcRenderer.invoke(IpcChannels.stop),
 
@@ -42,8 +41,7 @@ const api = {
     ipcRenderer.invoke(IpcChannels.dialogSaveTextFile, content),
   saveAudioFile: (format: AudioFormat): Promise<string | null> =>
     ipcRenderer.invoke(IpcChannels.dialogSaveAudioFile, format),
-  pickAudioFile: (): Promise<string | null> =>
-    ipcRenderer.invoke(IpcChannels.dialogPickAudioFile),
+  pickAudioFile: (): Promise<string | null> => ipcRenderer.invoke(IpcChannels.dialogPickAudioFile),
   readAudioFile: (filePath: string): Promise<Uint8Array> =>
     ipcRenderer.invoke(IpcChannels.readAudioFile, filePath),
 

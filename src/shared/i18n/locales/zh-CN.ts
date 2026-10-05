@@ -350,7 +350,8 @@ const zhCN: LocalePack = {
       configDefaultName: '角色语音配置.json',
       configFilter: '角色语音配置',
       invalidJson: '配置文件不是有效的 JSON',
-      noVoiceInConfig: '配置文件中没有找到任何已选择的发音人'
+      noVoiceInConfig: '配置文件中没有找到任何已选择的发音人',
+      unsupportedAudioExt: '不支持的音频文件类型：.{ext}'
     },
 
     help: {

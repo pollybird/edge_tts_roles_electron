@@ -52,7 +52,7 @@ const frFR: LocalePack = {
 
     editor: {
       header:
-        "Éditeur de texte (utilisez [A][B][C][D] pour changer de voix, [nombre] pour une pause, [R] pour un bip)",
+        'Éditeur de texte (utilisez [A][B][C][D] pour changer de voix, [nombre] pour une pause, [R] pour un bip)',
       open: '📂 Ouvrir',
       findPlaceholder: 'Rechercher',
       matchCase: 'Respecter la casse',
@@ -143,10 +143,10 @@ const frFR: LocalePack = {
       ready: 'Prêt',
       inputText: 'Veuillez saisir du texte !',
       selectOutput: 'Veuillez choisir un chemin de fichier de sortie !',
-      generating: "Génération de l’audio...",
-      generatingPreview: "Génération de l’audio d’aperçu...",
+      generating: 'Génération de l’audio...',
+      generatingPreview: 'Génération de l’audio d’aperçu...',
       selectForPreview: 'Veuillez d’abord sélectionner le texte à écouter !',
-      previewReady: "L’audio d’aperçu est prêt !",
+      previewReady: 'L’audio d’aperçu est prêt !',
       audioGenerated: 'Audio généré ! {path}',
       errorPrefix: 'Erreur : {msg}',
       configSaved: 'Configuration enregistrée : {path}',
@@ -158,7 +158,7 @@ const frFR: LocalePack = {
 
     tts: {
       parsing: 'Analyse du texte...',
-      parsingPreview: "Analyse du texte d’aperçu...",
+      parsingPreview: 'Analyse du texte d’aperçu...',
       noValidText: 'Aucun texte valide trouvé',
       roleNoVoice: 'Aucune voix sélectionnée pour le rôle {role}',
       cooldown: 'Temporisation après rétablissement réseau, reprise dans {sec} s...',
@@ -168,14 +168,14 @@ const frFR: LocalePack = {
       cacheHit: 'Rôle {role} chargé depuis le cache local ({index}/{total})',
       pauseAdded: 'Pause ajoutée : {ms} ms',
       beepAdded: 'Bip ajouté',
-      noAudio: "Aucun audio n’a été généré",
+      noAudio: 'Aucun audio n’a été généré',
       noSegments: 'Aucun segment audio à concaténer',
       merging: 'Fusion des segments audio...',
-      mixingExtras: "Mixage de l’intro / musique de fond / outro...",
+      mixingExtras: 'Mixage de l’intro / musique de fond / outro...',
       extrasLoadFailed: 'Impossible de charger la piste audio {file} : {msg}',
       encoding: 'Encodage en {format}...',
       done: 'Génération audio terminée !',
-      previewDone: "Génération de l’audio d’aperçu terminée !",
+      previewDone: 'Génération de l’audio d’aperçu terminée !',
       failFinal:
         'Un segment vocal a échoué {max} fois de suite ou est incomplet ({msg}). ' +
         'Les segments terminés sont conservés dans le cache local. Vérifiez votre réseau et ' +
@@ -184,7 +184,7 @@ const frFR: LocalePack = {
       connClosedEarly: 'Connexion fermée prématurément',
       emptyAudio: 'Données audio vides',
       edge50x:
-        "Erreur du serveur Edge TTS ({msg}), génération audio annulée. Veuillez réessayer plus tard.",
+        'Erreur du serveur Edge TTS ({msg}), génération audio annulée. Veuillez réessayer plus tard.',
       segmentFailed: 'Échec de la génération du segment vocal : {msg}',
       unknownError: 'Erreur inconnue'
     },
@@ -195,8 +195,9 @@ const frFR: LocalePack = {
       audioFilter: 'Fichiers audio',
       configDefaultName: 'voice-config.json',
       configFilter: 'Configuration des voix',
-      invalidJson: "Le fichier de configuration n’est pas un JSON valide",
-      noVoiceInConfig: 'Aucune voix sélectionnée trouvée dans le fichier de configuration'
+      invalidJson: 'Le fichier de configuration n’est pas un JSON valide',
+      noVoiceInConfig: 'Aucune voix sélectionnée trouvée dans le fichier de configuration',
+      unsupportedAudioExt: 'Type de fichier audio non pris en charge : .{ext}'
     },
 
     help: {
@@ -221,11 +222,11 @@ const frFR: LocalePack = {
     },
 
     agreement: {
-      title: "Conditions d’utilisation",
-      message: "Conditions d’utilisation",
+      title: 'Conditions d’utilisation',
+      message: 'Conditions d’utilisation',
       body:
         'Bienvenue dans le Générateur audio multi-voix Edge-TTS (« le Logiciel »). ' +
-        "Veuillez lire cet accord avant toute utilisation :\n\n" +
+        'Veuillez lire cet accord avant toute utilisation :\n\n' +
         '1. Le Logiciel est fourni uniquement pour l’étude, la recherche et la production vocale personnelle licite. ' +
         'Ne l’utilisez pas pour créer un contenu illégal, contrefaisant ou contraire à l’ordre public.\n' +
         '2. La synthèse vocale est fournie par le service vocal en ligne Microsoft Edge ; ' +
@@ -243,8 +244,7 @@ const frFR: LocalePack = {
       message: 'Générateur audio multi-voix Edge-TTS',
       version: 'Version : {version}',
       tech: 'Basé sur Electron + Vue 3. Voix fournies par Microsoft Edge TTS.',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'Licence : GNU AGPL v3',
       opensource: 'Logiciels open source utilisés :'

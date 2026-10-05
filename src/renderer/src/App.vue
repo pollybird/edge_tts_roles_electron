@@ -5,12 +5,7 @@ import RoleSettings from './components/RoleSettings.vue'
 import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
-import type {
-  AudioExtras,
-  AudioFormat,
-  RoleVoiceSettings,
-  VoiceInfo
-} from '../../shared/types'
+import type { AudioExtras, AudioFormat, RoleVoiceSettings, VoiceInfo } from '../../shared/types'
 import { ROLE_IDS, createDefaultAudioExtras } from '../../shared/types'
 import { useI18n } from './composables/useI18n'
 

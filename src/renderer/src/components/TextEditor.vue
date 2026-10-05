@@ -31,10 +31,7 @@ const ROLE_TAGS = ['A', 'B', 'C', 'D'] as const
 
 /** 先转义 HTML，再用一次扫描把标记包上 <mark>（与 PyQt6 版高亮配色一致） */
 const highlightedHtml = computed(() => {
-  const escaped = props.text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  const escaped = props.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   // 尾部补换行，保证文本满行时 backdrop 与 textarea 滚动高度一致
   return (
     escaped.replace(/\[([ABCD]|\d+|R)\]/g, (m, inner: string) => {
@@ -215,8 +212,7 @@ function replaceOne(): void {
     recomputeMatches()
     return
   }
-  const nextText =
-    props.text.slice(0, idx) + replaceQuery.value + props.text.slice(idx + q.length)
+  const nextText = props.text.slice(0, idx) + replaceQuery.value + props.text.slice(idx + q.length)
   locateAnchor = idx + replaceQuery.value.length
   emit('update:text', nextText)
 }
@@ -234,7 +230,10 @@ function replaceAll(): void {
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const re = new RegExp(escaped, 'g')
     if (!re.test(props.text)) return
-    emit('update:text', props.text.replace(new RegExp(escaped, 'g'), () => replaceQuery.value))
+    emit(
+      'update:text',
+      props.text.replace(new RegExp(escaped, 'g'), () => replaceQuery.value)
+    )
   }
   matchIndex.value = -1
   locateAnchor = null
@@ -282,7 +281,9 @@ defineExpose({ openFindBar })
         <button class="btn small" @click="replaceOne">{{ t('editor.replace') }}</button>
         <button class="btn small" @click="replaceAll">{{ t('editor.replaceAll') }}</button>
       </template>
-      <button class="btn small find-close" :title="t('editor.closeFind')" @click="closeFindBar">✕</button>
+      <button class="btn small find-close" :title="t('editor.closeFind')" @click="closeFindBar">
+        ✕
+      </button>
     </div>
 
     <!-- 高亮编辑器：底层渲染层 + 透明 textarea 叠放，同步滚动 -->

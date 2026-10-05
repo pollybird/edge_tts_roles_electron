@@ -48,7 +48,8 @@ const enUS: LocalePack = {
     },
 
     editor: {
-      header: 'Text editor (use [A][B][C][D] to switch voices, [number] for pauses, [R] for a beep)',
+      header:
+        'Text editor (use [A][B][C][D] to switch voices, [number] for pauses, [R] for a beep)',
       open: '📂 Open',
       findPlaceholder: 'Find',
       matchCase: 'Match case',
@@ -157,8 +158,7 @@ const enUS: LocalePack = {
       roleNoVoice: 'Role {role} has no voice selected',
       cooldown: 'Cooling down after network recovery, continuing in {sec}s...',
       generatingRole: 'Generating voice for role {role} ({index}/{total})...',
-      retrying:
-        'Network interrupted for role {role} ({reason}), retrying {attempt}/{max}...',
+      retrying: 'Network interrupted for role {role} ({reason}), retrying {attempt}/{max}...',
       cacheHit: 'Role {role} loaded from local cache ({index}/{total})',
       pauseAdded: 'Pause added: {ms}ms',
       beepAdded: 'Beep added',
@@ -189,7 +189,8 @@ const enUS: LocalePack = {
       configDefaultName: 'voice-config.json',
       configFilter: 'Voice config',
       invalidJson: 'The config file is not valid JSON',
-      noVoiceInConfig: 'No selected voice was found in the config file'
+      noVoiceInConfig: 'No selected voice was found in the config file',
+      unsupportedAudioExt: 'Unsupported audio file type: .{ext}'
     },
 
     help: {
@@ -236,8 +237,7 @@ const enUS: LocalePack = {
       message: 'Edge-TTS Multi-Voice Audio Generator',
       version: 'Version: {version}',
       tech: 'Built with Electron + Vue 3. Voices provided by Microsoft Edge TTS.',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'License: GNU AGPL v3',
       opensource: 'Open-source software used:'

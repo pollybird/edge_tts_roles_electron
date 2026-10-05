@@ -24,11 +24,11 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 
 ## Marker Syntax
 
-| Marker | Meaning |
-| --- | --- |
-| `[A]` `[B]` `[C]` `[D]` | Switch to role A / B / C / D from this point on |
-| `[1000]` | Insert a pause of `1000` milliseconds (any integer works) |
-| `[R]` | Insert a 500 ms / 1000 Hz beep |
+| Marker                  | Meaning                                                   |
+| ----------------------- | --------------------------------------------------------- |
+| `[A]` `[B]` `[C]` `[D]` | Switch to role A / B / C / D from this point on           |
+| `[1000]`                | Insert a pause of `1000` milliseconds (any integer works) |
+| `[R]`                   | Insert a 500 ms / 1000 Hz beep                            |
 
 Text before the first role marker is spoken by role A.
 
@@ -38,27 +38,27 @@ Text before the first role marker is spoken by role A.
 
 ## Usage Guide
 
-1. **Assign voices** — in *Voice Settings* on the right, pick a neural voice for each role used in the script and adjust rate / volume / pitch if needed.
+1. **Assign voices** — in _Voice Settings_ on the right, pick a neural voice for each role used in the script and adjust rate / volume / pitch if needed.
 2. **Write the script** — type or paste text in the editor and use the toolbar buttons to insert role tags, pauses and beeps.
-3. **(Optional) Add audio extras** — in the *Audio Extras* panel below the voice settings, choose a local file for intro / outro / background music and drag each volume slider (0–100 %).
+3. **(Optional) Add audio extras** — in the _Audio Extras_ panel below the voice settings, choose a local file for intro / outro / background music and drag each volume slider (0–100 %).
    - Intro plays before the narration; outro plays after it.
    - Background music is mixed underneath the narration and loops automatically if it is shorter.
-4. **Preview** — use *Preview Selection* / *Preview All Text* to listen in the built-in player.
-5. **Export** — choose an output format and a save path at the bottom, then click *Generate Audio*. Progress is shown per segment and the job can be stopped at any time.
+4. **Preview** — use _Preview Selection_ / _Preview All Text_ to listen in the built-in player.
+5. **Export** — choose an output format and a save path at the bottom, then click _Generate Audio_. Progress is shown per segment and the job can be stopped at any time.
 
 Accepted extra-audio formats: MP3, WAV, OGG, FLAC, M4A, AAC, OPUS and WMA (anything the bundled ffmpeg can decode). Mixing is hard-clipped to ±1.0 to prevent clipping.
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-| --- | --- |
-| `Ctrl/Cmd + O` | Open a text file |
-| `Ctrl/Cmd + S` | Save the text |
+| Shortcut               | Action                   |
+| ---------------------- | ------------------------ |
+| `Ctrl/Cmd + O`         | Open a text file         |
+| `Ctrl/Cmd + S`         | Save the text            |
 | `Ctrl/Cmd + Shift + O` | Load voice config (JSON) |
 | `Ctrl/Cmd + Shift + S` | Save voice config (JSON) |
-| `Ctrl/Cmd + F` | Find |
-| `Ctrl/Cmd + H` | Replace |
-| `F1` | Help |
+| `Ctrl/Cmd + F`         | Find                     |
+| `Ctrl/Cmd + H`         | Replace                  |
+| `F1`                   | Help                     |
 
 ## How It Works
 

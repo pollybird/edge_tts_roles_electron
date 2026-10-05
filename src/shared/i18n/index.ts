@@ -105,16 +105,15 @@ export function resolveVoicePack(locale = detectLocale()): VoiceNamespace {
 function lookupRaw(table: unknown, dottedKey: string): string | undefined {
   const val = dottedKey
     .split('.')
-    .reduce<unknown>((obj, k) => (obj == null ? undefined : (obj as Record<string, unknown>)[k]), table)
+    .reduce<unknown>(
+      (obj, k) => (obj == null ? undefined : (obj as Record<string, unknown>)[k]),
+      table
+    )
   return typeof val === 'string' ? val : undefined
 }
 
 /** 点分 key 查找：当前语言包 → en-US 基准包 → key 本身（绝不返回 undefined） */
-export function translate(
-  key: string,
-  vars?: TranslateVars,
-  locale = detectLocale()
-): string {
+export function translate(key: string, vars?: TranslateVars, locale = detectLocale()): string {
   const pack = resolvePack(locale)
   let str = lookupRaw(pack.messages, key) ?? lookupRaw(BASE_PACK.messages, key) ?? key
   if (vars) {

@@ -182,8 +182,7 @@ export class TtsService {
       // 前奏 / 尾声 / 背景音乐：任一路选择了文件才参与合成
       const extras = req.extras
       const hasExtras =
-        !!extras &&
-        (!!extras.intro.path || !!extras.outro.path || !!extras.bgm.path)
+        !!extras && (!!extras.intro.path || !!extras.outro.path || !!extras.bgm.path)
       if (hasExtras && extras) {
         if (this.stopRequested) return
         progress(96, t('tts.mixingExtras'))
@@ -302,10 +301,7 @@ export class TtsService {
    * 背景音乐按语音长度循环（超长则截断）后与语音叠加；前奏前置、尾声后置。
    * 各路独立应用 0~100% 音量；文件缺失或解码失败时抛本地化错误。
    */
-  private async attachExtras(
-    narration: StereoPcm,
-    extras: AudioExtras
-  ): Promise<StereoPcm> {
+  private async attachExtras(narration: StereoPcm, extras: AudioExtras): Promise<StereoPcm> {
     const t = createT()
     const sampleRate = narration.sampleRate
 
@@ -347,7 +343,9 @@ export class TtsService {
    * 等待期间用户点“停止”会立即中断。
    */
   private async retryBackoff(attempt: number): Promise<void> {
-    const table = [1000, 2000, 3000, 5000, 8000, 10000, 12000, 15000, 18000, 20000, 22000, 25000, 28000, 30000]
+    const table = [
+      1000, 2000, 3000, 5000, 8000, 10000, 12000, 15000, 18000, 20000, 22000, 25000, 28000, 30000
+    ]
     const base = table[Math.min(attempt - 1, table.length - 1)]
     const jitter = base * 0.2 * (Math.random() * 2 - 1)
     const total = Math.max(0, Math.round(base + jitter))
@@ -455,9 +453,11 @@ export class TtsService {
         ws.on('error', reject)
       })
 
-      const state = (communicate as unknown as {
-        state?: { offsetCompensation?: number }
-      }).state
+      const state = (
+        communicate as unknown as {
+          state?: { offsetCompensation?: number }
+        }
+      ).state
       // 库升级后若该内部字段消失，退化为信任流正常结束（旧行为），避免误判
       if (!state || typeof state.offsetCompensation !== 'number') return true
       return state.offsetCompensation > 0

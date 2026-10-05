@@ -32,10 +32,7 @@ function languageNameOf(regionName: string): string {
   return (regionName.split(/[（(]/)[0] ?? regionName).trim()
 }
 
-export function groupVoices(
-  voices: VoiceInfo[],
-  locale: string = detectLocale()
-): VoiceGroup[] {
+export function groupVoices(voices: VoiceInfo[], locale: string = detectLocale()): VoiceGroup[] {
   const defaultLang = langCode(locale)
   // 中文环境按拼音、英文环境按字母，排序规则跟随当前语言
   const labelCollator = new Intl.Collator(locale, { sensitivity: 'accent' })
@@ -55,8 +52,7 @@ export function groupVoices(
   for (const [lang, list] of byLang) {
     list.sort(
       (a, b) =>
-        codeCollator.compare(a.locale, b.locale) ||
-        codeCollator.compare(a.shortName, b.shortName)
+        codeCollator.compare(a.locale, b.locale) || codeCollator.compare(a.shortName, b.shortName)
     )
     const label = languageNameOf(getVoiceRegionName(list[0], locale))
     groups.push({ lang, label, voices: list })

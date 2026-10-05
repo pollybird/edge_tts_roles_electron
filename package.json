@@ -1,6 +1,6 @@
 {
   "name": "edge-tts-roles",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Edge-TTS 多角色音频生成器",
   "license": "AGPL-3.0-only",
   "main": "./out/main/index.js",
@@ -9,6 +9,7 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
+    "test": "vitest run",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -49,6 +50,7 @@
     "prettier": "^3.7.4",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
+    "vitest": "^4.1.11",
     "vue": "^3.5.25",
     "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.1.6"

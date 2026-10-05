@@ -90,8 +90,7 @@ const deDE: LocalePack = {
       loadConfig: 'Konfig. laden',
       saveConfigTip:
         'Aktuelle Stimme / Tempo / Lautstärke / Tonhöhe als Konfigurationsdatei speichern',
-      loadConfigTip:
-        'Stimme / Tempo / Lautstärke / Tonhöhe aus einer Konfigurationsdatei laden',
+      loadConfigTip: 'Stimme / Tempo / Lautstärke / Tonhöhe aus einer Konfigurationsdatei laden',
       roleLabel: 'Rolle {id}',
       voice: 'Stimme',
       unselected: '(nicht ausgewählt)',
@@ -196,7 +195,8 @@ const deDE: LocalePack = {
       configDefaultName: 'voice-config.json',
       configFilter: 'Stimmenkonfiguration',
       invalidJson: 'Die Konfigurationsdatei ist kein gültiges JSON',
-      noVoiceInConfig: 'In der Konfigurationsdatei wurde keine ausgewählte Stimme gefunden'
+      noVoiceInConfig: 'In der Konfigurationsdatei wurde keine ausgewählte Stimme gefunden',
+      unsupportedAudioExt: 'Nicht unterstützter Audiodateityp: .{ext}'
     },
 
     help: {
@@ -243,8 +243,7 @@ const deDE: LocalePack = {
       message: 'Edge-TTS Audio-Generator mit mehreren Stimmen',
       version: 'Version: {version}',
       tech: 'Erstellt mit Electron + Vue 3. Stimmen von Microsoft Edge TTS.',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'Lizenz: GNU AGPL v3',
       opensource: 'Verwendete Open-Source-Software:'

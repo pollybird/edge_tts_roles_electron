@@ -15,7 +15,7 @@ export function personName(voice: VoiceInfo): string {
   const prefix = `${voice.locale}-`
   let person = voice.shortName.startsWith(prefix)
     ? voice.shortName.slice(prefix.length)
-    : voice.shortName.split('-').pop() ?? voice.shortName
+    : (voice.shortName.split('-').pop() ?? voice.shortName)
   person = person.replace(/MultilingualNeural$/, '').replace(/Neural$/, '')
   return person
 }
@@ -41,8 +41,7 @@ export function getVoiceDisplayName(voice: VoiceInfo, locale?: string): string {
 
   const name = pack.voiceNames[voice.shortName] ?? personName(voice)
   const region = pack.localeNames[voice.locale] ?? nativeRegion(voice)
-  const gender =
-    pack.gender[voice.gender.toLowerCase() as 'female' | 'male'] ?? voice.gender
+  const gender = pack.gender[voice.gender.toLowerCase() as 'female' | 'male'] ?? voice.gender
 
   return pack.displayPattern
     .replace('{name}', name)

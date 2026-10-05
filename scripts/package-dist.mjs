@@ -79,19 +79,30 @@ try {
 
     // 暂存：resources/.ffmpeg-stage-<platform>/<triplet>/...
     // 各平台用独立目录，可安全并行构建（不互相覆盖）
-    cpSync(src, join(stageDir, triplet), { recursive: true, verbatimSymlinks: true, errorOnExist: false })
+    cpSync(src, join(stageDir, triplet), {
+      recursive: true,
+      verbatimSymlinks: true,
+      errorOnExist: false
+    })
     console.log(`已暂存 ffmpeg: ${triplet} → .ffmpeg-stage/${triplet}`)
 
     const config = {
       ...baseYaml,
       // 关键：electron-builder 会以“配置文件所在目录”作为项目根，缓存键也基于文件名
       // 用临时目录且每次名字不同，强制重读
-      extraResources: [{ from: join('resources', `.ffmpeg-stage-${platform}`), to: 'ffmpeg', filter: ['**/*'] }]
+      extraResources: [
+        { from: join('resources', `.ffmpeg-stage-${platform}`), to: 'ffmpeg', filter: ['**/*'] }
+      ]
     }
     const configPath = join(tmpDir, `electron-builder-${platform}-${arch}-${Date.now()}.json`)
     writeFileSync(configPath, JSON.stringify(config))
 
-    const builderBin = join(ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder')
+    const builderBin = join(
+      ROOT,
+      'node_modules',
+      '.bin',
+      process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder'
+    )
     run(builderBin, configPath, arch)
 
     rmSync(stageDir, { recursive: true, force: true })

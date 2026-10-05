@@ -51,8 +51,7 @@ const jaJP: LocalePack = {
     },
 
     editor: {
-      header:
-        'テキストエディタ（[A][B][C][D]でボイス切替、[数値]で一時停止、[R]でビープ音）',
+      header: 'テキストエディタ（[A][B][C][D]でボイス切替、[数値]で一時停止、[R]でビープ音）',
       open: '📂 開く',
       findPlaceholder: '検索',
       matchCase: '大文字と小文字を区別',
@@ -194,7 +193,8 @@ const jaJP: LocalePack = {
       configDefaultName: 'voice-config.json',
       configFilter: 'ボイス設定',
       invalidJson: '設定ファイルは有効な JSON ではありません',
-      noVoiceInConfig: '設定ファイルに選択済みのボイスが見つかりません'
+      noVoiceInConfig: '設定ファイルに選択済みのボイスが見つかりません',
+      unsupportedAudioExt: 'サポートされていない音声ファイル形式です：.{ext}'
     },
 
     help: {
@@ -241,8 +241,7 @@ const jaJP: LocalePack = {
       message: 'Edge-TTS 複数ボイス音声ジェネレーター',
       version: 'バージョン: {version}',
       tech: 'Electron + Vue 3 で構築。ボイスは Microsoft Edge TTS を使用。',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'ライセンス: GNU AGPL v3',
       opensource: '使用しているオープンソースソフトウェア:'

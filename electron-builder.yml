@@ -65,7 +65,7 @@ mac:
   notarize: false
 linux:
   icon: build/icon.png
-  maintainer: "泰州姜堰钟毓信息技术有限公司 <44961355+pollybird@users.noreply.github.com>"
+  maintainer: '泰州姜堰钟毓信息技术有限公司 <44961355+pollybird@users.noreply.github.com>'
   category: Utility
   target:
     - target: AppImage

@@ -5,12 +5,7 @@ import { createT } from '../shared/i18n'
 
 /** 菜单动作 id（渲染进程据此分发） */
 export type MenuActionId =
-  | 'open-text'
-  | 'save-text'
-  | 'load-config'
-  | 'save-config'
-  | 'find'
-  | 'replace'
+  'open-text' | 'save-text' | 'load-config' | 'save-config' | 'find' | 'replace'
 
 const WEBSITE_URL = 'https://www.tzzhy.cn/'
 
@@ -37,14 +32,12 @@ const OPEN_SOURCE_SOFTWARE: string[] = [
 export function buildMenu(getWindow: () => BrowserWindow | null): void {
   const t = createT()
 
-  const send =
-    (id: MenuActionId) =>
-    (): void => {
-      const win = getWindow()
-      if (win && !win.isDestroyed()) {
-        win.webContents.send(IpcChannels.menuAction, id)
-      }
+  const send = (id: MenuActionId) => (): void => {
+    const win = getWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(IpcChannels.menuAction, id)
     }
+  }
 
   const template: Electron.MenuItemConstructorOptions[] = [
     {

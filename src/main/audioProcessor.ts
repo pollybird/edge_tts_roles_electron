@@ -33,10 +33,7 @@ async function ensureDir(p: string): Promise<void> {
 }
 
 /** 用 ffmpeg 解码 MP3（或任意 ffmpeg 支持的格式）为 f32le 立体声 PCM */
-export async function decodeAudioToPcm(
-  inputPath: string,
-  sampleRate = 24000
-): Promise<StereoPcm> {
+export async function decodeAudioToPcm(inputPath: string, sampleRate = 24000): Promise<StereoPcm> {
   const rawPath = tempPath('.raw')
   await runFfmpeg([
     '-y',
@@ -173,7 +170,10 @@ export async function writePcmCache(pcm: StereoPcm, filePath: string): Promise<v
 }
 
 /** 读取 f32le 立体声 raw 缓存文件；长度非法时返回 null */
-export async function readPcmCache(filePath: string, sampleRate = 24000): Promise<StereoPcm | null> {
+export async function readPcmCache(
+  filePath: string,
+  sampleRate = 24000
+): Promise<StereoPcm | null> {
   let buf: Buffer
   try {
     buf = await readFile(filePath)

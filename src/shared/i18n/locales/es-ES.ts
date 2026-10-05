@@ -90,8 +90,7 @@ const esES: LocalePack = {
       loadConfig: 'Cargar config.',
       saveConfigTip:
         'Guardar la voz / velocidad / volumen / tono actuales en un archivo de configuración',
-      loadConfigTip:
-        'Cargar voz / velocidad / volumen / tono desde un archivo de configuración',
+      loadConfigTip: 'Cargar voz / velocidad / volumen / tono desde un archivo de configuración',
       roleLabel: 'Rol {id}',
       voice: 'Voz',
       unselected: '(ninguna seleccionada)',
@@ -163,8 +162,7 @@ const esES: LocalePack = {
       roleNoVoice: 'El rol {role} no tiene una voz seleccionada',
       cooldown: 'Espera tras la recuperación de red, continuación en {sec} s...',
       generatingRole: 'Generando la voz del rol {role} ({index}/{total})...',
-      retrying:
-        'Red interrumpida para el rol {role} ({reason}), reintentando {attempt}/{max}...',
+      retrying: 'Red interrumpida para el rol {role} ({reason}), reintentando {attempt}/{max}...',
       cacheHit: 'Rol {role} cargado desde la caché local ({index}/{total})',
       pauseAdded: 'Pausa añadida: {ms} ms',
       beepAdded: 'Pitido añadido',
@@ -196,7 +194,8 @@ const esES: LocalePack = {
       configDefaultName: 'voice-config.json',
       configFilter: 'Configuración de voces',
       invalidJson: 'El archivo de configuración no es un JSON válido',
-      noVoiceInConfig: 'No se encontró ninguna voz seleccionada en el archivo de configuración'
+      noVoiceInConfig: 'No se encontró ninguna voz seleccionada en el archivo de configuración',
+      unsupportedAudioExt: 'Tipo de archivo de audio no compatible: .{ext}'
     },
 
     help: {
@@ -243,8 +242,7 @@ const esES: LocalePack = {
       message: 'Generador de audio multi-voz Edge-TTS',
       version: 'Versión: {version}',
       tech: 'Desarrollado con Electron + Vue 3. Voces proporcionadas por Microsoft Edge TTS.',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'Licencia: GNU AGPL v3',
       opensource: 'Software de código abierto utilizado:'

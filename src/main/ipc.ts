@@ -1,7 +1,7 @@
 import { app, dialog, ipcMain } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
+import { extname, join } from 'path'
 import { IpcChannels } from '../shared/ipc'
 import { createT } from '../shared/i18n'
 import { ROLE_IDS } from '../shared/types'
@@ -15,6 +15,9 @@ import type {
 import { getSetting, setSetting } from './settings'
 import type { SettingsSchema } from './settings'
 import { ttsService } from './ttsService'
+
+/** 允许读取的音频扩展名（与文件选择对话框保持一致） */
+const AUDIO_EXTENSIONS = new Set(['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus', 'wma'])
 
 /** 注册全部 IPC handler（在 app ready 后调用一次） */
 export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void {
@@ -94,31 +97,33 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   })
 
   ipcMain.handle(IpcChannels.readAudioFile, async (_e, filePath: string) => {
+    // 仅允许读取常见音频扩展名，避免渲染进程借该通道读取任意文件
+    const ext = extname(filePath).slice(1).toLowerCase()
+    if (!AUDIO_EXTENSIONS.has(ext)) {
+      throw new Error(createT()('dialog.unsupportedAudioExt', { ext }))
+    }
     const buf = await readFile(filePath)
     return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
   })
 
-  ipcMain.handle(
-    IpcChannels.configSaveRoleSettings,
-    async (_e, settings: RoleVoiceSettings) => {
-      const win = getWindow()
-      if (!win) return null
-      const t = createT()
-      const { canceled, filePath } = await dialog.showSaveDialog(win, {
-        defaultPath: join(app.getPath('documents'), t('dialog.configDefaultName')),
-        filters: [{ name: t('dialog.configFilter'), extensions: ['json'] }]
-      })
-      if (canceled || !filePath) return null
-      const payload = {
-        app: 'edge-tts-roles',
-        version: 1,
-        savedAt: new Date().toISOString(),
-        roleSettings: settings
-      }
-      await writeFile(filePath, JSON.stringify(payload, null, 2), 'utf-8')
-      return filePath
+  ipcMain.handle(IpcChannels.configSaveRoleSettings, async (_e, settings: RoleVoiceSettings) => {
+    const win = getWindow()
+    if (!win) return null
+    const t = createT()
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: join(app.getPath('documents'), t('dialog.configDefaultName')),
+      filters: [{ name: t('dialog.configFilter'), extensions: ['json'] }]
+    })
+    if (canceled || !filePath) return null
+    const payload = {
+      app: 'edge-tts-roles',
+      version: 1,
+      savedAt: new Date().toISOString(),
+      roleSettings: settings
     }
-  )
+    await writeFile(filePath, JSON.stringify(payload, null, 2), 'utf-8')
+    return filePath
+  })
 
   ipcMain.handle(IpcChannels.configLoadRoleSettings, async () => {
     const win = getWindow()

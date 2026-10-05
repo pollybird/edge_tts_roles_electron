@@ -78,7 +78,7 @@ function stop(): void {
   currentTime.value = 0
   isPlaying.value = false
   canStop.value = false
-  status.value = '已停止'
+  status.value = t('preview.stopped')
 }
 
 /** 拖动进度条 */
@@ -145,14 +145,25 @@ onBeforeUnmount(() => {
       <div class="time-label">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</div>
 
       <div class="player-controls">
-        <button class="btn primary" :disabled="isPlaying" @click="play">{{ t('preview.play') }}</button>
+        <button class="btn primary" :disabled="isPlaying" @click="play">
+          {{ t('preview.play') }}
+        </button>
         <button class="btn" :disabled="!isPlaying" @click="pause">{{ t('preview.pause') }}</button>
-        <button class="btn danger" :disabled="!canStop" @click="stop">{{ t('preview.stop') }}</button>
+        <button class="btn danger" :disabled="!canStop" @click="stop">
+          {{ t('preview.stop') }}
+        </button>
       </div>
 
       <div class="volume-row">
         <span>{{ t('preview.volume') }}</span>
-        <input v-model.number="volume" class="volume-bar" type="range" min="0" max="100" @input="onVolume" />
+        <input
+          v-model.number="volume"
+          class="volume-bar"
+          type="range"
+          min="0"
+          max="100"
+          @input="onVolume"
+        />
         <span class="volume-value">{{ volume }}%</span>
       </div>
 

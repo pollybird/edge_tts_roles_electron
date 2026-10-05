@@ -23,8 +23,9 @@ async function handlePickFile(track: ExtraAudioTrack): Promise<void> {
   try {
     const picked = await window.api.pickAudioFile()
     if (picked) track.path = picked
-  } catch {
-    // 选择失败时保持原文件，错误提示由全局进度区展示
+  } catch (err) {
+    // 选择失败时保持原文件；至少打到控制台，避免静默吞错
+    console.error('[extras] pick audio file failed:', err)
   }
 }
 

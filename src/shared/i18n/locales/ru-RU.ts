@@ -88,10 +88,8 @@ const ruRU: LocalePack = {
       title: 'Настройки голосов',
       saveConfig: 'Сохранить конфиг.',
       loadConfig: 'Загрузить конфиг.',
-      saveConfigTip:
-        'Сохранить текущий голос / скорость / громкость / тон в файл конфигурации',
-      loadConfigTip:
-        'Загрузить голос / скорость / громкость / тон из файла конфигурации',
+      saveConfigTip: 'Сохранить текущий голос / скорость / громкость / тон в файл конфигурации',
+      loadConfigTip: 'Загрузить голос / скорость / громкость / тон из файла конфигурации',
       roleLabel: 'Роль {id}',
       voice: 'Голос',
       unselected: '(не выбран)',
@@ -163,8 +161,7 @@ const ruRU: LocalePack = {
       roleNoVoice: 'Для роли {role} не выбран голос',
       cooldown: 'Задержка после восстановления сети, продолжение через {sec} с...',
       generatingRole: 'Создание голоса для роли {role} ({index}/{total})...',
-      retrying:
-        'Сеть для роли {role} прервана ({reason}), повтор {attempt}/{max}...',
+      retrying: 'Сеть для роли {role} прервана ({reason}), повтор {attempt}/{max}...',
       cacheHit: 'Роль {role} загружена из локального кэша ({index}/{total})',
       pauseAdded: 'Добавлена пауза: {ms} мс',
       beepAdded: 'Добавлен звуковой сигнал',
@@ -183,8 +180,7 @@ const ruRU: LocalePack = {
       streamInterrupted: 'Аудиопоток завершился до окончания передачи',
       connClosedEarly: 'Соединение закрыто преждевременно',
       emptyAudio: 'Пустые аудиоданные',
-      edge50x:
-        'Ошибка сервера Edge TTS ({msg}), создание аудио прервано. Повторите попытку позже.',
+      edge50x: 'Ошибка сервера Edge TTS ({msg}), создание аудио прервано. Повторите попытку позже.',
       segmentFailed: 'Не удалось создать голосовой сегмент: {msg}',
       unknownError: 'Неизвестная ошибка'
     },
@@ -196,7 +192,8 @@ const ruRU: LocalePack = {
       configDefaultName: 'voice-config.json',
       configFilter: 'Конфигурация голосов',
       invalidJson: 'Файл конфигурации не является допустимым JSON',
-      noVoiceInConfig: 'В файле конфигурации не найдено ни одного выбранного голоса'
+      noVoiceInConfig: 'В файле конфигурации не найдено ни одного выбранного голоса',
+      unsupportedAudioExt: 'Неподдерживаемый тип аудиофайла: .{ext}'
     },
 
     help: {
@@ -243,8 +240,7 @@ const ruRU: LocalePack = {
       message: 'Генератор многоголосого аудио Edge-TTS',
       version: 'Версия: {version}',
       tech: 'Создано на Electron + Vue 3. Голоса предоставлены Microsoft Edge TTS.',
-      copyright:
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'Лицензия: GNU AGPL v3',
       opensource: 'Используемое ПО с открытым исходным кодом:'
