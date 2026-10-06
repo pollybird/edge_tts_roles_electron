@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
-import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const { t } = useI18n()
 
@@ -30,7 +29,7 @@ const ROLE_TAGS = ['A', 'B', 'C', 'D'] as const
 
 /* ---------------- 标记高亮 ---------------- */
 
-/** 先转义 HTML，再用一次扫描把标记包上 <mark>（与 PyQt6 版高亮配色一致） */
+/** 先转义 HTML，再一次扫描把标记包上带配色类名的 <mark>，实现标记语法高亮 */
 const highlightedHtml = computed(() => {
   const escaped = props.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   // 尾部补换行，保证文本满行时 backdrop 与 textarea 滚动高度一致
@@ -48,7 +47,7 @@ function onInput(e: Event): void {
   emit('update:text', (e.target as HTMLTextAreaElement).value)
 }
 
-/** 在光标位置插入标记并恢复焦点（对应原版 insert_tag） */
+/** 在光标/选区位置插入标记，并恢复焦点与选区位置 */
 async function insertTag(tag: string): Promise<void> {
   const ta = textareaRef.value
   if (!ta) return
@@ -247,7 +246,6 @@ defineExpose({ openFindBar })
   <section class="panel editor-panel">
     <header class="panel-header">
       <span>{{ t('editor.header') }}</span>
-      <LanguageSwitcher />
     </header>
 
     <!-- 查找 / 替换栏（Ctrl+F / Ctrl+H） -->

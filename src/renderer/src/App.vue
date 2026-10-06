@@ -5,6 +5,7 @@ import RoleSettings from './components/RoleSettings.vue'
 import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
+import AgreementDialog from './components/AgreementDialog.vue'
 import type {
   AudioExtras,
   AudioFormat,
@@ -13,7 +14,7 @@ import type {
   VoiceInfo
 } from '../../shared/types'
 import { ROLE_IDS, createDefaultAudioExtras } from '../../shared/types'
-import { useI18n } from './composables/useI18n'
+import { useI18n, applyLocaleLocal } from './composables/useI18n'
 
 const { t, locale } = useI18n()
 
@@ -31,6 +32,21 @@ const editorRef = ref<InstanceType<typeof TextEditor> | null>(null)
 /** 试听弹窗 */
 const previewVisible = ref(false)
 const previewFilePath = ref('')
+
+/** 首次运行用户协议弹窗：未同意前以强制模态遮罩锁定整个界面 */
+const agreementRequired = ref(false)
+
+async function handleAcceptAgreement(doNotShowAgain: boolean): Promise<void> {
+  // 勾选“下次不再弹出”才持久化同意状态；未勾选则下次启动继续弹出
+  if (doNotShowAgain) {
+    await window.api.setSetting('agreementAccepted', true)
+  }
+  agreementRequired.value = false
+}
+
+function handleDeclineAgreement(): void {
+  void window.api.quitApp()
+}
 
 const roleSettings = reactive<RoleVoiceSettings>(
   Object.fromEntries(
@@ -80,7 +96,7 @@ async function handleGenerate(): Promise<void> {
   }
 }
 
-/** 发起试听（与原版一致：无角色标记时自动补 [A]） */
+/** 发起试听：文本不含任何角色标记时自动补 [A]，默认由角色 A 朗读 */
 async function startPreview(content: string, selectionOnly: boolean): Promise<void> {
   const trimmed = content.trim()
   if (selectionOnly && !trimmed) {
@@ -200,6 +216,9 @@ async function handleSaveText(): Promise<void> {
 }
 
 onMounted(async () => {
+  // 首次运行门槛：未同意用户协议前强制弹出，模态遮罩锁定主界面
+  agreementRequired.value = !(await window.api.getSetting<boolean>('agreementAccepted'))
+
   // 窗口标题与初始状态栏随系统语言
   document.title = t('app.title')
   progressMessage.value = t('message.ready')
@@ -244,7 +263,10 @@ onMounted(async () => {
         progressMessage.value = t('update.available', { version: event.version })
         break
       case 'not-available':
-        // 静默：已是最新版本，不打扰用户
+        // 启动时的自动检查保持静默；用户手动检查时明确提示“已是最新版本”
+        if (event.manual) {
+          window.alert(t('update.notAvailable'))
+        }
         break
       case 'download-progress':
         progressMessage.value = t('update.downloadProgress', {
@@ -262,6 +284,9 @@ onMounted(async () => {
         break
     }
   })
+
+  // 主进程“语言(L)”菜单切换广播
+  window.api.onLocaleChanged((code) => applyLocaleLocal(code))
 
   // 主菜单动作分发
   window.api.onMenuAction((actionId) => {
@@ -323,6 +348,11 @@ onMounted(async () => {
       v-if="previewVisible"
       :file-path="previewFilePath"
       @close="previewVisible = false"
+    />
+    <AgreementDialog
+      v-if="agreementRequired"
+      @accept="handleAcceptAgreement"
+      @decline="handleDeclineAgreement"
     />
   </div>
 </template>

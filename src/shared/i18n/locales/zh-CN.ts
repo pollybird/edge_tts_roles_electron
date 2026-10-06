@@ -191,6 +191,7 @@ const zhCN: LocalePack = {
     menu: {
       file: '文件(F)(&F)',
       edit: '编辑(E)(&E)',
+      language: '语言(L)(&L)',
       help: '帮助(H)(&H)',
       openText: '打开文本(&O)...',
       saveText: '保存文本(&S)',
@@ -399,7 +400,10 @@ const zhCN: LocalePack = {
         '因使用本软件产生的一切后果由使用者自行承担。\n' +
         '4. 本软件基于 GNU AGPL v3 开源协议发布，您可在遵守该协议的前提下自由使用、修改与分发；请勿利用本软件侵犯微软或其他服务提供方的合法权益，或从事任何违反法律法规的行为。\n' +
         '5. 您对自己生成、保存与传播的音频内容负全部责任。\n\n' +
-        'Copyright © 2026 泰州姜堰钟毓信息技术有限公司 保留所有权利。'
+        'Copyright © 2026 泰州姜堰钟毓信息技术有限公司 版权所有。',
+      accept: '我已阅读并同意用户协议',
+      decline: '不同意并退出',
+      doNotShowAgain: '下次不再弹出'
     },
 
     about: {

@@ -1,0 +1,83 @@
+name: release
+
+# 推送 v* 标签自动构建并发布；也可手动指定已存在的 tag 重跑（用于补传附件）
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '已有标签名（如 v2.0.3），用于手动重跑发布'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      # 配置 GitCode 仓库 Secrets.GITCODE_TOKEN 后会自动镜像（推送 tag + 上传附件）
+      GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and checkout requested tag (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git fetch --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git checkout "${RELEASE_TAG}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 单台 Linux runner 完成三平台双架构打包（与本地发版流程一致）：
+      # Linux AppImage/deb/rpm(x64+arm64)、Windows NSIS(x64+arm64, wine)、macOS zip(x64+arm64)
+      # prepare:ffmpeg 由各 build:* 的 pre 钩子自动执行
+      - name: Build all platforms
+        run: npm run build:all
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+            dist/*.exe
+            dist/*.blockmap
+            dist/*.zip
+            dist/latest.yml
+            dist/latest-mac.yml
+            dist/latest-linux.yml
+
+      # ---- 可选：镜像到 GitCode（Secrets 中配置 GITCODE_TOKEN 即启用）----
+      - name: Push tag to GitCode
+        if: env.GITCODE_TOKEN != ''
+        run: |
+          git remote add gitcode "https://pollybird:${GITCODE_TOKEN}@gitcode.com/pollybird/edge_tts_roles_electron.git"
+          git push gitcode "HEAD:refs/tags/${RELEASE_TAG}"
+
+      - name: Upload assets to GitCode Release
+        if: env.GITCODE_TOKEN != ''
+        run: node scripts/publish-gitcode.mjs
+        env:
+          GITCODE_TAG: ${{ env.RELEASE_TAG }}
+
+      # Gitee 单附件限 100MB 且无上传 CI 通道，发布后需手动在 Gitee 建源码 Release
+      - name: Reminder for Gitee
+        if: always()
+        run: |
+          echo "::warning::GitHub/GitCode 附件已发布。Gitee 需手动创建源码 Release 并在说明中引导至 GitHub/GitCode 下载。"

@@ -136,6 +136,7 @@ npm run build:linux      # Linux x64 + arm64：AppImage、deb、rpm
 npm run build:win        # Windows x64 + arm64：NSIS 安装包
 npm run build:mac        # macOS x64 + arm64：DMG + ZIP（需在 macOS 上运行）
 npm run build:mac:zip    # 仅 macOS x64 + arm64 ZIP（可在 Linux/Windows 上交叉产出）
+npm run build:all        # 依次执行 linux + win + mac:zip（CI 发版使用）
 ```
 
 各平台脚本会自动先执行 `prepare:ffmpeg`，下载**全部**目标平台的 FFmpeg 二进制（Linux x64/arm64、Windows x64、macOS x64/arm64，合计约 320MB）到 `resources/ffmpeg/`（已被 git 忽略）。二进制与 ffmpeg-static 同源同版本（release `b6.1.1`，GPL 构建），打包时由 electron-builder 放入 `resources/ffmpeg/<platform>-<arch>/`，应用运行时按当前平台选择对应文件。GitHub 较慢时可用环境变量 `FFMPEG_BINARIES_URL` 指定镜像（脚本也会自动回退到 npmmirror 二进制镜像）。
@@ -145,26 +146,29 @@ npm run build:mac:zip    # 仅 macOS x64 + arm64 ZIP（可在 Linux/Windows 上�
 应用启动 5 秒后自动检查更新，也可通过菜单 **帮助 → 检查更新** 手动触发。
 
 - **主更新源**：[GitHub Releases](https://github.com/pollybird/edge_tts_roles_electron/releases)（`/releases/latest/download/latest*.yml`）。
-- **回退源**：GitCode 仓库根目录的原始文件（`latest.yml`、`latest-mac.yml`、`latest-linux.yml`）。若 GitHub 在 3.5 秒内不可达，应用自动回退到 GitCode。
+- **回退源**：GitCode Release 附件。若 GitHub 在 3.5 秒内不可达，应用先调用 GitCode 公开 API（`/api/v5/repos/<owner>/<repo>/releases/latest`，免认证）解析最新 Release 的 tag，再以 `/releases/download/<tag>/` 作为 feed base 拉取同名附件（GitCode 不支持 GitHub 的 latest 别名，仓库 raw 地址对缺失文件会返回 HTML，均不可直接用作 feed）。
 
-维护者发版流程：
+#### 自动发版（GitHub Actions，推荐）
 
-1. 构建全部平台安装包（`build:linux`、`build:win`、`build:mac:zip`）。electron-builder 会在 `dist/` 生成 `latest.yml`（Windows）、`latest-mac.yml`（macOS）、`latest-linux.yml`（Linux）。
-2. 创建并推送版本 tag，然后把安装包产物**连同三个 `latest*.yml`** 上传到 **GitHub 和 GitCode** 的 Release；yml 在两个平台均保持相对文件名——GitHub 端相对 `/releases/latest/download/` 解析，GitCode 端由应用通过公开 API（`/api/v5/repos/<owner>/<repo>/releases/latest`，免认证）解析最新 Release 的 tag，并以 `/releases/download/<tag>/` 作为 feed base。
-3. 推送到三个远端（GitHub / Gitee / GitCode）。
+1. 推送 `v*` 标签触发 [release 工作流](./.github/workflows/release.yml)：单台 Linux Runner 执行 `npm run build:all` 完成三平台双架构打包，并把全部安装包、blockmap 与三个 `latest*.yml`（共 17 个附件）发布到 GitHub Release。
+2. 在仓库 **Settings → Secrets and variables → Actions** 配置 `GITCODE_TOKEN` 后，工作流会自动把该标签推送到 GitCode 并运行 `scripts/publish-gitcode.mjs` 镜像全部附件（已存在的同名附件会跳过——GitCode 不支持 API 删除/覆盖）。
+3. Gitee 受单附件 100MB 限制，仍需手动创建仅含源码包的 Release，并在说明中引导到 GitHub/GitCode 下载。
+4. Release 的中英发布说明需在发布后在各平台网页补充（Gitee 仅中文）。推送到 main 的每次提交与 PR 会由 [ci 工作流](./.github/workflows/ci.yml) 自动执行 typecheck / lint / 单元测试。
 
-`electron-builder.yml` 已配置 `publish.provider: github`；执行 `electron-builder --publish always`（需 `GH_TOKEN`）可自动将产物和 `latest*.yml` 上传到 GitHub Releases。
+也可在 Actions 页面对**已有标签**手动重跑 release 工作流以补传缺失附件。本地手动发版（无 CI 时）仍可依次执行 `build:linux`、`build:win`、`build:mac:zip`，再以 `GITCODE_TOKEN=xxx npm run release:gitcode` 镜像到 GitCode。
+
+`electron-builder.yml` 已配置 `publish.provider: github`；执行 `electron-builder --publish always`（需 `GH_TOKEN`）亦可直接上传产物到 GitHub Releases（本仓库打包脚本统一使用 `--publish never`，以避免 CI 环境误触发）。
 
 平台说明：
 
-- 原生安装包原则上需在对应系统上构建。Linux 主机可以构建 Linux 安装包、Windows NSIS 安装包（electron-builder 会自动使用 Wine）以及 macOS ZIP 压缩包，但**生成 DMG 必须在 macOS 上**；需要 macOS 公证或 Windows 代码签名时，请在对应系统执行（建议配置 CI 多平台矩阵）。
+- 原生安装包原则上需在对应系统上构建。Linux 主机可以构建 Linux 安装包、Windows NSIS 安装包（electron-builder 会自动使用 Wine）以及 macOS ZIP 压缩包，但**生成 DMG 必须在 macOS 上**；需要 macOS 公证或 Windows 代码签名时，请在对应系统执行。
 - Windows NSIS 为辅助式（非一键）安装器，安装向导会展示完整的 **GNU AGPL v3 许可协议页**，并允许用户选择安装目录。
 - Windows on ARM 没有官方原生 FFmpeg 构建：arm64 安装包内附带的是 x64 版 `ffmpeg.exe`，借助 Windows 11 on ARM 内置的 x64 模拟运行；若缺失则回退使用系统 PATH 中的 ffmpeg。
 - `npm run build` 会在打包前对两个 TypeScript 工程执行开启了 `noUnusedLocals` / strict 的严格检查，是最权威的校验命令。开发环境无需自行安装 ffmpeg——执行 `npm install` 时 ffmpeg-static 会自动下载当前平台的二进制。
 
 ## 国际化
 
-全部界面文案位于 [src/shared/i18n/locales](./src/shared/i18n/locales) 下的类型化语言包：英语（基准/兜底）、简体中文、繁体中文、法语、德语、西班牙语、俄语、日语、阿拉伯语。渲染进程跟随 `navigator.language`，主进程跟随系统语言；缺失的 key 会自动回退英语。新增语言只需新增一个语言包并添加一条注册记录。
+全部界面文案位于 [src/shared/i18n/locales](./src/shared/i18n/locales) 下的类型化语言包：英语（基准/兜底）、简体中文、繁体中文、法语、德语、西班牙语、俄语、日语、阿拉伯语。首次启动默认跟随系统语言；用户在主菜单 **语言(L)** 中的选择会持久化保存并在重启后应用。缺失的 key 会自动回退英语。新增语言只需新增一个语言包并在 `src/shared/i18n/index.ts` 与 `availableLocales()` 中登记。
 
 ## 许可证
 

@@ -1,8 +1,9 @@
 /**
  * 渲染进程 i18n 组合式函数。
  *
- * locale 为模块级共享 ref：启动时取系统语言（detectLocale），App 挂载后若存在
- * 用户保存的语言设置则应用之；用户可在编辑器头部手动切换（switchLocale）。
+ * locale 为模块级共享 ref：启动时取系统语言（detectLocale），挂载前若存在
+ * 用户持久化的语言偏好则应用之；语言切换入口在主进程“语言(L)”菜单，
+ * 主进程通过 locale:changed 广播到渲染进程（applyLocaleLocal）。
  * t 为普通函数但内部读取 localeRef，模板渲染时会被 Vue 依赖追踪，
  * 因此切换语言后界面文本自动重渲。
  */
@@ -27,15 +28,13 @@ export function useI18n(): { locale: Ref<string>; t: Translator } {
   return { locale: localeRef, t }
 }
 
-/** 仅切换渲染进程语言（voiceDisplay / voiceGroups 的默认 detectLocale 同步跟随） */
+/**
+ * 应用语言到渲染进程（voiceDisplay / voiceGroups 的默认 detectLocale 同步跟随）。
+ * 空字符串表示恢复跟随系统语言（navigator.language）。
+ */
 export function applyLocaleLocal(code: string): void {
-  localeRef.value = code
-  setLocale(code)
-  syncDir(code)
-}
-
-/** 切换语言并通知主进程（重建原生菜单；仅本次会话生效，不持久化） */
-export async function switchLocale(code: string): Promise<void> {
-  applyLocaleLocal(code)
-  await window.api.setLocale(code)
+  const resolved = code || detectLocale()
+  localeRef.value = resolved
+  setLocale(resolved)
+  syncDir(resolved)
 }

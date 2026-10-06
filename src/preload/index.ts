@@ -52,8 +52,12 @@ const api = {
   loadRoleSettings: (): Promise<RoleVoiceSettings | null> =>
     ipcRenderer.invoke(IpcChannels.configLoadRoleSettings),
 
-  // 界面语言切换
-  setLocale: (code: string): Promise<void> => ipcRenderer.invoke(IpcChannels.localeSet, code),
+  // 界面语言：订阅主进程“语言”菜单的切换广播（启动偏好通过 getSetting('locale') 读取）
+  onLocaleChanged: (cb: (code: string) => void): (() => void) =>
+    subscribe(IpcChannels.localeChanged, cb),
+
+  // 拒绝用户协议：退出应用
+  quitApp: (): Promise<void> => ipcRenderer.invoke(IpcChannels.appQuit),
 
   // 自动更新
   checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateCheck),

@@ -5,8 +5,8 @@ const MARKER_PATTERN = /(\[[ABCD]\])|(\[\d+\])|(\[R\])/
 
 /**
  * 解析含标记的文本为片段序列。
- * 逻辑与 PyQt6 版 tts_workers.py 的 _parse_text 保持一致：
- * 带捕获组的 split 会把命中的分隔符交错插入结果数组。
+ * 利用带捕获组的 split：命中的分隔符会作为数组元素交错插入结果，
+ * 一次遍历即可区分普通文本、角色切换、停顿与蜂鸣四种片段。
  */
 export function parseText(text: string): Segment[] {
   const segments: Segment[] = []

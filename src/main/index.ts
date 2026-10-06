@@ -1,11 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerIpcHandlers } from './ipc'
 import { buildMenu } from './menu'
 import { setLocale } from '../shared/i18n'
-import { IpcChannels } from '../shared/ipc'
+import { getSetting } from './settings'
 import { initAutoUpdater } from './updater'
 
 let mainWindow: BrowserWindow | null = null
@@ -52,15 +52,8 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('cn.tzzhy.edge-tts-roles')
-  // i18n：主进程语言跟随系统（渲染进程自动取 navigator.language）；
-  // 用户在界面切换语言仅对本次会话生效，不持久化
-  setLocale(app.getLocale())
-
-  // 渲染进程切换语言：主进程同步 + 重建原生菜单
-  ipcMain.handle(IpcChannels.localeSet, (_e, code: string) => {
-    setLocale(code)
-    buildMenu(() => mainWindow)
-  })
+  // i18n：优先应用用户在“语言”菜单中持久化的选择；从未选择时跟随系统语言
+  setLocale(getSetting('locale') || app.getLocale())
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

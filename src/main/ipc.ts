@@ -35,6 +35,9 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
 
   ipcMain.handle(IpcChannels.stop, () => ttsService.stop())
 
+  // 用户在首次运行的用户协议弹窗中选择“不同意并退出”
+  ipcMain.handle(IpcChannels.appQuit, () => app.quit())
+
   ipcMain.handle(IpcChannels.settingsGet, (_e, key: string) =>
     getSetting(key as keyof SettingsSchema)
   )

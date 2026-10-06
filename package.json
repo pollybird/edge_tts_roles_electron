@@ -1,6 +1,6 @@
 {
   "name": "edge-tts-roles",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Edge-TTS 多角色音频生成器",
   "license": "AGPL-3.0-only",
   "main": "./out/main/index.js",
@@ -27,7 +27,9 @@
     "prebuild:mac:zip": "npm run prepare:ffmpeg",
     "build:mac:zip": "npm run build && node scripts/package-dist.mjs mac zip --x64 --arm64",
     "prebuild:linux": "npm run prepare:ffmpeg",
-    "build:linux": "npm run build && node scripts/package-dist.mjs linux AppImage deb rpm --x64 --arm64"
+    "build:linux": "npm run build && node scripts/package-dist.mjs linux AppImage deb rpm --x64 --arm64",
+    "build:all": "npm run build:linux && npm run build:win && npm run build:mac:zip",
+    "release:gitcode": "node scripts/publish-gitcode.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

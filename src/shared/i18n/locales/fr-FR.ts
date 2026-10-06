@@ -31,6 +31,7 @@ const frFR: LocalePack = {
     menu: {
       file: '&Fichier',
       edit: '&Édition',
+      language: '&Langue',
       help: '&Aide',
       openText: '&Ouvrir un texte...',
       saveText: '&Enregistrer le texte',
@@ -247,7 +248,10 @@ const frFR: LocalePack = {
         'l’exactitude ou l’adéquation des résultats générés. Vous assumez toutes les conséquences de son utilisation.\n' +
         '4. Ce Logiciel est distribué sous la licence open-source GNU AGPL v3 ; vous pouvez librement l’utiliser, le modifier et le distribuer conformément à cette licence. Vous ne pouvez pas utiliser le Logiciel pour porter atteinte aux droits légitimes de Microsoft ou d’autres fournisseurs de service, ni pour enfreindre toute loi ou réglementation applicable.\n' +
         '5. Vous êtes entièrement responsable du contenu audio que vous générez, enregistrez et diffusez.\n\n' +
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. Tous droits réservés.'
+        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.',
+      accept: "J'ai lu et j'accepte les conditions d'utilisation",
+      decline: 'Refuser et quitter',
+      doNotShowAgain: 'Ne plus afficher au prochain lancement'
     },
 
     about: {

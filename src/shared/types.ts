@@ -111,8 +111,10 @@ export interface RendererApi {
   saveRoleSettings(settings: RoleVoiceSettings): Promise<string | null>
   /** 从 JSON 配置文件加载角色语音设置（取消或校验失败返回 null） */
   loadRoleSettings(): Promise<RoleVoiceSettings | null>
-  /** 切换界面语言：主进程重建原生菜单并持久化到设置 */
-  setLocale(code: string): Promise<void>
+  /** 订阅主进程“语言”菜单切换广播（启动偏好通过 getSetting('locale') 读取），返回取消订阅函数 */
+  onLocaleChanged(cb: (code: string) => void): () => void
+  /** 拒绝用户协议时退出应用 */
+  quitApp(): Promise<void>
   /** 手动检查更新 */
   checkForUpdates(): Promise<void>
   /** 下载完成后立即安装并重启 */
@@ -131,7 +133,7 @@ export interface RendererApi {
 export type UpdateEvent =
   | { type: 'checking' }
   | { type: 'available'; version: string; releaseDate?: string }
-  | { type: 'not-available'; version: string }
+  | { type: 'not-available'; version: string; manual: boolean }
   | {
       type: 'download-progress'
       percent: number

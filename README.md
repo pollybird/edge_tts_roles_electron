@@ -136,6 +136,7 @@ npm run build:linux      # Linux x64 + arm64: AppImage, deb, rpm
 npm run build:win        # Windows x64 + arm64: NSIS installers
 npm run build:mac        # macOS x64 + arm64: DMG + ZIP (run on macOS)
 npm run build:mac:zip    # macOS x64 + arm64 ZIP only (can run on Linux/Windows)
+npm run build:all        # linux + win + mac:zip in sequence (used by release CI)
 ```
 
 Each platform script automatically runs `prepare:ffmpeg`, which downloads the FFmpeg binaries for **all** target platforms (Linux x64/arm64, Windows x64, macOS x64/arm64, ~320 MB in total) into `resources/ffmpeg/` (git-ignored). They are the same GPL builds used by ffmpeg-static (release `b6.1.1`) and are placed into `resources/ffmpeg/<platform>-<arch>/` by electron-builder; the app selects the matching binary at runtime. If GitHub is slow, override the source with `FFMPEG_BINARIES_URL` (the script also falls back to the npmmirror binary mirror automatically).
@@ -145,26 +146,29 @@ Each platform script automatically runs `prepare:ffmpeg`, which downloads the FF
 The app checks for updates automatically on startup (5 s delay) and supports a manual check from **Help → Check for Updates**.
 
 - **Primary feed**: [GitHub Releases](https://github.com/pollybird/edge_tts_roles_electron/releases) (`/releases/latest/download/latest*.yml`).
-- **Fallback feed**: GitCode raw files in the repository root (`latest.yml`, `latest-mac.yml`, `latest-linux.yml`). If GitHub is unreachable within 3.5 s, the app falls back to GitCode automatically.
+- **Fallback feed**: GitCode Release attachments. If GitHub is unreachable within 3.5 s, the app first calls the public GitCode API (`/api/v5/repos/<owner>/<repo>/releases/latest`, no auth) to resolve the latest release tag, then uses `/releases/download/<tag>/` as the feed base for the attached files with the same names. (GitCode has no GitHub-style `latest` alias, and its raw URLs serve HTML for missing files, so neither can be used as a feed directly.)
 
-Release workflow for maintainers:
+#### Automated release (GitHub Actions, recommended)
 
-1. Build all platform installers (`build:linux`, `build:win`, `build:mac:zip`). electron-builder generates `latest.yml` (Windows), `latest-mac.yml` (macOS), and `latest-linux.yml` (Linux) in `dist/`.
-2. Create and push the version tag, then upload the installer artifacts **and the three `latest*.yml`** to **both** GitHub and GitCode Releases. The `latest*.yml` keep relative filenames in both places: on GitHub they resolve against `/releases/latest/download/`; on GitCode the app resolves the latest release tag through the public API (`/api/v5/repos/<owner>/<repo>/releases/latest`, no auth required) and uses `/releases/download/<tag>/` as the feed base.
-3. Push to all three remotes (GitHub / Gitee / GitCode).
+1. Push a `v*` tag to trigger the [release workflow](./.github/workflows/release.yml): a single Linux runner runs `npm run build:all`, producing installers for all three platforms on both architectures, and publishes every installer, blockmap and the three `latest*.yml` files (17 assets in total) to the GitHub Release.
+2. After adding a `GITCODE_TOKEN` repository secret under **Settings → Secrets and variables → Actions**, the workflow also pushes the tag to GitCode and mirrors all assets there via `scripts/publish-gitcode.mjs` (existing same-name attachments are skipped — GitCode cannot delete or overwrite them through its API).
+3. Gitee still requires a manual source-only release due to its 100 MB per-asset limit, with notes directing users to GitHub/GitCode for downloads.
+4. Bilingual release notes are edited on each platform's web page after publishing. Every push to `main` and every pull request is verified by the [ci workflow](./.github/workflows/ci.yml) (typecheck / lint / unit tests).
 
-`electron-builder.yml` is configured with `publish.provider: github`; running `electron-builder --publish always` (requires `GH_TOKEN`) uploads artifacts and the `latest*.yml` files to GitHub Releases automatically.
+The release workflow can also be dispatched manually for an existing tag to re-upload missing assets. For a fully local release without CI, run `build:linux`, `build:win` and `build:mac:zip` in sequence and mirror with `GITCODE_TOKEN=xxx npm run release:gitcode`.
+
+`electron-builder.yml` is configured with `publish.provider: github`; running `electron-builder --publish always` (requires `GH_TOKEN`) can also upload artifacts and the `latest*.yml` files to GitHub Releases (the packaging scripts in this repo always pass `--publish never` to prevent accidental publishing in CI).
 
 Platform notes:
 
-- Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages, Windows NSIS installers (Wine is used automatically by electron-builder), and macOS ZIP archives, but **DMG creation requires macOS**. For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS (a CI matrix is recommended).
+- Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages, Windows NSIS installers (Wine is used automatically by electron-builder), and macOS ZIP archives, but **DMG creation requires macOS**. For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS.
 - The NSIS installer is an assisted (non-one-click) installer that displays the full **GNU AGPL v3** license page and lets users choose the installation directory.
 - There is no native FFmpeg build for Windows on ARM. The arm64 installer ships the x64 `ffmpeg.exe`, which runs via Windows 11 on ARM's built-in x64 emulation; if it is absent, the app falls back to a system `ffmpeg` on `PATH`.
 - `npm run build` runs both TypeScript projects with `noUnusedLocals` / strict settings before bundling, so it is the authoritative check. Development itself needs no FFmpeg installation (ffmpeg-static fetches the current platform's binary during `npm install`).
 
 ## Internationalization
 
-All UI strings live in typed locale packs under [src/shared/i18n/locales](./src/shared/i18n/locales): English (base/fallback), Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese and Arabic. The renderer follows `navigator.language` and the main process follows the system locale; missing keys transparently fall back to English. Adding a language is a single new pack plus one registration entry.
+All UI strings live in typed locale packs under [src/shared/i18n/locales](./src/shared/i18n/locales): English (base/fallback), Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese and Arabic. The app follows the system language on first launch; a choice made in the top-level **Language** menu is persisted and reapplied on restart. Missing keys transparently fall back to English. Adding a language is a new pack plus entries in `src/shared/i18n/index.ts` and `availableLocales()`.
 
 ## License
 

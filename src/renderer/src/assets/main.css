@@ -480,7 +480,7 @@ mark.hl-beep {
   font-size: 12px;
 }
 
-/* ===== 试听弹窗（对应原版 PreviewDialog） ===== */
+/* ===== 试听弹窗 ===== */
 .modal-mask {
   position: fixed;
   inset: 0;

@@ -1,7 +1,8 @@
 import { app, dialog, Menu, shell } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { IpcChannels } from '../shared/ipc'
-import { createT } from '../shared/i18n'
+import { availableLocales, createT, detectLocale, setLocale } from '../shared/i18n'
+import { setSetting } from './settings'
 import { checkForUpdates } from './updater'
 
 /** 菜单动作 id（渲染进程据此分发） */
@@ -76,6 +77,15 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
       ]
     },
     {
+      label: t('menu.language'),
+      submenu: availableLocales().map(({ code, label }) => ({
+        type: 'radio' as const,
+        label,
+        checked: detectLocale() === code,
+        click: () => changeLocale(code, getWindow)
+      }))
+    },
+    {
       label: t('menu.help'),
       submenu: [
         {
@@ -93,6 +103,20 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
   ]
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
+/**
+ * 切换界面语言：持久化偏好 → 同步主进程语言 → 重建原生菜单 →
+ * 广播给渲染进程刷新界面（单向数据流：主进程菜单 → IPC → 渲染状态）。
+ */
+function changeLocale(code: string, getWindow: () => BrowserWindow | null): void {
+  setSetting('locale', code)
+  setLocale(code)
+  buildMenu(getWindow)
+  const win = getWindow()
+  if (win && !win.isDestroyed()) {
+    win.webContents.send(IpcChannels.localeChanged, code)
+  }
 }
 
 function showHelp(win: BrowserWindow | null): void {

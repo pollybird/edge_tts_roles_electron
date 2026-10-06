@@ -1,5 +1,21 @@
 # Upgrade Log
 
+## v2.0.3
+
+### Improvements
+
+- **Persistent language switching**: the language dropdown in the editor header has been removed. Language selection now lives in a new top-level **Language** menu (between Edit and Help), listing all 9 languages as radio items with the active one checked. The choice is persisted and reapplied on restart; users who never pick a language still follow the system language by default.
+- **Feedback for manual update checks**: when **Help → Check for Updates** finds that the latest version is already installed, the app now shows an explicit message. The automatic background check on startup remains silent.
+- **First-run user agreement gate**: on first launch the app shows a modal User Agreement dialog. The main window is fully blocked until the user clicks **I have read and agree to the User Agreement**; the dialog cannot be dismissed via mask click, ESC or a close button. A **Do not show again next time** checkbox persists the acceptance (leaving it unchecked allows this session but prompts again next launch), and **Disagree and Exit** terminates the app.
+
+### Engineering
+
+- **Testable feed resolution**: network probing was extracted from `updater.ts` into an Electron-free module, `src/main/updateFeed.ts`, which accepts an injected mock fetch. 15 new unit cases cover GitHub-first selection (GitCode never contacted), GitCode fallback (including GitHub serving an HTML error page), and both-sources-fail paths (API 5xx / network error / missing tag in response / attachment 404 / attachment served as HTML), plus platform-to-`latest*.yml` file-name mapping.
+- **Release automation (CI)**:
+  - `.github/workflows/ci.yml`: typecheck, lint and unit tests run on every push to `main` and every pull request.
+  - `.github/workflows/release.yml`: pushing a `v*` tag builds Linux / Windows / macOS installers for both architectures on a Linux runner and publishes all 17 artifacts (installers, blockmaps, `latest*.yml`) to the GitHub Release. If the repository secret `GITCODE_TOKEN` is configured, the tag is pushed to GitCode and all assets are mirrored to the GitCode Release via `scripts/publish-gitcode.mjs` (existing attachments are skipped because GitCode cannot overwrite them). The workflow can also be re-run manually for an existing tag.
+  - Gitee remains a manual source-only release due to its 100 MB per-asset limit.
+
 ## v2.0.2
 
 ### New Features

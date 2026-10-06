@@ -28,6 +28,7 @@ const enUS: LocalePack = {
     menu: {
       file: '&File',
       edit: '&Edit',
+      language: '&Language',
       help: '&Help',
       openText: '&Open Text...',
       saveText: '&Save Text',
@@ -240,7 +241,10 @@ const enUS: LocalePack = {
         'accuracy or fitness of the generated results. You bear all consequences of its use.\n' +
         '4. This software is released under the GNU AGPL v3 open-source license; you may freely use, modify and distribute it in accordance with that license. You may not use the software to infringe the legitimate rights of Microsoft or other service providers, nor to violate any applicable laws or regulations.\n' +
         '5. You are fully responsible for the audio content you generate, store and distribute.\n\n' +
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.'
+        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.',
+      accept: 'I have read and agree to the User Agreement',
+      decline: 'Disagree and Exit',
+      doNotShowAgain: 'Do not show again next time'
     },
 
     about: {

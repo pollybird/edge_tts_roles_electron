@@ -14,7 +14,10 @@ export const IpcChannels = {
   readAudioFile: 'file:read-audio',
   configSaveRoleSettings: 'config:save-role-settings',
   configLoadRoleSettings: 'config:load-role-settings',
-  localeSet: 'locale:set',
+  // 语言：启动时渲染进程用 settings:get 读取偏好；菜单切换后主进程广播此事件
+  localeChanged: 'locale:changed',
+  // 用户拒绝用户协议时退出应用
+  appQuit: 'app:quit',
   menuAction: 'menu:action',
   // 自动更新（invoke：渲染→主；send：主→渲染推送状态）
   updateCheck: 'update:check',

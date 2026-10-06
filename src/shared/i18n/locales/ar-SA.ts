@@ -41,12 +41,13 @@ const arSA: LocalePack = {
   messages: {
     app: {
       title: 'مولد الصوت متعدد الأصوات Edge-TTS',
-      copyright: '© 2026 شركة تايتشو جيانغيان تشونغيو لتقنية المعلومات. جميع الحقوق محفوظة.'
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
     menu: {
       file: '&ملف',
       edit: '&تحرير',
+      language: 'اللغة(&L)',
       help: '&مساعدة',
       openText: '&فتح نص...',
       saveText: '&حفظ النص',
@@ -258,7 +259,10 @@ const arSA: LocalePack = {
         'دقة أو ملاءمة النتائج المُنشأة. أنت تتحمل كامل عواقب استخدامه.\n' +
         '4. يُصدر البرنامج بموجب رخصة المصادر المفتوحة GNU AGPL v3؛ يمكنك استخدامه وتعديله وتوزيعه بحرية وفقاً لتلك الرخصة. لا يجوز لك استخدام البرنامج لانتهاك الحقوق المشروعة لشركة مايكروسوفت أو مقدمي الخدمات الآخرين، أو لانتهاك أي قوانين أو لوائح معمول بها.\n' +
         '5. أنت مسؤول بالكامل عن محتوى الصوت الذي تنشئه وتخزنه وتنشره.\n\n' +
-        'حقوق النشر © 2026 شركة تايتشو جيانغيان تشونغيو لتقنية المعلومات. جميع الحقوق محفوظة.'
+        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.',
+      accept: 'لقد قرأت اتفاقية المستخدم وأوافق عليها',
+      decline: 'رفض والخروج',
+      doNotShowAgain: 'عدم الإظهار في المرة القادمة'
     },
 
     about: {
@@ -266,7 +270,7 @@ const arSA: LocalePack = {
       message: 'مولد الصوت متعدد الأصوات Edge-TTS',
       version: 'الإصدار: {version}',
       tech: 'مبني باستخدام Electron + Vue 3. الأصوات مقدمة من Microsoft Edge TTS.',
-      copyright: 'حقوق النشر © 2026 شركة تايتشو جيانغيان تشونغيو لتقنية المعلومات.',
+      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
       website: 'https://www.tzzhy.cn/',
       license: 'الترخيص: GNU AGPL v3',
       opensource: 'البرمجيات مفتوحة المصدر المستخدمة:'

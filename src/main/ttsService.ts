@@ -26,7 +26,7 @@ import {
 import type { StereoPcm } from './audioProcessor'
 
 /**
- * TTS 生成服务（对应 PyQt6 版 tts_workers.py 的 TTSWorker / PreviewWorker）。
+ * TTS 生成服务：负责完整合成与试听两条任务的调度、重试与进度上报。
  *
  * 管线：parseText 解析 → 逐片段 edge-tts 流式合成（MP3）→
  * ffmpeg 解码 PCM → 拼接/静音/蜂鸣 → 编码输出（WAV/MP3/OGG/FLAC）。

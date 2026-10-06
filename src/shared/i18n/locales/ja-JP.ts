@@ -25,12 +25,13 @@ const jaJP: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS 複数ボイス音声ジェネレーター',
-      copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
+      copyright: '© 2026 泰州姜堰鍾毓信息技術有限公司'
     },
 
     menu: {
       file: 'ファイル(F)(&F)',
       edit: '編集(E)(&E)',
+      language: '言語(L)(&L)',
       help: 'ヘルプ(H)(&H)',
       openText: 'テキストを開く(&O)...',
       saveText: 'テキストを保存(&S)',
@@ -245,7 +246,10 @@ const jaJP: LocalePack = {
         'いかなる保証も行いません。使用によるすべての結果は利用者の責任となります。\n' +
         '4. 本ソフトウェアは GNU AGPL v3 オープンソースライセンスの下で公開されており、当該ライセンスに従って自由に使用・改変・頒布できます。マイクロソフトその他のサービス提供者の正当な権利を侵害するため、または適用される法令に違反するために本ソフトウェアを使用することはできません。\n' +
         '5. 生成・保存・配信する音声コンテンツについては利用者が全責任を負います。\n\n' +
-        'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd. All rights reserved.'
+        'Copyright © 2026 泰州姜堰鍾毓信息技術有限公司 All rights reserved.',
+      accept: '利用規約を読み、同意します',
+      decline: '同意せず終了',
+      doNotShowAgain: '次回から表示しない'
     },
 
     about: {
@@ -253,7 +257,7 @@ const jaJP: LocalePack = {
       message: 'Edge-TTS 複数ボイス音声ジェネレーター',
       version: 'バージョン: {version}',
       tech: 'Electron + Vue 3 で構築。ボイスは Microsoft Edge TTS を使用。',
-      copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.',
+      copyright: 'Copyright © 2026 泰州姜堰鍾毓信息技術有限公司',
       website: 'https://www.tzzhy.cn/',
       license: 'ライセンス: GNU AGPL v3',
       opensource: '使用しているオープンソースソフトウェア:'

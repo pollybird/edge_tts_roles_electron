@@ -184,12 +184,13 @@ const zhTW: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS 多角色音訊產生器',
-      copyright: '© 2026 泰州姜堰钟毓信息技术有限公司'
+      copyright: '© 2026 泰州姜堰鍾毓信息技術有限公司'
     },
 
     menu: {
       file: '檔案(F)(&F)',
       edit: '編輯(E)(&E)',
+      language: '語言(L)(&L)',
       help: '說明(H)(&H)',
       openText: '開啟文字(&O)...',
       saveText: '儲存文字(&S)',
@@ -398,7 +399,10 @@ const zhTW: LocalePack = {
         '因使用本軟體產生的一切後果由使用者自行承擔。\n' +
         '4. 本軟體基於 GNU AGPL v3 開放原始碼授權條款發布，您可在遵守該條款的前提下自由使用、修改與散布；請勿利用本軟體侵害微軟或其他服務提供方的合法權益，或從事任何違反法令規章的行為。\n' +
         '5. 您對自己產生、儲存與傳播的音訊內容負全部責任。\n\n' +
-        'Copyright © 2026 泰州姜堰钟毓信息技术有限公司 保留所有權利。'
+        'Copyright © 2026 泰州姜堰鍾毓信息技術有限公司 保留所有權利。',
+      accept: '我已閱讀並同意使用者協議',
+      decline: '不同意並退出',
+      doNotShowAgain: '下次不再彈出'
     },
 
     about: {
@@ -406,7 +410,7 @@ const zhTW: LocalePack = {
       message: 'Edge-TTS 多角色音訊產生器',
       version: '版本：{version}',
       tech: '技術：Electron + Vue 3，語音由 Microsoft Edge TTS 提供',
-      copyright: 'Copyright © 2026 泰州姜堰钟毓信息技术有限公司',
+      copyright: 'Copyright © 2026 泰州姜堰鍾毓信息技術有限公司',
       website: 'https://www.tzzhy.cn/',
       license: '授權條款：GNU AGPL v3',
       opensource: '使用的開放原始碼軟體：'

@@ -1,5 +1,5 @@
 /**
- * 音频 PCM 处理与编解码（对应 PyQt6 版 audio_processor.py）。
+ * 音频 PCM 处理与编解码：ffmpeg 解码、声道合成、静音/蜂鸣生成与 WAV 等格式编码。
  *
  * 依赖：随安装包分发的 ffmpeg（resources/ffmpeg，见 ffmpegResolver.ts）；
  * 开发环境直接使用 ffmpeg-static 下载的当前平台二进制。
