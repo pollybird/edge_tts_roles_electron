@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 提问 / 用法咨询 · Questions & Usage
+    url: https://github.com/pollybird/edge_tts_roles_electron/discussions
+    about: 关于如何使用软件的问题请到 Discussions 提问，而不是开 Issue。 / Please ask usage questions in Discussions instead of opening an issue.
+  - name: 用户手册 · User Manual
+    url: https://github.com/pollybird/edge_tts_roles_electron/blob/main/MANUAL_CN.md
+    about: 提交问题前请先查阅使用手册，常见问题在 FAQ 章节已有解答。 / Check the manual and FAQ before reporting — your question may already be answered.

@@ -2,11 +2,22 @@
 
 **Edge-TTS Multi-Voice Audio Generator** — a desktop application that turns marker-based scripts into multi-speaker audio using the online Microsoft Edge TTS service. Built with Electron + Vue 3 + TypeScript.
 
+[![GitHub stars](https://img.shields.io/github/stars/pollybird/edge_tts_roles_electron)](https://github.com/pollybird/edge_tts_roles_electron/stargazers)
+[![license](https://img.shields.io/github/license/pollybird/edge_tts_roles_electron)](./LICENSE)
+[![release](https://img.shields.io/github/v/release/pollybird/edge_tts_roles_electron)](https://github.com/pollybird/edge_tts_roles_electron/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/pollybird/edge_tts_roles_electron/ci.yml?label=ci)](https://github.com/pollybird/edge_tts_roles_electron/actions)
+
 English | [简体中文](./README_CN.md)
+
+> If you find this project useful, please ⭐ **Star it on GitHub** — your support keeps the project alive.
 
 You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, `[R]`), assign a different neural voice to each of the four roles, and the app synthesizes every segment, stitches it together with pauses and beeps, optionally mixes in intro / outro / background music, and exports a WAV / MP3 / OGG / FLAC file.
 
 > The speech synthesis itself is provided by Microsoft Edge's online speech service. **An internet connection is required.**
+
+## Screenshot
+
+![Edge-TTS Multi-Voice Audio Generator](./docs/screenshot.png)
 
 ## Features
 
@@ -19,7 +30,7 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 - **Four output formats** — WAV (32-bit float), MP3, OGG Vorbis and FLAC, all processed through a bundled ffmpeg binary (no system ffmpeg required).
 - **Voice config import/export** — save the four roles' voice / rate / volume / pitch to a JSON file and reuse it across scripts.
 - **Editor conveniences** — find & replace, one-click marker insertion, quick-pause buttons, live character count, open/save text files.
-- **8 built-in languages** — English, Simplified Chinese, French, German, Spanish, Russian, Japanese and Arabic; the UI follows the system language automatically.
+- **9 built-in languages** — English, Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese and Arabic (with RTL layout); the UI follows the system language automatically.
 - The main window opens maximized by default.
 
 ## Marker Syntax

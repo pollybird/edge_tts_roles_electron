@@ -2,11 +2,22 @@
 
 **Edge-TTS 多角色音频生成器**——基于在线微软 Edge TTS 语音服务，将带标记的文本脚本转换为多人配音音频的桌面应用。基于 Electron + Vue 3 + TypeScript 构建。
 
+[![GitHub stars](https://img.shields.io/github/stars/pollybird/edge_tts_roles_electron)](https://github.com/pollybird/edge_tts_roles_electron/stargazers)
+[![license](https://img.shields.io/github/license/pollybird/edge_tts_roles_electron)](./LICENSE)
+[![release](https://img.shields.io/github/v/release/pollybird/edge_tts_roles_electron)](https://github.com/pollybird/edge_tts_roles_electron/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/pollybird/edge_tts_roles_electron/ci.yml?label=ci)](https://github.com/pollybird/edge_tts_roles_electron/actions)
+
 [English](./README.md) | 简体中文
+
+> 如果这个项目对你有帮助，请在 GitHub 上 ⭐ **点个 Star**——你的支持是项目持续维护的动力。
 
 只需在纯文本脚本中使用轻量标记（`[A]`、`[B]`、`[1000]`、`[R]`），为四个角色分别指定不同的神经网络发音人，应用即可逐段合成语音，拼接停顿与蜂鸣声，并可选择性混入前奏 / 尾声 / 背景音乐，最终导出 WAV / MP3 / OGG / FLAC 音频文件。
 
 > 语音合成本身由微软 Edge 在线语音服务提供，**使用时需要联网**。
+
+## 产品截图
+
+![Edge-TTS 多角色音频生成器](./docs/screenshot.png)
 
 ## 功能特性
 
@@ -19,7 +30,7 @@
 - **四种导出格式**——WAV（32 位浮点）、MP3、OGG Vorbis、FLAC，全部通过内置的 ffmpeg 二进制处理，无需系统安装 ffmpeg。
 - **音色配置导入/导出**——可将四个角色的发音人 / 语速 / 音量 / 音调保存为 JSON 配置文件，在不同脚本间复用。
 - **编辑器辅助功能**——查找替换、一键插入标记、快速停顿按钮、实时字数统计、文本文件打开/保存。
-- **内置 8 种语言**——英语、简体中文、法语、德语、西班牙语、俄语、日语、阿拉伯语，界面自动跟随系统语言。
+- **内置 9 种语言**——英语、简体中文、繁体中文、法语、德语、西班牙语、俄语、日语、阿拉伯语（支持 RTL 布局），界面自动跟随系统语言。
 - 程序启动时窗口默认最大化。
 
 ## 标记语法
