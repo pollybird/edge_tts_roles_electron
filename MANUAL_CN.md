@@ -32,7 +32,7 @@
 - [15. 项目结构](#15-项目结构)
 - [16. 技术栈](#16-技术栈)
 - [17. 环境要求与本地开发](#17-环境要求与本地开发)
-- [18. 单元测试](#18-单元测试)
+- [18. 单元测试与 UI 自动化测试](#18-单元测试与-ui-自动化测试)
 - [19. 构建与打包](#19-构建与打包)
 - [20. 自动更新机制](#20-自动更新机制)
 - [21. 国际化扩展（新增语言）](#21-国际化扩展新增语言)
@@ -509,7 +509,11 @@ edge_tts_roles_electron/
 │   ├── main/                 Electron 主进程
 │   │   ├── index.ts          应用生命周期、主窗口、启动初始化
 │   │   ├── ipc.ts            IPC 处理器：文件对话框、配置导入导出、协议退出等
-│   │   ├── ttsService.ts     合成管线：解析→合成→重试→缓存→附加音频混音→编码
+│   │   ├── ttsService.ts     合成管线编排：解析→合成→附加音频混音→编码
+│   │   ├── tts/              TTS 职责子模块
+│   │   │   ├── voiceCatalog.ts       语音列表缓存
+│   │   │   ├── segmentCache.ts       片段 PCM 磁盘缓存（断点续传/LRU）
+│   │   │   └── segmentSynthesizer.ts 单片段流式合成、重试、空闲看门狗
 │   │   ├── audioProcessor.ts PCM 运算 + ffmpeg 编解码（24kHz 立体声 f32）
 │   │   ├── ffmpegResolver.ts 运行时 ffmpeg 二进制路径解析（打包/开发/PATH 三级兜底）
 │   │   ├── updater.ts        electron-updater 集成层（事件转发、手动/静默检查）
@@ -586,12 +590,15 @@ npm run typecheck    # tsc（主/preload）+ vue-tsc（渲染），仅检查
 npm run lint         # ESLint
 npm run format       # Prettier 全量格式化
 npm test             # vitest 单元测试
+npm run test:e2e     # electron-vite 构建 + Playwright Electron UI 自动化
 npm run build        # typecheck + electron-vite 构建（输出 out/）
 ```
 
-## 18. 单元测试
+## 18. 单元测试与 UI 自动化测试
 
-测试框架为 **vitest** 4.x，配置在 `vitest.config.mts`（Node 环境，仅覆盖 `tests/` 下的纯逻辑）；当前 **5 个测试文件、56 个用例全部通过**：
+### 18.1 单元测试（vitest）
+
+测试框架为 **vitest** 4.x，配置在 `vitest.config.mts`（Node 环境，仅覆盖 `tests/` 下的纯逻辑）；当前 **6 个测试文件、76 个用例全部通过**：
 
 ```bash
 npm test
@@ -605,10 +612,35 @@ npm test
 | `voiceGroups` | 按系统默认语言优先的分组排序、同语言多 locale 合并、组内稳定排序 |
 | `voiceDisplay` | 人名/地区/性别词格式化与回退 |
 | `audioProcessor` | 静音生成、蜂鸣合成与淡入淡出、PCM 拼接、循环铺满、混音硬限幅、音量缩放 |
-| `ttsService` | 重试退避表 ±20% 抖动、停止指令中断、片段缓存键稳定性 |
+| `tts/segmentCache` + `tts/segmentSynthesizer` | 片段缓存键稳定性、退避表 ±20% 抖动、停止指令中断、段间冷却状态机 |
 | `updateFeed` | GitHub 主源优先、GitCode 回退（含 HTML 错误页识别）、双源失败分支、平台→latest*.yml 映射 |
 
-设计原则：核心业务逻辑尽量抽为**不依赖 Electron 的纯函数/纯类**（如 `updateFeed.ts`），便于注入 mock 进行单元测试。
+设计原则：核心业务逻辑尽量抽为**不依赖 Electron 的纯函数/纯类**（如 `updateFeed.ts`、`tts/segmentSynthesizer.ts` 中的退避纯函数），便于注入 mock 进行单元测试。
+
+### 18.2 UI 自动化测试（Playwright + Electron）
+
+框架为 **@playwright/test** 的 `_electron` 驱动，直接加载 `electron-vite build` 的产物（`out/`），无需下载浏览器；配置在 `playwright.config.ts`，用例位于 `e2e/`，当前 9 个用例：
+
+```bash
+npm run test:e2e
+```
+
+覆盖场景：
+
+| 用例文件 | 覆盖内容 |
+| --- | --- |
+| `e2e/agreement.spec.ts` | 首启协议弹窗强制显示、ESC/遮罩不可绕过、拒绝则退出、未勾选复选框重启仍弹、勾选后重启直接进入 |
+| `e2e/language.spec.ts` | 原生「语言」菜单切换（经主进程 Menu API 程序化点击）、界面文案即时切换、重启后偏好恢复 |
+| `e2e/editor-markers.spec.ts` | 角色标记 `[A]`–`[D]`、自定义毫秒停顿、蜂鸣 `[R]`、快捷停顿的插入与手输混排 |
+
+实现要点：
+
+- 每个用例使用独立临时 `--user-data-dir`（electron-store 的 `config.json` 随目录隔离），重启类用例复用同一目录验证持久化，互不污染真实配置。
+- 选择器统一使用元素上的 `data-testid`（如 `script-editor`、`agreement-accept`、`insert-role-A`），不随界面语言变化。
+- 用例串行执行（单 worker）；Linux 无显示环境（CI）需经 Xvfb 运行：`xvfb-run --auto-servernum npm run test:e2e`。
+- 失败时保留 Playwright trace 与 HTML 报告（`test-results/`、`playwright-report/`，已 gitignore）。
+
+> UI 自动化曾发现真实缺陷：渲染进程的 IPC 订阅最初注册在 `await listVoices()`（网络请求）之后，音色列表未返回前切换语言会丢失广播；现已将所有订阅提前到 `onMounted` 同步阶段。
 
 ## 19. 构建与打包
 
@@ -708,8 +740,8 @@ npm run build:all         # linux + win + mac:zip（CI 发版用）
 
 ### 22.1 提交规范与 CI
 
-- 推送 `main` 或创建 PR 时，`.github/workflows/ci.yml` 自动执行 `typecheck`、`lint`、`npm test`；
-- 发布前保证本地：`npm run typecheck && npm run lint && npm test` 全部通过。
+- 推送 `main` 或创建 PR 时，`.github/workflows/ci.yml` 自动执行 `typecheck`、`lint`、`npm test`，并在 Xvfb 下运行 Electron UI 自动化（`npm run test:e2e`）；
+- 发布前保证本地：`npm run typecheck && npm run lint && npm test && npm run test:e2e` 全部通过。
 
 ### 22.2 自动发布（推荐）
 

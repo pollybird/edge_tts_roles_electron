@@ -6,3 +6,5 @@ resources/.ffmpeg-stage
 .DS_Store
 .eslintcache
 *.log*
+test-results
+playwright-report

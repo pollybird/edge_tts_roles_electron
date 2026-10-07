@@ -215,24 +215,9 @@ async function handleSaveText(): Promise<void> {
   }
 }
 
-onMounted(async () => {
-  // 首次运行门槛：未同意用户协议前强制弹出，模态遮罩锁定主界面
-  agreementRequired.value = !(await window.api.getSetting<boolean>('agreementAccepted'))
-
-  // 窗口标题与初始状态栏随系统语言
-  document.title = t('app.title')
-  progressMessage.value = t('message.ready')
-
-  // 语言切换时同步窗口标题；未在生成时把状态栏恢复为“就绪”
-  watch(locale, () => {
-    document.title = t('app.title')
-    if (!running.value) {
-      progressMessage.value = t('message.ready')
-    }
-  })
-
-  voices.value = await window.api.listVoices()
-
+onMounted(() => {
+  // 同步注册全部 IPC 订阅：必须先于任何 await，否则在音色列表等网络请求未返回前，
+  // 语言切换、进度、菜单等事件会因监听尚未挂载而丢失。
   window.api.onProgress((p) => {
     progress.value = p.percent
     progressMessage.value = p.message
@@ -311,6 +296,26 @@ onMounted(async () => {
         break
     }
   })
+
+  // 语言切换时同步窗口标题；未在生成时把状态栏恢复为“就绪”
+  watch(locale, () => {
+    document.title = t('app.title')
+    if (!running.value) {
+      progressMessage.value = t('message.ready')
+    }
+  })
+
+  // 异步初始化（协议门槛状态、音色列表）；不阻塞上面的事件订阅
+  void (async () => {
+    // 首次运行门槛：未同意用户协议前强制弹出，模态遮罩锁定主界面
+    agreementRequired.value = !(await window.api.getSetting<boolean>('agreementAccepted'))
+
+    // 窗口标题与初始状态栏随系统语言
+    document.title = t('app.title')
+    progressMessage.value = t('message.ready')
+
+    voices.value = await window.api.listVoices()
+  })()
 })
 </script>
 

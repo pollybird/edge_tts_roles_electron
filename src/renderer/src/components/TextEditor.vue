@@ -291,6 +291,7 @@ defineExpose({ openFindBar })
       <textarea
         ref="textareaRef"
         class="editor-input"
+        data-testid="script-editor"
         :value="text"
         spellcheck="false"
         :placeholder="t('editor.placeholder')"
@@ -306,16 +307,28 @@ defineExpose({ openFindBar })
           v-for="role in ROLE_TAGS"
           :key="role"
           class="btn small"
+          :data-testid="`insert-role-${role}`"
           @click="insertTag(`[${role}]`)"
         >
           {{ t('editor.insertRole', { tag: `[${role}]` }) }}
         </button>
-        <button class="btn small" @click="insertPause">{{ t('editor.insertPause') }}</button>
+        <button class="btn small" data-testid="insert-pause" @click="insertPause">
+          {{ t('editor.insertPause') }}
+        </button>
         <label class="pause-input">
           {{ t('editor.pauseMs') }}
-          <input v-model.number="pauseMs" type="number" min="10" max="10000" step="10" />
+          <input
+            v-model.number="pauseMs"
+            data-testid="pause-ms"
+            type="number"
+            min="10"
+            max="10000"
+            step="10"
+          />
         </label>
-        <button class="btn small" @click="insertTag('[R]')">{{ t('editor.insertBeep') }}</button>
+        <button class="btn small" data-testid="insert-beep" @click="insertTag('[R]')">
+          {{ t('editor.insertBeep') }}
+        </button>
       </div>
 
       <!-- 快速停顿 -->
@@ -325,6 +338,7 @@ defineExpose({ openFindBar })
           v-for="ms in quickPauses"
           :key="ms"
           class="btn small quick"
+          :data-testid="`quick-pause-${ms}`"
           @click="insertTag(`[${ms}]`)"
         >
           ⏱️ {{ t('editor.secondsShort', { n: ms / 1000 }) }}

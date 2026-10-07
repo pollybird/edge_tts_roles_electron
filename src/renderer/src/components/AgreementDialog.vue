@@ -48,6 +48,7 @@ onMounted(() => acceptBtnEl.value?.focus())
       ref="dialogEl"
       class="agreement-dialog"
       role="dialog"
+      data-testid="agreement-dialog"
       :aria-modal="true"
       :aria-label="t('agreement.title')"
       @keydown="onKeydown"
@@ -57,15 +58,20 @@ onMounted(() => acceptBtnEl.value?.focus())
       <div class="agreement-body">{{ t('agreement.body') }}</div>
 
       <label class="agreement-optout">
-        <input v-model="doNotShowAgain" type="checkbox" />
+        <input v-model="doNotShowAgain" type="checkbox" data-testid="agreement-optout" />
         <span>{{ t('agreement.doNotShowAgain') }}</span>
       </label>
 
       <div class="agreement-actions">
-        <button class="btn danger" @click="emit('decline')">
+        <button class="btn danger" data-testid="agreement-decline" @click="emit('decline')">
           {{ t('agreement.decline') }}
         </button>
-        <button ref="acceptBtnEl" class="btn primary" @click="emit('accept', doNotShowAgain)">
+        <button
+          ref="acceptBtnEl"
+          class="btn primary"
+          data-testid="agreement-accept"
+          @click="emit('accept', doNotShowAgain)"
+        >
           {{ t('agreement.accept') }}
         </button>
       </div>

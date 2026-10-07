@@ -32,7 +32,7 @@ A desktop application that turns marker-based text scripts into multi-speaker au
 - [15. Project Structure](#15-project-structure)
 - [16. Technology Stack](#16-technology-stack)
 - [17. Requirements & Local Development](#17-requirements--local-development)
-- [18. Unit Tests](#18-unit-tests)
+- [18. Unit & UI Automated Tests](#18-unit--ui-automated-tests)
 - [19. Building & Packaging](#19-building--packaging)
 - [20. How Auto-Update Works](#20-how-auto-update-works)
 - [21. Adding a Language](#21-adding-a-language)
@@ -586,12 +586,15 @@ npm run typecheck    # tsc (main/preload) + vue-tsc (renderer), no emit
 npm run lint         # ESLint
 npm run format       # Prettier write
 npm test             # vitest unit tests
+npm run test:e2e     # electron-vite build + Playwright Electron UI automation
 npm run build        # typecheck + electron-vite build (output in out/)
 ```
 
-## 18. Unit Tests
+## 18. Unit & UI Automated Tests
 
-Tests use **vitest** 4.x with the config in `vitest.config.mts` (Node environment, pure-logic `tests/` only). Currently **5 test files, 56 tests**, all passing:
+### 18.1 Unit Tests (vitest)
+
+Tests use **vitest** 4.x with the config in `vitest.config.mts` (Node environment, pure-logic `tests/` only). Currently **6 test files, 76 tests**, all passing:
 
 ```bash
 npm test
@@ -605,10 +608,35 @@ Coverage:
 | `voiceGroups` | Language-first grouping/sorting, same-language merge, stable order |
 | `voiceDisplay` | Person/region/gender formatting and fallbacks |
 | `audioProcessor` | Silence, beep with fades, PCM concat, loop-to-length, mixing hard-clip, gain scaling |
-| `ttsService` | Backoff table ±20% jitter, stop interruption, segment cache key stability |
+| `tts/segmentCache` + `tts/segmentSynthesizer` | Segment cache key stability, backoff table ±20% jitter, stop interruption, inter-segment cooldown state machine |
 | `updateFeed` | GitHub-first preference, GitCode fallback (incl. HTML-page detection), dual-source failure, platform → latest*.yml mapping |
 
-Design rule: core business logic is extracted into **Electron-free pure functions/classes** (e.g. `updateFeed.ts`) so it can be unit-tested with injected mocks.
+Design rule: core business logic is extracted into **Electron-free pure functions/classes** (e.g. `updateFeed.ts`, the backoff helpers in `tts/segmentSynthesizer.ts`) so it can be unit-tested with injected mocks.
+
+### 18.2 UI Automated Tests (Playwright + Electron)
+
+The **@playwright/test** `_electron` driver launches the `electron-vite build` output in `out/` directly — no browser download required. Config: `playwright.config.ts`; specs: `e2e/`; currently 9 tests:
+
+```bash
+npm run test:e2e
+```
+
+Coverage:
+
+| Spec | What is covered |
+| --- | --- |
+| `e2e/agreement.spec.ts` | First-run agreement dialog shown; ESC / mask click cannot bypass it; decline quits the app; relaunch re-prompts unless "do not show again" is checked (then the main UI opens directly) |
+| `e2e/language.spec.ts` | Native Language menu switching (clicked programmatically via the main-process Menu API), live UI text switch, preference restored after relaunch |
+| `e2e/editor-markers.spec.ts` | Inserting role tags `[A]`–`[D]`, custom millisecond pauses, beep `[R]`, quick pauses, and mixing tags with typed text |
+
+Implementation notes:
+
+- Every test uses an isolated temporary `--user-data-dir` (electron-store `config.json` lives there); relaunch tests reuse the same directory to verify persistence, never touching real settings.
+- Selectors rely on `data-testid` attributes (e.g. `script-editor`, `agreement-accept`, `insert-role-A`) and stay valid in every UI language.
+- Tests run serially (1 worker); on a headless Linux (CI) they run under Xvfb: `xvfb-run --auto-servernum npm run test:e2e`.
+- On failure, Playwright traces and the HTML report are kept (`test-results/`, `playwright-report/`; both gitignored).
+
+> These UI tests caught a real defect: renderer IPC subscriptions were originally registered after `await listVoices()` (a network call), so a language switch broadcast was lost until the voice list returned. All subscriptions are now registered synchronously in `onMounted`.
 
 ## 19. Building & Packaging
 
@@ -708,8 +736,8 @@ UI strings live in `src/shared/i18n/locales/<locale>.ts`, a typed object:
 
 ### 22.1 CI & Pre-flight
 
-- On pushes to `main` or PRs, `.github/workflows/ci.yml` runs `typecheck`, `lint` and `npm test`;
-- Before releasing, ensure locally: `npm run typecheck && npm run lint && npm test` all pass.
+- On pushes to `main` or PRs, `.github/workflows/ci.yml` runs `typecheck`, `lint`, `npm test` and the Electron E2E suite under Xvfb (`npm run test:e2e`);
+- Before releasing, ensure locally: `npm run typecheck && npm run lint && npm test && npm run test:e2e` all pass.
 
 ### 22.2 Automated Release (recommended)
 
