@@ -1,6 +1,6 @@
 # edge-tts-roles User Manual
 
-**Edge-TTS Multi-Voice Audio Generator** (v2.0.3)
+**Edge-TTS Multi-Voice Audio Generator** (v2.0.4)
 
 A desktop application that turns marker-based text scripts into multi-speaker audio. It uses Microsoft's online Edge speech synthesis service: assign a different neural voice to each speaker, switch roles freely in one script, control pauses and beeps, optionally add music, and export WAV / MP3 / OGG / FLAC files.
 
@@ -797,6 +797,7 @@ Each release prepends a section to `UPGRADE.md` / `UPGRADE_CN.md` (categorized: 
 
 | Version | Highlights |
 | --- | --- |
+| v2.0.4 | **TTS main-process modularization** (`ttsService.ts` split into `voiceCatalog` / `segmentCache` / `segmentSynthesizer` modules, public API unchanged); **Playwright/Electron E2E tests** (9 cases: agreement gate, language menu, marker insertion) with Xvfb in CI; fixed App.vue IPC subscriptions being registered after `await listVoices()` (language-switch broadcast could be lost); bilingual Issue / PR templates and Code of Conduct; README badges + product screenshot |
 | v2.0.3 | **Persisted language switching** (editor dropdown replaced by the "Language" menu radio items; choice saved); **first-launch User Agreement gate** (mandatory modal, persisted with "Do not show again"); **manual check feedback** ("already up to date" only for manual checks, silent startup check stays quiet); feed probing extracted into a mockable pure module (15 tests); CI (typecheck/lint/test) and automated release workflows; GitCode mirror script (`scripts/publish-gitcode.mjs`) |
 | v2.0.2 | **Auto-update** (GitHub primary + GitCode fallback); **runtime language switching** (editor dropdown in v2.0.2, moved to the native menu in v2.0.3); **Arabic (RTL) and Traditional Chinese**; fixed update-error content leaking into the status bar; agreement clause 4 aligned with AGPL-3.0 |
 | v2.0.1 | Fixed hard-coded Chinese "已停止" in the preview dialog; `readAudioFile` IPC now validates an audio-extension allowlist; introduced vitest unit tests; full Prettier pass |
@@ -806,4 +807,4 @@ Full changelogs live in `UPGRADE.md` / `UPGRADE_CN.md` at the repository root.
 
 ---
 
-*This manual is written against v2.0.3. On-screen labels follow the selected language; wording may differ from the screenshots described here.*
+*This manual is written against v2.0.4. On-screen labels follow the selected language; wording may differ from the screenshots described here.*

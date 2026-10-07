@@ -1,6 +1,6 @@
 # edge-tts-roles 使用手册
 
-**Edge-TTS 多角色音频生成器**（v2.0.3）
+**Edge-TTS 多角色音频生成器**（v2.0.4）
 
 一个将带标记的文本脚本转换为多人配音音频的桌面应用。它利用微软 Edge 在线语音合成服务，让你为不同的说话人分配不同的神经网络音色，在一个脚本里自由切换角色、控制停顿、插入提示音，并支持配乐，最终导出为 WAV / MP3 / OGG / FLAC 音频文件。
 
@@ -797,7 +797,7 @@ GITCODE_TOKEN=xxx npm run release:gitcode   # 镜像到 GitCode
 
 ---
 
-*本手册基于 v2.0.3 编写。界面文案随所选语言变化，图中文字以实际显示为准。*
+*本手册基于 v2.0.4 编写。界面文案随所选语言变化，图中文字以实际显示为准。*
 
 ---
 
@@ -805,6 +805,7 @@ GITCODE_TOKEN=xxx npm run release:gitcode   # 镜像到 GitCode
 
 | 版本 | 主要内容 |
 | --- | --- |
+| v2.0.4 | **TTS 主进程模块化**（`ttsService.ts` 拆分为 `voiceCatalog` / `segmentCache` / `segmentSynthesizer` 模块，对外 API 不变）；**Playwright/Electron E2E 测试**（9 个用例：协议门槛、语言菜单、标记插入），CI 接入 Xvfb；修复 App.vue 的 IPC 订阅注册在 `await listVoices()` 之后导致语言切换广播丢失的问题；中英双语 Issue / PR 模板与行为准则；README 添加徽章与产品截图 |
 | v2.0.3 | **语言切换持久化**（从编辑器下拉框改为「语言(L)」菜单单选，选择持久保存）；**首次运行用户协议门槛**（强制模态，勾选「下次不再弹出」才持久化）；**手动检查更新有反馈**（已是最新版时明确提示，启动静默检查仍安静）；更新源探测抽为可单测纯模块（15 用例）；新增 CI（typecheck/lint/test）与自动发版 workflow；GitCode 镜像脚本（`scripts/publish-gitcode.mjs`） |
 | v2.0.2 | **自动更新**（GitHub 主源 + GitCode 回退）；**运行时语言切换**（v2.0.2 为编辑器头部下拉框，v2.0.3 移入主菜单）；**阿拉伯语（RTL 布局）与繁体中文**翻译；修复更新出错把原始内容写入状态栏的问题；用户协议第 4 条与 AGPL-3.0 对齐 |
 | v2.0.1 | 修复试听对话框硬编码中文「已停止」；`readAudioFile` IPC 增加音频扩展名白名单校验；引入 vitest 单元测试；全量 prettier 格式化 |

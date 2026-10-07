@@ -1,5 +1,33 @@
 # 更新日志
 
+## v2.0.4
+
+### 改进
+
+- **TTS 主进程模块化**：将原 481 行的 `ttsService.ts` 按职责拆分为 4 个模块（对外 API 与单例 `ttsService` 保持不变）：
+  - `src/main/tts/voiceCatalog.ts`：语音列表缓存。
+  - `src/main/tts/segmentCache.ts`：PCM 磁盘缓存（`cacheDir` 延迟初始化并以 `tmpdir` 回退、SHA-256 `keyFor`、LRU 300→200 淘汰）。
+  - `src/main/tts/segmentSynthesizer.ts`：单片段流式合成 + 最多 15 次重试 + 15 秒空闲看门狗。
+  - `src/main/ttsService.ts`：仅做管线编排、进度上报与 `attachExtras`（约 240 行）。
+
+### 测试
+
+- **UI 自动化测试（Playwright / Electron）**：新增 9 个端到端用例，覆盖：
+  - 首启用户协议弹窗（5 个）：全新 userData 启动时弹出对话框、ESC 与遮罩点击无法绕过、拒绝即退出应用、同意但未勾选「下次不再弹出」则重启仍弹出、同意且勾选则持久化并跳过弹窗。
+  - 语言菜单切换与持久化（1 个）：通过 `app.evaluate` 驱动原生「语言」菜单，验证占位符文本变化与 `settings.locale` 跨重启持久化。
+  - 文本编辑标记插入（3 个）：按点击顺序插入角色标记 `[A][C]`、自定义停顿 + 蜂鸣 + 快速停顿生成 `[A][500][R][1000]`、标记与手动输入混合 `[B]hello`。
+  - 通过 `playwright.config.ts` 配置；CI 执行 `xvfb-run --auto-servernum npm run test:e2e`，失败时上传 Playwright 报告。
+
+### Bug 修复
+
+- **App.vue IPC 订阅时机**：原本所有 IPC 订阅（`onProgress`、`onFinished`、`onError`、`onLocaleChanged`、`onMenuAction` 等）注册在 `await window.api.listVoices()` 之后，导致语音列表网络请求未返回前 `locale:changed` 广播丢失，首启后短时间内切换语言可能不生效。改为在 `onMounted` 顶部同步注册全部订阅，异步初始化移入 IIFE。该缺陷由本次新增的 E2E 测试发现。
+
+### 仓库治理
+
+- **Issue / PR 模板与行为准则**：新增 Issue 模板（bug 报告、功能请求）、Pull Request 模板、Contributor Covenant v2.1 行为准则，全部采用中英双语。
+- **README 完善**：添加 shields.io 徽章（Star / License / Release / CI）、「Star this repo」引导语与产品截图。
+- **MANUAL 更新**：补充 `tts/` 子目录项目结构、Playwright 技术栈、E2E 测试章节与 CI 描述。
+
 ## v2.0.3
 
 ### 改进

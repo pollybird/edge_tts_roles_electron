@@ -1,5 +1,33 @@
 # Upgrade Log
 
+## v2.0.4
+
+### Improvements
+
+- **TTS main-process modularization**: the original 481-line `ttsService.ts` has been split into four responsibility-focused modules (the public API and the `ttsService` singleton are unchanged):
+  - `src/main/tts/voiceCatalog.ts` — voice catalog caching.
+  - `src/main/tts/segmentCache.ts` — PCM disk cache (lazy `cacheDir` initialization with `tmpdir` fallback, SHA-256 `keyFor`, LRU prune 300→200).
+  - `src/main/tts/segmentSynthesizer.ts` — single-segment streaming synthesis with up to 15 retries and a 15 s idle watchdog.
+  - `src/main/ttsService.ts` — pipeline orchestration, progress reporting and `attachExtras` (~240 lines).
+
+### Testing
+
+- **UI automated tests (Playwright / Electron)**: 9 end-to-end cases added, covering:
+  - First-launch agreement gate (5): dialog shown on fresh userData, ESC/mask click cannot bypass, decline exits the app, accept without checkbox still prompts on restart, accept with checkbox persists and skips the dialog on restart.
+  - Language menu switching and persistence (1): drives the native Language menu via `app.evaluate`, verifies the placeholder text changes and `settings.locale` is persisted across restarts.
+  - Text editor marker insertion (3): role markers `[A][C]` in click order, custom pause + beep + quick pause producing `[A][500][R][1000]`, and markers mixed with manual typing (`[B]hello`).
+  - Configured via `playwright.config.ts`; CI runs `xvfb-run --auto-servernum npm run test:e2e` and uploads the Playwright report on failure.
+
+### Bug Fixes
+
+- **App.vue IPC subscription timing**: all IPC subscriptions (`onProgress`, `onFinished`, `onError`, `onLocaleChanged`, `onMenuAction`, etc.) were previously registered *after* `await window.api.listVoices()`, so the `locale:changed` broadcast was lost when the voice list had not yet returned — language switching could silently fail shortly after first launch. Subscriptions are now registered synchronously at the top of `onMounted`, with async initialization moved into an IIFE. This regression was caught by the new E2E tests.
+
+### Repository
+
+- **Issue / PR templates & Code of Conduct**: added Issue templates (bug report, feature request), a Pull Request template, and a Contributor Covenant v2.1 Code of Conduct — all bilingual (Chinese + English).
+- **README polish**: added shields.io badges (Star / License / Release / CI), a "Star this repo" call to action, and a product screenshot.
+- **MANUAL update**: documented the `tts/` subdirectory project structure, Playwright in the technology stack, an E2E testing section, and the CI description.
+
 ## v2.0.3
 
 ### Improvements
