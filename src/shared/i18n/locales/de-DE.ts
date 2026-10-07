@@ -149,6 +149,8 @@ const deDE: LocalePack = {
       selectForPreview: 'Bitte zuerst den vorzuhörenden Text auswählen!',
       previewReady: 'Vorschau-Audio ist bereit!',
       audioGenerated: 'Audio erzeugt! {path}',
+      subtitleSaved: 'Untertitel gespeichert: {path}',
+      stopped: 'Generierung gestoppt.',
       errorPrefix: 'Fehler: {msg}',
       configSaved: 'Konfiguration gespeichert: {path}',
       configLoaded: 'Stimmeneinstellungen geladen!',
@@ -165,7 +167,18 @@ const deDE: LocalePack = {
       downloaded: 'Version {version} heruntergeladen. Jetzt neu starten zum Installieren?',
       install: 'Neu starten & installieren',
       later: 'Später',
-      checkFailed: 'Suche nach Aktualisierungen fehlgeschlagen.'
+      checkFailed: 'Suche nach Aktualisierungen fehlgeschlagen.',
+      dialogTitle: 'Update verfügbar',
+      dialogBody: 'Die neue Version {version} ist verfügbar. Jetzt herunterladen und installieren?',
+      dialogInstall: 'Jetzt installieren',
+      dialogLater: 'Später erinnern',
+      dialogNever: 'Für diese Version nicht mehr erinnern'
+    },
+    subtitle: {
+      label: 'Untertitel',
+      none: 'Keine',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -194,6 +207,7 @@ const deDE: LocalePack = {
         'klicken Sie erneut auf Erzeugen, um ab dem Unterbrechungspunkt fortzufahren.',
       streamInterrupted: 'Der Audiostream endete vor Abschluss der Übertragung',
       connClosedEarly: 'Verbindung vorzeitig geschlossen',
+      audioTruncated: 'Audio unvollständig (Server hat vorzeitig beendet)',
       emptyAudio: 'Leere Audiodaten',
       edge50x:
         'Edge-TTS-Serverfehler ({msg}), Audioerzeugung abgebrochen. Bitte später erneut versuchen.',

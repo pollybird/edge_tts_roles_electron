@@ -478,6 +478,8 @@ mark.hl-beep {
   min-width: 160px;
   color: var(--text-secondary);
   font-size: 12px;
+  /* 字幕保存提示与音频路径分两行显示 */
+  white-space: pre-line;
 }
 
 /* ===== 试听弹窗 ===== */

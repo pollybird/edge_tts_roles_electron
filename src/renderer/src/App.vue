@@ -6,11 +6,13 @@ import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
 import AgreementDialog from './components/AgreementDialog.vue'
+import UpdateDialog from './components/UpdateDialog.vue'
 import type {
   AudioExtras,
   AudioFormat,
   RoleId,
   RoleVoiceSettings,
+  SubtitleFormat,
   VoiceInfo
 } from '../../shared/types'
 import { ROLE_IDS, createDefaultAudioExtras } from '../../shared/types'
@@ -22,6 +24,8 @@ const text = ref('')
 const voices = ref<VoiceInfo[]>([])
 const outputPath = ref('')
 const format = ref<AudioFormat>('wav')
+/** 字幕输出格式（会话级，与音频格式一致不持久化） */
+const subtitleFormat = ref<SubtitleFormat>('')
 const progress = ref(0)
 const progressMessage = ref(t('message.ready'))
 const running = ref(false)
@@ -36,6 +40,9 @@ const previewFilePath = ref('')
 /** 首次运行用户协议弹窗：未同意前以强制模态遮罩锁定整个界面 */
 const agreementRequired = ref(false)
 
+/** 更新确认弹窗：发现新版本且未被“不再提示”跳过时弹出（'' = 隐藏） */
+const updateDialogVersion = ref('')
+
 async function handleAcceptAgreement(doNotShowAgain: boolean): Promise<void> {
   // 勾选“下次不再弹出”才持久化同意状态；未勾选则下次启动继续弹出
   if (doNotShowAgain) {
@@ -46,6 +53,24 @@ async function handleAcceptAgreement(doNotShowAgain: boolean): Promise<void> {
 
 function handleDeclineAgreement(): void {
   void window.api.quitApp()
+}
+
+/** 更新确认弹窗：立即下载（进度走 update.downloadProgress 状态栏），下载完成后确认安装 */
+function handleUpdateInstall(): void {
+  updateDialogVersion.value = ''
+  void window.api.downloadUpdate()
+}
+
+/** 稍后提示：仅关闭弹窗，不持久化，下次启动静默检查发现后再次弹出 */
+function handleUpdateLater(): void {
+  updateDialogVersion.value = ''
+}
+
+/** 不再提示：按版本号持久化跳过；手动“检查更新”不受影响 */
+function handleUpdateNever(): void {
+  const version = updateDialogVersion.value
+  updateDialogVersion.value = ''
+  if (version) void window.api.skipUpdateVersion(version)
 }
 
 const roleSettings = reactive<RoleVoiceSettings>(
@@ -88,7 +113,8 @@ async function handleGenerate(): Promise<void> {
       roleSettings: snapshotSettings(),
       outputPath: outputPath.value,
       format: format.value,
-      extras: snapshotExtras()
+      extras: snapshotExtras(),
+      subtitleFormat: subtitleFormat.value
     })
   } catch (err) {
     showError(err)
@@ -230,12 +256,21 @@ onMounted(() => {
       previewFilePath.value = payload.filePath
       previewVisible.value = true
     } else {
-      progressMessage.value = t('message.audioGenerated', { path: payload.filePath })
+      const audioMsg = t('message.audioGenerated', { path: payload.filePath })
+      progressMessage.value = payload.subtitlePath
+        ? `${audioMsg}\n${t('message.subtitleSaved', { path: payload.subtitlePath })}`
+        : audioMsg
     }
   })
   window.api.onError((e) => {
     running.value = false
     progressMessage.value = t('message.errorPrefix', { msg: e.message })
+  })
+  // 用户停止任务：复位按钮与进度条（此前停止后生成按钮不会恢复）
+  window.api.onStopped(() => {
+    running.value = false
+    progress.value = 0
+    progressMessage.value = t('message.stopped')
   })
 
   // 自动更新状态反馈
@@ -245,7 +280,8 @@ onMounted(() => {
         progressMessage.value = t('update.checking')
         break
       case 'available':
-        progressMessage.value = t('update.available', { version: event.version })
+        // 发现新版本：弹出确认对话框（主进程已按“不再提示”过滤过静默检查场景）
+        updateDialogVersion.value = event.version
         break
       case 'not-available':
         // 启动时的自动检查保持静默；用户手动检查时明确提示“已是最新版本”
@@ -343,6 +379,7 @@ onMounted(() => {
     <OutputPanel
       v-model:output-path="outputPath"
       v-model:format="format"
+      v-model:subtitle-format="subtitleFormat"
       :progress="progress"
       :progress-message="progressMessage"
       :running="running"
@@ -358,6 +395,13 @@ onMounted(() => {
       v-if="agreementRequired"
       @accept="handleAcceptAgreement"
       @decline="handleDeclineAgreement"
+    />
+    <UpdateDialog
+      v-if="updateDialogVersion"
+      :version="updateDialogVersion"
+      @install="handleUpdateInstall"
+      @later="handleUpdateLater"
+      @never="handleUpdateNever"
     />
   </div>
 </template>

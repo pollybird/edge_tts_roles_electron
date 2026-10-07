@@ -4,6 +4,7 @@ import { IpcChannels } from '../shared/ipc'
 import type {
   AudioFormat,
   ErrorPayload,
+  StoppedPayload,
   FinishedPayload,
   GenerateRequest,
   PreviewRequest,
@@ -62,6 +63,9 @@ const api = {
   // 自动更新
   checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateCheck),
   installUpdate: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateInstall),
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateDownload),
+  skipUpdateVersion: (version: string): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.updateSkipVersion, version),
   onUpdateEvent: (cb: (event: UpdateEvent) => void): (() => void) => {
     const channels: Array<[string, UpdateEvent['type']]> = [
       [IpcChannels.updateChecking, 'checking'],
@@ -93,7 +97,9 @@ const api = {
   onFinished: (cb: (payload: FinishedPayload) => void): (() => void) =>
     subscribe(IpcChannels.finished, cb),
   onError: (cb: (payload: ErrorPayload) => void): (() => void) =>
-    subscribe(IpcChannels.taskError, cb)
+    subscribe(IpcChannels.taskError, cb),
+  onStopped: (cb: (payload: StoppedPayload) => void): (() => void) =>
+    subscribe(IpcChannels.taskStopped, cb)
 }
 
 if (process.contextIsolated) {

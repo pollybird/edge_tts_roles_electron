@@ -10,6 +10,8 @@ export interface SettingsSchema {
   locale: string
   /** 用户是否已同意用户协议（首次运行为 false，必须在协议弹窗中同意后才能使用） */
   agreementAccepted: boolean
+  /** 用户选择“不再提示”的更新版本号（'' = 未跳过任何版本；更高版本仍会弹出更新确认） */
+  updateSkippedVersion: string
 }
 
 const defaultRoleSettings = (): RoleVoiceSettings =>
@@ -24,7 +26,8 @@ const store = new Store<SettingsSchema>({
     outputPath: '',
     audioFormat: 'wav',
     locale: '',
-    agreementAccepted: false
+    agreementAccepted: false,
+    updateSkippedVersion: ''
   }
 })
 

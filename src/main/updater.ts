@@ -9,6 +9,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IpcChannels } from '../shared/ipc'
+import { getSetting, setSetting } from './settings'
+import { shouldPromptUpdate } from './updatePrompt'
 import { getFeedFileName, resolveFeedUrl } from './updateFeed'
 
 const FEED_FILE = getFeedFileName()
@@ -41,7 +43,8 @@ export async function initAutoUpdater(getMainWindow: () => BrowserWindow | null)
 
   // electron-updater 的 generic provider 直接用 base URL 拼接 latest*.yml
   autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
-  autoUpdater.autoDownload = true
+  // 关闭自动下载：发现新版本先经渲染进程弹窗确认，用户选择“立即安装”后才下载
+  autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
 
   // 转发事件到渲染进程
@@ -49,7 +52,20 @@ export async function initAutoUpdater(getMainWindow: () => BrowserWindow | null)
 
   autoUpdater.on('checking-for-update', () => forward(IpcChannels.updateChecking))
   autoUpdater.on('update-available', (info) => {
+    const manual = manualCheck
     manualCheck = false
+    // “不再提示”的版本在启动静默检查中直接跳过（不发事件，渲染进程无感知）；手动检查不受影响
+    const skipped = getSetting('updateSkippedVersion')
+    if (
+      !shouldPromptUpdate({
+        skippedVersion: skipped,
+        newVersion: info.version,
+        isManualCheck: manual
+      })
+    ) {
+      console.log(`[updater] update ${info.version} skipped by user preference`)
+      return
+    }
     forward(IpcChannels.updateAvailable, { version: info.version, releaseDate: info.releaseDate })
   })
   autoUpdater.on('update-not-available', (info) => {
@@ -89,6 +105,17 @@ export async function initAutoUpdater(getMainWindow: () => BrowserWindow | null)
   // 立即安装并重启（下载完成后由用户触发）
   ipcMain.handle(IpcChannels.updateInstall, () => {
     autoUpdater.quitAndInstall(false, true)
+  })
+  // 下载更新（autoDownload 已关闭，由用户在确认弹窗中选择“立即安装”后触发）
+  ipcMain.handle(IpcChannels.updateDownload, () => {
+    return autoUpdater.downloadUpdate().catch((err: Error) => {
+      console.error('[updater] downloadUpdate failed:', err.message)
+      forward(IpcChannels.updateError)
+    })
+  })
+  // “不再提示”：按版本号持久化，仅影响启动静默检查；更高版本仍会弹出
+  ipcMain.handle(IpcChannels.updateSkipVersion, (_e, version: string) => {
+    setSetting('updateSkippedVersion', String(version))
   })
 
   // 启动后延迟静默检查一次（等窗口就绪，避免干扰首屏；manualCheck 保持 false）

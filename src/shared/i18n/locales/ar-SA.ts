@@ -163,6 +163,8 @@ const arSA: LocalePack = {
       selectForPreview: 'الرجاء تحديد النص أولاً للمعاينة!',
       previewReady: 'صوت المعاينة جاهز!',
       audioGenerated: 'تم إنشاء الصوت! {path}',
+      subtitleSaved: 'تم حفظ ملف الترجمة: {path}',
+      stopped: 'تم إيقاف التوليد.',
       errorPrefix: 'خطأ: {msg}',
       configSaved: 'تم حفظ الإعدادات: {path}',
       configLoaded: 'تم تحميل إعدادات الصوت!',
@@ -179,7 +181,18 @@ const arSA: LocalePack = {
       downloaded: 'تم تنزيل الإصدار {version}. هل تريد إعادة التشغيل للتثبيت؟',
       install: 'إعادة التشغيل والتثبيت',
       later: 'لاحقاً',
-      checkFailed: 'فشل التحقق من التحديثات.'
+      checkFailed: 'فشل التحقق من التحديثات.',
+      dialogTitle: 'تحديث متاح',
+      dialogBody: 'يتوفر إصدار جديد {version}. هل تريد التنزيل والتثبيت الآن؟',
+      dialogInstall: 'تثبيت الآن',
+      dialogLater: 'ذكّرني لاحقاً',
+      dialogNever: 'لا تُذكّرني لهذا الإصدار'
+    },
+    subtitle: {
+      label: 'الترجمة',
+      none: 'بدون',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -207,6 +220,7 @@ const arSA: LocalePack = {
         'انقر "إنشاء الصوت" مرة أخرى للاستئناف.',
       streamInterrupted: 'انتهى دفق الصوت قبل اكتمال النقل',
       connClosedEarly: 'تم إغلاق الاتصال مبكراً',
+      audioTruncated: 'الصوت غير مكتمل (أنهى الخادم مبكراً)',
       emptyAudio: 'بيانات صوتية فارغة',
       edge50x: 'خطأ في خادم Edge TTS ({msg})، تم إيقاف إنشاء الصوت. الرجاء المحاولة لاحقاً.',
       segmentFailed: 'فشل إنشاء مقطع الصوت: {msg}',

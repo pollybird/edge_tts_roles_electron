@@ -307,6 +307,8 @@ const zhCN: LocalePack = {
       selectForPreview: '请先选中要试听的文本！',
       previewReady: '试听音频已生成！',
       audioGenerated: '音频已生成！{path}',
+      subtitleSaved: '字幕已保存：{path}',
+      stopped: '已停止生成。',
       errorPrefix: '错误: {msg}',
       configSaved: '配置已保存：{path}',
       configLoaded: '角色语音配置加载成功！',
@@ -323,7 +325,18 @@ const zhCN: LocalePack = {
       downloaded: '新版本 {version} 已下载，是否立即重启安装？',
       install: '重启并安装',
       later: '稍后',
-      checkFailed: '检查更新失败。'
+      checkFailed: '检查更新失败。',
+      dialogTitle: '更新提示',
+      dialogBody: '发现新版本 {version}，是否立即下载安装？',
+      dialogInstall: '立即安装',
+      dialogLater: '稍后提示',
+      dialogNever: '不再提示'
+    },
+    subtitle: {
+      label: '字幕',
+      none: '不生成',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -350,6 +363,7 @@ const zhCN: LocalePack = {
         '已成功的片段已保存在本地缓存，请检查网络后重新点击生成，将自动从断点继续。',
       streamInterrupted: '音频流在传输完成前中断',
       connClosedEarly: '连接提前断开',
+      audioTruncated: '音频不完整（服务端提前收尾）',
       emptyAudio: '音频数据为空',
       edge50x: 'Edge TTS 服务器错误（{msg}），音频生成已中止。请稍后重试。',
       segmentFailed: '生成音频片段失败: {msg}',

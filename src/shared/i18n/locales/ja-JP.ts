@@ -147,6 +147,8 @@ const jaJP: LocalePack = {
       selectForPreview: '試聴するテキストを先に選択してください！',
       previewReady: 'プレビュー音声の準備ができました！',
       audioGenerated: '音声を生成しました！{path}',
+      subtitleSaved: '字幕を保存しました：{path}',
+      stopped: '生成を停止しました。',
       errorPrefix: 'エラー: {msg}',
       configSaved: '設定を保存しました: {path}',
       configLoaded: 'ボイス設定を読み込みました！',
@@ -164,7 +166,19 @@ const jaJP: LocalePack = {
         'バージョン {version} のダウンロードが完了しました。再起動してインストールしますか？',
       install: '再起動してインストール',
       later: '後で',
-      checkFailed: '更新の確認に失敗しました。'
+      checkFailed: '更新の確認に失敗しました。',
+      dialogTitle: '更新のお知らせ',
+      dialogBody:
+        '新しいバージョン {version} が利用可能です。今すぐダウンロードしてインストールしますか？',
+      dialogInstall: '今すぐインストール',
+      dialogLater: '後で通知',
+      dialogNever: 'このバージョンは今後表示しない'
+    },
+    subtitle: {
+      label: '字幕',
+      none: '生成しない',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -193,6 +207,7 @@ const jaJP: LocalePack = {
         '再度「生成」をクリックすると中断位置から再開します。',
       streamInterrupted: '音声ストリームが転送完了前に終了しました',
       connClosedEarly: '接続が早期に切断されました',
+      audioTruncated: '音声が不完全です（サーバーが早期に終了）',
       emptyAudio: '空の音声データです',
       edge50x:
         'Edge TTS サーバーエラー（{msg}）。音声生成を中止しました。後でもう一度お試しください。',

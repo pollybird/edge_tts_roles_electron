@@ -25,6 +25,9 @@ export type Segment =
 
 export type AudioFormat = 'wav' | 'mp3' | 'ogg' | 'flac'
 
+/** 字幕输出格式；'' = 不生成字幕 */
+export type SubtitleFormat = '' | 'lrc' | 'srt'
+
 /** 一路用户附加音频（前奏 / 尾声 / 背景音乐） */
 export interface ExtraAudioTrack {
   /** 本地音频文件绝对路径；空串表示未选择 */
@@ -64,6 +67,8 @@ export interface GenerateRequest {
   format: AudioFormat
   /** 可选：前奏 / 尾声 / 背景音乐 */
   extras?: AudioExtras
+  /** 可选：随音频同步生成的字幕格式（缺省 = 不生成） */
+  subtitleFormat?: SubtitleFormat
 }
 
 export interface PreviewRequest {
@@ -85,12 +90,19 @@ export type TaskKind = 'generate' | 'preview'
 export interface FinishedPayload {
   kind: TaskKind
   filePath: string
+  /** 同步生成的字幕文件路径（未生成字幕时缺省） */
+  subtitlePath?: string
 }
 
 /** 任务错误事件 */
 export interface ErrorPayload {
   kind: TaskKind
   message: string
+}
+
+/** 任务被用户停止事件（生成/试听中断后通知渲染进程复位界面状态） */
+export interface StoppedPayload {
+  kind: TaskKind
 }
 
 /** 渲染进程 API 契约（preload 实现，渲染进程经 window.api 使用） */
@@ -121,12 +133,18 @@ export interface RendererApi {
   installUpdate(): Promise<void>
   /** 订阅更新状态事件，返回取消订阅函数 */
   onUpdateEvent(cb: (event: UpdateEvent) => void): () => void
+  /** 开始下载已确认的更新（autoDownload 关闭后由用户在确认弹窗中触发），进度经 onUpdateEvent 推送 */
+  downloadUpdate(): Promise<void>
+  /** 将指定版本标记为“不再提示”：启动静默检查发现该版本时不再弹出更新确认；手动检查不受影响 */
+  skipUpdateVersion(version: string): Promise<void>
   /** 订阅主菜单动作（文件/编辑/帮助中需渲染进程处理的项），返回取消订阅函数 */
   onMenuAction(cb: (actionId: string) => void): () => void
   /** 订阅事件，返回取消订阅函数 */
   onProgress(cb: (payload: ProgressPayload) => void): () => void
   onFinished(cb: (payload: FinishedPayload) => void): () => void
   onError(cb: (payload: ErrorPayload) => void): () => void
+  /** 任务被用户停止（生成/试听中断） */
+  onStopped(cb: (payload: StoppedPayload) => void): () => void
 }
 
 /** 自动更新事件（主进程→渲染进程） */

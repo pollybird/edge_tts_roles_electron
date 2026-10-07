@@ -34,6 +34,7 @@ export interface Messages {
   extras: Record<string, string>
   output: Record<string, string>
   preview: Record<string, string>
+  subtitle: Record<string, string>
   message: Record<string, string>
   update: Record<string, string>
   tts: Record<string, string>

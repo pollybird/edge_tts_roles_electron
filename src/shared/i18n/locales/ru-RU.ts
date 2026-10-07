@@ -148,6 +148,8 @@ const ruRU: LocalePack = {
       selectForPreview: 'Сначала выделите текст для прослушивания!',
       previewReady: 'Аудио для предпрослушивания готово!',
       audioGenerated: 'Аудио создано! {path}',
+      subtitleSaved: 'Субтитры сохранены: {path}',
+      stopped: 'Генерация остановлена.',
       errorPrefix: 'Ошибка: {msg}',
       configSaved: 'Конфигурация сохранена: {path}',
       configLoaded: 'Настройки голосов загружены!',
@@ -164,7 +166,18 @@ const ruRU: LocalePack = {
       downloaded: 'Версия {version} загружена. Перезапустить для установки?',
       install: 'Перезапустить и установить',
       later: 'Позже',
-      checkFailed: 'Не удалось проверить обновления.'
+      checkFailed: 'Не удалось проверить обновления.',
+      dialogTitle: 'Доступно обновление',
+      dialogBody: 'Доступна новая версия {version}. Скачать и установить сейчас?',
+      dialogInstall: 'Установить сейчас',
+      dialogLater: 'Напомнить позже',
+      dialogNever: 'Больше не напоминать об этой версии'
+    },
+    subtitle: {
+      label: 'Субтитры',
+      none: 'Нет',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -192,6 +205,7 @@ const ruRU: LocalePack = {
         'нажмите «Создать» ещё раз — продолжение произойдёт с точки прерывания.',
       streamInterrupted: 'Аудиопоток завершился до окончания передачи',
       connClosedEarly: 'Соединение закрыто преждевременно',
+      audioTruncated: 'Аудио неполное (сервер завершил раньше времени)',
       emptyAudio: 'Пустые аудиоданные',
       edge50x: 'Ошибка сервера Edge TTS ({msg}), создание аудио прервано. Повторите попытку позже.',
       segmentFailed: 'Не удалось создать голосовой сегмент: {msg}',

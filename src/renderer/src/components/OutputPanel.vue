@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AudioFormat } from '../../../shared/types'
+import type { AudioFormat, SubtitleFormat } from '../../../shared/types'
 import { useI18n } from '../composables/useI18n'
 
 const { t } = useI18n()
@@ -7,6 +7,7 @@ const { t } = useI18n()
 const props = defineProps<{
   outputPath: string
   format: AudioFormat
+  subtitleFormat: SubtitleFormat
   progress: number
   progressMessage: string
   running: boolean
@@ -15,11 +16,17 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:outputPath': [value: string]
   'update:format': [value: AudioFormat]
+  'update:subtitleFormat': [value: SubtitleFormat]
   generate: []
   stop: []
 }>()
 
 const formats: AudioFormat[] = ['wav', 'mp3', 'ogg', 'flac']
+const subtitleOptions: Array<{ value: SubtitleFormat; label: string }> = [
+  { value: '', label: 'subtitle.none' },
+  { value: 'lrc', label: 'subtitle.lrc' },
+  { value: 'srt', label: 'subtitle.srt' }
+]
 
 async function chooseOutput(): Promise<void> {
   const path = await window.api.saveAudioFile(props.format)
@@ -28,6 +35,10 @@ async function chooseOutput(): Promise<void> {
 
 function onFormatChange(e: Event): void {
   emit('update:format', (e.target as HTMLSelectElement).value as AudioFormat)
+}
+
+function onSubtitleFormatChange(e: Event): void {
+  emit('update:subtitleFormat', (e.target as HTMLSelectElement).value as SubtitleFormat)
 }
 </script>
 
@@ -40,6 +51,19 @@ function onFormatChange(e: Event): void {
         {{ t('output.format') }}
         <select class="format-select" :value="format" @change="onFormatChange">
           <option v-for="f in formats" :key="f" :value="f">{{ f.toUpperCase() }}</option>
+        </select>
+      </label>
+      <label class="format-field">
+        {{ t('subtitle.label') }}
+        <select
+          class="format-select"
+          data-testid="subtitle-format"
+          :value="subtitleFormat"
+          @change="onSubtitleFormatChange"
+        >
+          <option v-for="opt in subtitleOptions" :key="opt.value" :value="opt.value">
+            {{ opt.value ? opt.value.toUpperCase() : t(opt.label) }}
+          </option>
         </select>
       </label>
     </div>

@@ -22,6 +22,8 @@ export const IpcChannels = {
   // 自动更新（invoke：渲染→主；send：主→渲染推送状态）
   updateCheck: 'update:check',
   updateInstall: 'update:install',
+  updateDownload: 'update:download',
+  updateSkipVersion: 'update:skip-version',
   updateChecking: 'update:checking',
   updateAvailable: 'update:available',
   updateNotAvailable: 'update:not-available',
@@ -31,6 +33,7 @@ export const IpcChannels = {
   // send（主 → 渲染，事件推送）
   progress: 'tts:progress',
   finished: 'tts:finished',
+  taskStopped: 'tts:stopped',
   taskError: 'tts:error'
 } as const
 

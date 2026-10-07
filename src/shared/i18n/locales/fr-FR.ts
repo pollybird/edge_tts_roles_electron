@@ -150,6 +150,8 @@ const frFR: LocalePack = {
       selectForPreview: 'Veuillez d’abord sélectionner le texte à écouter !',
       previewReady: 'L’audio d’aperçu est prêt !',
       audioGenerated: 'Audio généré ! {path}',
+      subtitleSaved: 'Sous-titres enregistrés : {path}',
+      stopped: 'Génération arrêtée.',
       errorPrefix: 'Erreur : {msg}',
       configSaved: 'Configuration enregistrée : {path}',
       configLoaded: 'Réglages des voix chargés !',
@@ -166,7 +168,18 @@ const frFR: LocalePack = {
       downloaded: 'La version {version} est téléchargée. Redémarrer pour installer ?',
       install: 'Redémarrer et installer',
       later: 'Plus tard',
-      checkFailed: 'Échec de la recherche de mise à jour.'
+      checkFailed: 'Échec de la recherche de mise à jour.',
+      dialogTitle: 'Mise à jour disponible',
+      dialogBody: 'La version {version} est disponible. La télécharger et l’installer maintenant ?',
+      dialogInstall: 'Installer maintenant',
+      dialogLater: 'Me le rappeler plus tard',
+      dialogNever: 'Ne plus me le rappeler pour cette version'
+    },
+    subtitle: {
+      label: 'Sous-titres',
+      none: 'Aucun',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -195,6 +208,7 @@ const frFR: LocalePack = {
         'cliquez à nouveau sur Générer pour reprendre à partir du point d’arrêt.',
       streamInterrupted: 'Le flux audio s’est terminé avant la fin du transfert',
       connClosedEarly: 'Connexion fermée prématurément',
+      audioTruncated: 'Audio incomplet (fin anticipée du serveur)',
       emptyAudio: 'Données audio vides',
       edge50x:
         'Erreur du serveur Edge TTS ({msg}), génération audio annulée. Veuillez réessayer plus tard.',

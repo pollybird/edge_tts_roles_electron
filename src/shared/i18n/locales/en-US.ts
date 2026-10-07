@@ -145,6 +145,8 @@ const enUS: LocalePack = {
       selectForPreview: 'Please select the text to preview first!',
       previewReady: 'Preview audio is ready!',
       audioGenerated: 'Audio generated! {path}',
+      subtitleSaved: 'Subtitle saved: {path}',
+      stopped: 'Generation stopped.',
       errorPrefix: 'Error: {msg}',
       configSaved: 'Config saved: {path}',
       configLoaded: 'Voice settings loaded!',
@@ -161,7 +163,18 @@ const enUS: LocalePack = {
       downloaded: 'Version {version} downloaded. Restart to install?',
       install: 'Restart & Install',
       later: 'Later',
-      checkFailed: 'Failed to check for updates.'
+      checkFailed: 'Failed to check for updates.',
+      dialogTitle: 'Update Available',
+      dialogBody: 'A new version {version} is available. Download and install now?',
+      dialogInstall: 'Install Now',
+      dialogLater: 'Remind Me Later',
+      dialogNever: "Don't Remind Me for This Version"
+    },
+    subtitle: {
+      label: 'Subtitles',
+      none: 'None',
+      lrc: 'LRC',
+      srt: 'SRT'
     },
 
     tts: {
@@ -189,6 +202,7 @@ const enUS: LocalePack = {
         'click Generate again to resume from the breakpoint.',
       streamInterrupted: 'The audio stream ended before transfer completed',
       connClosedEarly: 'Connection closed early',
+      audioTruncated: 'Audio incomplete (server ended early)',
       emptyAudio: 'Empty audio data',
       edge50x: 'Edge TTS server error ({msg}), audio generation aborted. Please try again later.',
       segmentFailed: 'Failed to generate voice segment: {msg}',
