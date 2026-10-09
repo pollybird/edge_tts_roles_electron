@@ -5,6 +5,11 @@ import type { SynthesisOutcome, TTSProvider, TtsSegmentRequest, TtsSynthesisHook
 /** 两次音频数据包之间的默认最大间隔，超时视为连接僵死并按不完整处理 */
 export const DEFAULT_IDLE_TIMEOUT_MS = 15000
 
+/** 去除空白与全部标点/符号，仅保留文字与数字（完整性尾部比对用） */
+export function stripSymbols(s: string): string {
+  return s.replace(/[\s\p{P}\p{S}]/gu, '')
+}
+
 /**
  * 默认 TTS Provider：基于 edge-tts-universal 的在线流式合成。
  *
@@ -52,11 +57,13 @@ export class EdgeTTSProvider implements TTSProvider {
     hooks: TtsSynthesisHooks,
     isStopped: () => boolean
   ): Promise<SynthesisOutcome> {
-    const INCOMPLETE: SynthesisOutcome = { complete: false, serverEndMs: -1 }
+    const INCOMPLETE: SynthesisOutcome = { complete: false, serverEndMs: -1, spokenTail: '' }
     const { createWriteStream } = await import('fs')
     const ws = createWriteStream(filePath)
     let timer: NodeJS.Timeout | undefined
     let resetIdle: (() => void) | undefined
+    // 收集服务端逐词边界元数据（WordBoundary）的文本，作为不依赖服务端自宣告的完整性先验
+    const spokenWords: string[] = []
     try {
       const iterator = communicate.stream()[Symbol.asyncIterator]()
 
@@ -84,6 +91,8 @@ export class EdgeTTSProvider implements TTSProvider {
           ws.write(Buffer.from(chunk.data))
           resetIdle?.()
           hooks.onAudioChunk?.()
+        } else if (typeof (chunk as { text?: unknown }).text === 'string') {
+          spokenWords.push((chunk as { text: string }).text)
         }
       }
       if (timer) clearTimeout(timer)
@@ -100,13 +109,14 @@ export class EdgeTTSProvider implements TTSProvider {
       ).state
       // 库升级后若该内部字段消失，退化为信任流正常结束（旧行为），避免误判
       if (!state || typeof state.offsetCompensation !== 'number') {
-        return { complete: true, serverEndMs: -1 }
+        return { complete: true, serverEndMs: -1, spokenTail: stripSymbols(spokenWords.join('')) }
       }
       const comp = state.offsetCompensation
       if (comp <= 0) return INCOMPLETE
       // turn.end 时 offsetCompensation = 最后一个字终点 + 8750000 tick（875ms）
       const serverEndMs = comp > 875e4 ? (comp - 875e4) / 10000 : -1
-      return { complete: true, serverEndMs }
+      const spokenTail = stripSymbols(spokenWords.join('')).slice(-64)
+      return { complete: true, serverEndMs, spokenTail }
     } catch (err) {
       if (timer) clearTimeout(timer)
       ws.destroy()

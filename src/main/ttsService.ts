@@ -98,6 +98,8 @@ export class TtsService {
       const audioSegments: StereoPcm[] = []
       // 字幕素材：语音段在旁白时间轴上的起止（样本计数推进，停顿/蜂鸣不产出 cue）
       const cueSources: SubtitleSource[] = []
+      // 字幕对齐调试（EDGE_TTS_DEBUG_CUES=1 时落盘 /tmp/cues-debug.json）
+      const cueDebug: Array<Record<string, unknown>> = []
       const sampleRate = 24000
       let sampleCursor = 0
       let segIndex = 0
@@ -163,17 +165,43 @@ export class TtsService {
               startMs: ((sampleCursor + startSample) / sampleRate) * 1000,
               endMs: ((sampleCursor + endSample) / sampleRate) * 1000
             })
+            if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+              cueDebug.push({
+                type: 'text',
+                role: seg.role,
+                textPreview: seg.text.slice(0, 30),
+                segStartMs: (sampleCursor / sampleRate) * 1000,
+                segLenMs: (pcm.left.length / sampleRate) * 1000,
+                detectStartMs: range ? (startSample / sampleRate) * 1000 : null,
+                detectEndMs: range ? (endSample / sampleRate) * 1000 : null,
+                sampleRate
+              })
+            }
             sampleCursor += pcm.left.length
           }
         } else if (seg.type === 'pause') {
           progress(percent, t('tts.pauseAdded', { ms: seg.durationMs }))
           const silence = createSilence(seg.durationMs, sampleRate)
           audioSegments.push(silence)
+          if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+            cueDebug.push({
+              type: 'pause',
+              durationMs: seg.durationMs,
+              segStartMs: (sampleCursor / sampleRate) * 1000
+            })
+          }
           sampleCursor += silence.left.length
         } else if (seg.type === 'beep') {
           progress(percent, t('tts.beepAdded'))
           const beep = createBeep(500, 1000, sampleRate)
           audioSegments.push(beep)
+          if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+            cueDebug.push({
+              type: 'beep',
+              segStartMs: (sampleCursor / sampleRate) * 1000,
+              segLenMs: (beep.left.length / sampleRate) * 1000
+            })
+          }
           sampleCursor += beep.left.length
         }
       }
@@ -182,6 +210,12 @@ export class TtsService {
       if (audioSegments.length === 0) {
         this.sendError(win, kind, t('tts.noAudio'))
         return
+      }
+
+      // 字幕对齐调试：逐段记录样本游标/段长/检测结果，用于排查字幕与音频的时间偏差
+      if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+        const { appendFileSync } = await import('fs')
+        appendFileSync('/tmp/cues-debug.json', JSON.stringify(cueDebug) + '\n')
       }
 
       progress(95, t('tts.merging'))
@@ -200,6 +234,10 @@ export class TtsService {
         // 前奏将整条语音右移，字幕时间轴同步偏移
         introOffsetMs = (mixed.introSamples / sampleRate) * 1000
       }
+
+      // 结尾统一补 1 秒静音：部分播放器/蓝牙音频链路会在文件播完前提前关闭设备，
+      // 截掉末尾数百毫秒语音（表现为“最后几个字丢失”）；补静音后被截的只是静音
+      finalPcm = concatenate([finalPcm, createSilence(1000, sampleRate)])
 
       let outputPath: string
       let subtitlePath = ''

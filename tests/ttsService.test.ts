@@ -18,8 +18,51 @@ import {
   BACKOFF_TABLE_MS,
   RunState,
   backoffDelayMs,
-  interruptibleWait
+  interruptibleWait,
+  isSpokenTailAligned
 } from '../src/main/tts/segmentSynthesizer'
+
+// 服务端提前收尾吞字时，逐词文本序列与源文本尾部错位（唯一不依赖服务端自宣告的判据）
+describe('isSpokenTailAligned', () => {
+  it('完整合成的逐词文本与源文本尾部对齐（中英文含标点）', () => {
+    expect(
+      isSpokenTailAligned(
+        '听一听到此结束请同学们继续完成试卷剩下的部分',
+        '听一听到此结束，请同学们继续完成试卷剩下的部分。'
+      )
+    ).toBe(true)
+    expect(
+      isSpokenTailAligned(
+        'ChildrensDayiscomingsoonWearegoingtohaveaparty',
+        "Children's Day is coming soon. We are going to have a party."
+      )
+    ).toBe(true)
+  })
+
+  it('吞掉结尾文字时逐词序列成为真前缀，尾部错位 → 判截断', () => {
+    expect(
+      isSpokenTailAligned(
+        '听一听到此结束请同学们继续完成试卷剩下的',
+        '听一听到此结束，请同学们继续完成试卷剩下的部分。'
+      )
+    ).toBe(false)
+    expect(
+      isSpokenTailAligned(
+        'ChildrensDayiscomingsoonWearegoingtohavea',
+        "Children's Day is coming soon. We are going to have a party."
+      )
+    ).toBe(false)
+  })
+
+  it('空逐词序列（库升级回退）不做判定', () => {
+    expect(isSpokenTailAligned('', '任意文本')).toBe(true)
+  })
+
+  it('逐词序列长于源文本时同样按尾部对齐判定', () => {
+    expect(isSpokenTailAligned('abcdefghijklmnopqrstuvwxyz', 'xyz')).toBe(true)
+    expect(isSpokenTailAligned('abcdefghijklmnopqrstuvw', 'xyz')).toBe(false)
+  })
+})
 
 // 重构后 retryBackoff 拆为纯函数 backoffDelayMs（查表+抖动）与 interruptibleWait（分片可中断等待）
 describe('backoffDelayMs', () => {

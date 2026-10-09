@@ -86,11 +86,11 @@ describe('formatLrc', () => {
     expect(formatLrcTimestamp(999)).toBe('00:01.00') // 四舍五入进位
   })
 
-  it('内联角色标签，段内换行折叠为空格', () => {
+  it('全角【角色】前缀（尖括号会被增强 LRC 解析器误当时间标签），段内换行折叠为空格', () => {
     const cues = buildSubtitleCues([
       { role: 'A', text: '第一行\n第二行', startMs: 500, endMs: 3200 }
     ])
-    expect(formatLrc(cues)).toBe('[00:00.50]<A>第一行 第二行\n')
+    expect(formatLrc(cues)).toBe('[00:00.50]【A】第一行 第二行\n')
   })
 })
 

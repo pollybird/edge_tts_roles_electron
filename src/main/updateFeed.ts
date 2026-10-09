@@ -1,15 +1,19 @@
 /**
  * 更新源探测（纯网络逻辑，不依赖 electron / electron-updater，可注入 mock fetch 单测）
  *
- * 更新源策略：GitHub Releases 为主，GitCode Release 附件为回退
- *（GitHub 在国内访问不稳定，需要可达的镜像源）。
+ * 更新源策略：默认 GitHub Releases 为主、GitCode Release 附件为回退；
+ * 简体中文系统（zh-CN / zh-Hans*）反过来 GitCode 优先、GitHub 回退——
+ * 这类环境绝大多数位于中国大陆，直连 GitHub 不稳定且即使探测成功下载也很慢，
+ * 而 GitCode 国内直连快速可靠。
  *
  * 1. 按当前平台生成对应的 latest*.yml 文件名
  *    （win=latest.yml, mac=latest-mac.yml, linux=latest-linux.yml）
- * 2. 探测 GitHub Releases 的 /releases/latest/download/{file}，短超时
- * 3. 探测失败 → 调 GitCode 公开 API 取最新 Release 的 tag，
- *    再以 /releases/download/{tag}/ 作为 generic feed base（GitCode 不支持 latest 别名，
- *    且其仓库 raw 地址对缺失/受限文件返回 HTML 页面，不能直接用作 feed）
+ * 2. 按优先级探测主源：
+ *    - GitHub：/releases/latest/download/{file}，短超时
+ *    - GitCode：先调公开 API 取最新 Release 的 tag，再以
+ *      /releases/download/{tag}/ 作为 generic feed base（GitCode 不支持 latest 别名，
+ *      且其仓库 raw 地址对缺失/受限文件返回 HTML 页面，不能直接用作 feed）
+ * 3. 主源不可达 → 探测另一个源（双向回退）
  * 4. updater.ts 把解析出的 base URL 交给 electron-updater generic provider
  *
  * 发版时需把安装包与 latest*.yml 同时作为附件上传到两个平台的 Release
@@ -69,8 +73,21 @@ export interface ResolveFeedOptions {
   endpoints?: Partial<FeedEndpoints>
   /** 单次探测超时（毫秒） */
   timeoutMs?: number
+  /** GitCode 优先（简体中文系统置 true）；默认 GitHub 优先 */
+  gitCodeFirst?: boolean
   /** 诊断日志（默认 console.log） */
   log?: (message: string) => void
+}
+
+/**
+ * 判断当前系统语言是否应优先使用 GitCode 更新源：
+ * 简体中文区域（zh-CN / zh-Hans*）的系统绝大多数位于中国大陆，
+ * 直连 GitHub 不稳定，GitCode 国内直连快速可靠。
+ * 繁体区域（zh-TW / zh-HK / zh-Hant*）不匹配——这些地区访问 GitHub 无障碍。
+ */
+export function prefersGitCodeFirst(locale: string): boolean {
+  const normalized = locale.toLowerCase()
+  return normalized.startsWith('zh-cn') || normalized.startsWith('zh-hans')
 }
 
 interface FeedContext {
@@ -78,6 +95,7 @@ interface FeedContext {
   fetchImpl: FetchLike
   endpoints: FeedEndpoints
   timeoutMs: number
+  gitCodeFirst: boolean
   log: (message: string) => void
 }
 
@@ -87,6 +105,7 @@ function buildContext(options: ResolveFeedOptions): FeedContext {
     fetchImpl: options.fetchImpl ?? ((url, init) => fetch(url, init as RequestInit)),
     endpoints: { ...DEFAULT_ENDPOINTS, ...options.endpoints },
     timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    gitCodeFirst: options.gitCodeFirst ?? false,
     log: options.log ?? ((msg) => console.log(msg))
   }
 }
@@ -145,27 +164,38 @@ export async function resolveGitCodeFeedUrl(options: ResolveFeedOptions): Promis
 
   const base = `${ctx.endpoints.gitcodeDownloadBase}${tag}/`
   const ok = await probeUrl(base + ctx.feedFile, ctx.fetchImpl, ctx.timeoutMs)
-  if (ok) {
-    ctx.log(`[updater] GitHub feed unreachable, falling back to GitCode: ${base}`)
-    return base
-  }
-  return null
+  return ok ? base : null
 }
 
 /**
- * 选择可用的更新源：优先 GitHub Releases，失败回退 GitCode Release 附件。
+ * 选择可用的更新源。默认 GitHub Releases 优先、GitCode Release 附件回退；
+ * gitCodeFirst 为 true 时顺序对调（简体中文系统默认 GitCode 优先，
+ * 避免 GitHub 清单探测成功但安装包下载极慢的情况），双向回退。
  * 返回 electron-updater generic provider 需要的 base URL；若两者均不可达返回 null。
  */
 export async function resolveFeedUrl(options: ResolveFeedOptions): Promise<string | null> {
   const ctx = buildContext(options)
-  const githubFeed = ctx.endpoints.githubBase + ctx.feedFile
-  const githubOk = await probeUrl(githubFeed, ctx.fetchImpl, ctx.timeoutMs)
-  if (githubOk) {
-    ctx.log(`[updater] using GitHub feed: ${ctx.endpoints.githubBase}`)
-    return ctx.endpoints.githubBase
+
+  const resolveGitHub = async (): Promise<string | null> => {
+    const githubFeed = ctx.endpoints.githubBase + ctx.feedFile
+    const ok = await probeUrl(githubFeed, ctx.fetchImpl, ctx.timeoutMs)
+    return ok ? ctx.endpoints.githubBase : null
   }
-  const gitcodeBase = await resolveGitCodeFeedUrl(options)
-  if (gitcodeBase) return gitcodeBase
+  const resolveGitCode = (): Promise<string | null> => resolveGitCodeFeedUrl(options)
+
+  const primary = ctx.gitCodeFirst ? resolveGitCode : resolveGitHub
+  const fallback = ctx.gitCodeFirst ? resolveGitHub : resolveGitCode
+
+  const primaryBase = await primary()
+  if (primaryBase) {
+    ctx.log(`[updater] using primary feed: ${primaryBase}`)
+    return primaryBase
+  }
+  const fallbackBase = await fallback()
+  if (fallbackBase) {
+    ctx.log(`[updater] using fallback feed: ${fallbackBase}`)
+    return fallbackBase
+  }
   ctx.log('[updater] neither GitHub nor GitCode feed reachable, skipping update check')
   return null
 }

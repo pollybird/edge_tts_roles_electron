@@ -4,6 +4,21 @@ import { decodeAudioToPcm, tempPath } from '../audioProcessor'
 import type { StereoPcm } from '../audioProcessor'
 import type { SegmentCache, SegmentVoiceSettings } from './segmentCache'
 import type { TTSProvider } from './provider/types'
+import { stripSymbols } from './provider/edgeTtsProvider'
+
+/**
+ * 完整性尾部对齐判定：服务端逐词文本（去空白标点）应与源文本（去空白标点）
+ * 尾部对齐。服务端提前收尾吞掉结尾文字时，对应词边界不会推送，spokenTail
+ * 成为源文本的真前缀，尾部必然错位。取两侧较短者的尾部最多 20 字比较，
+ * 空流（spokenTail 为空）不做判定，交由其他判据处理。
+ */
+export function isSpokenTailAligned(spokenTail: string, sourceText: string): boolean {
+  if (!spokenTail) return true
+  const source = stripSymbols(sourceText)
+  const k = Math.min(spokenTail.length, source.length, 20)
+  if (k === 0) return true
+  return spokenTail.slice(-k) === source.slice(-k)
+}
 
 /** 一次生成任务的运行态：停止信号 + 段间自适应冷却，由编排器在每次任务前 reset */
 export class RunState {
@@ -164,6 +179,12 @@ export class SegmentSynthesizer {
             // 流正常收尾但音频时长明显短于服务端宣告的语音终点：
             // 服务端提前 turn.end 丢掉尾部音频，按不完整处理触发重试，
             // 防止截断片段落盘缓存后永久复现“结尾几秒语音丢失”
+            lastErr = new Error(t('tts.audioTruncated'))
+            failReason = t('tts.connClosedEarly')
+          } else if (!isSpokenTailAligned(outcome.spokenTail, request.text)) {
+            // 服务端提前收尾时连最后几字的词边界宣告也会一并缺失，
+            // 宣告终点与实际音频“自洽”，时长校验无法察觉；
+            // 唯一独立先验是逐词文本序列与源文本的尾部对齐——被吞的字不在序列里
             lastErr = new Error(t('tts.audioTruncated'))
             failReason = t('tts.connClosedEarly')
           } else {

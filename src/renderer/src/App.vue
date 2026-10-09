@@ -23,7 +23,7 @@ const { t, locale } = useI18n()
 const text = ref('')
 const voices = ref<VoiceInfo[]>([])
 const outputPath = ref('')
-const format = ref<AudioFormat>('wav')
+const format = ref<AudioFormat>('mp3')
 /** 字幕输出格式（会话级，与音频格式一致不持久化） */
 const subtitleFormat = ref<SubtitleFormat>('')
 const progress = ref(0)

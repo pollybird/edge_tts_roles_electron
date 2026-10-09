@@ -2,7 +2,8 @@
  * 自动更新模块（Electron 集成层）
  *
  * 纯网络探测逻辑在 ./updateFeed.ts（可注入 mock 单测）；本文件负责：
- * - 启动时解析可用更新源（GitHub 主源 / GitCode 回退）并配置 electron-updater
+ * - 启动时解析可用更新源并配置 electron-updater（默认 GitHub 主源 / GitCode 回退；
+ *   简体中文系统反过来 GitCode 优先，见 updateFeed.ts）
  * - 转发更新事件到渲染进程
  * - 区分“启动静默检查”与“用户手动检查”：手动检查且无新版本时提示“已是最新版本”
  */
@@ -11,7 +12,7 @@ import { autoUpdater } from 'electron-updater'
 import { IpcChannels } from '../shared/ipc'
 import { getSetting, setSetting } from './settings'
 import { shouldPromptUpdate } from './updatePrompt'
-import { getFeedFileName, resolveFeedUrl } from './updateFeed'
+import { getFeedFileName, prefersGitCodeFirst, resolveFeedUrl } from './updateFeed'
 
 const FEED_FILE = getFeedFileName()
 
@@ -35,7 +36,11 @@ export async function initAutoUpdater(getMainWindow: () => BrowserWindow | null)
     return
   }
 
-  const feedUrl = await resolveFeedUrl({ feedFile: FEED_FILE }).catch(() => null)
+  const feedUrl = await resolveFeedUrl({
+    feedFile: FEED_FILE,
+    // 简体中文系统默认 GitCode 优先（此类环境多在中国大陆，直连 GitHub 慢且不稳定）
+    gitCodeFirst: prefersGitCodeFirst(app.getLocale())
+  }).catch(() => null)
   if (!feedUrl) {
     // 两个更新源均不可达：不注册更新检查，避免向无效地址请求导致解析错误
     return

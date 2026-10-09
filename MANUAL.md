@@ -1,6 +1,6 @@
 # edge-tts-roles User Manual
 
-**Edge-TTS Multi-Voice Audio Generator** (v2.0.4)
+**Edge-TTS Multi-Voice Audio Generator** (v2.0.5)
 
 A desktop application that turns marker-based text scripts into multi-speaker audio. It uses Microsoft's online Edge speech synthesis service: assign a different neural voice to each speaker, switch roles freely in one script, control pauses and beeps, optionally add music, and export WAV / MP3 / OGG / FLAC files.
 
@@ -56,7 +56,7 @@ A desktop application that turns marker-based text scripts into multi-speaker au
 - Lets you assign a different **neural voice** to **four roles (A–D)**, each with its own rate, volume and pitch;
 - Synthesizes each segment through Microsoft's online Edge speech service and stitches it together with pauses and beeps;
 - Optionally mixes in an **intro, outro and background music**;
-- Exports WAV (32-bit float), MP3, OGG and FLAC audio files.
+- Exports WAV (32-bit float), MP3, OGG and FLAC audio files, optionally together with LRC / SRT subtitles sample-aligned to the audio.
 
 ### 1.1 Key Features
 
@@ -65,14 +65,15 @@ A desktop application that turns marker-based text scripts into multi-speaker au
 | Four switchable roles | Each role (A–D) has its own voice, rate, volume and pitch |
 | Marker-based scripts | Switch voices, insert millisecond pauses and beeps without leaving the text |
 | Full voice catalog | Voices are fetched from the service, grouped by language with localized names |
-| Reliable long-form synthesis | Up to 15 automatic retries per segment, a 15-second idle watchdog and jittered backoff |
+| Reliable long-form synthesis | Up to 15 automatic retries per segment, a 15-second idle watchdog and jittered backoff; a triple integrity check keeps truncated segments out of the cache |
 | Resume from breakpoint | Completed segments are cached on disk, so a re-run skips what already worked |
 | Audio extras | Intro / outro / background music, each with a 0–100% volume control; BGM loops automatically |
 | Instant preview | Audition the whole text or just the selection before exporting (extras included) |
-| Four output formats | WAV, MP3, OGG Vorbis, FLAC — all processed by a bundled ffmpeg, no system install needed |
+| Synchronized subtitles | LRC / SRT subtitles generated alongside the audio, timestamped sample-aligned; role prefixes 【A】 (LRC) / [A] (SRT); intro/outro shifts times automatically |
+| Four output formats | WAV, MP3 (44.1 kHz, default), OGG Vorbis, FLAC — all processed by a bundled ffmpeg, no system install needed |
 | Config import/export | Save the four roles' voice / rate / volume / pitch to a JSON file and reuse it |
 | 9 interface languages | English, Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese, Arabic (with RTL layout) |
-| Auto-update | Silent check after launch, or manual check anytime; GitHub primary source + GitCode fallback |
+| Auto-update | Silent check after launch, or manual check anytime; a confirmation dialog appears for new versions (per-version skip supported); Simplified-Chinese systems probe GitCode first, others GitHub first (two-way fallback) |
 
 ### 1.2 Important Notes
 
@@ -345,36 +346,56 @@ Click **Preview Selection** (after selecting text) or **Preview All Text**:
 ### 9.1 Steps
 
 1. In the bottom output panel click **Output File...** and pick a path (defaults to `output.<format>` in your Music folder);
-2. Choose a **Format**:
-   - **WAV** — 32-bit float stereo, largest size, lossless;
-   - **MP3** — `libmp3lame` high-quality compression, best compatibility;
+2. Choose a **Format** (default **MP3**):
+   - **MP3** — `libmp3lame` high-quality compression, uniformly resampled to 44.1 kHz, best compatibility;
    - **OGG** — Vorbis compression;
    - **FLAC** — lossless compression;
-3. Click **Generate Audio**.
+   - **WAV** — 32-bit float stereo, largest size, lossless;
+3. Choose a **Subtitle** format — **None / LRC / SRT**. With LRC or SRT selected, a subtitle file with the same name (`output.lrc` / `output.srt`) is exported alongside the audio, see [9.5 Subtitle Export](#95-subtitle-export);
+4. Click **Generate Audio**.
 
 ### 9.2 During Generation
 
 - The status bar shows live progress (percentage + localized messages: which segment is being synthesized, retries, cache hits, pauses, beeps, mixing, encoding);
-- **Stop** interrupts the job at any time (takes effect within 0.2 s);
-- On success the output path is shown in the status bar.
+- **Stop** interrupts the job at any time (takes effect within 0.2 s) and the UI resets immediately;
+- On success the output path is shown in the status bar; if a subtitle format was selected, the audio and subtitle files are written together and can be opened in any player or editor.
 
 ### 9.3 Reliability Notes (advanced users)
 
 - **Automatic retries**: each text segment retries up to 15 times on network interruption; backoff grows from 1 s to 30 s with ±20% random jitter (fast retries for transient glitches, long waits for sustained outages);
 - **Idle watchdog**: 15 seconds without audio data marks the connection as dead and triggers a retry instead of hanging forever;
 - **Inter-segment cooldown**: after a retried segment, the next one waits 0.5–2 s; two consecutive clean successes relax the cooldown;
-- **Disk cache (resume)**: every successful segment is cached under `userData/tts-segment-cache` keyed by `voice|rate|volume|pitch|text`; re-running a script that failed mid-way hits the cache and only synthesizes what is missing. The cache prunes to 200 entries (LRU) once it exceeds 300.
+- **Triple synthesis integrity check**: every segment must simultaneously ① end with the server's finalization signal; ② match the server-declared speech end against the actual PCM duration; ③ have the server-pushed word-boundary (WordBoundary) texts tail-aligned with the source text. Any violation means "the server ended early and truncated the segment" — the segment is discarded and retried, and **a failing segment is never written to the cache**, so a truncation cannot be replayed forever by the cache;
+- **Versioned cache keys**: each time the integrity logic improves, the cache-key version prefix is bumped (currently v3), invalidating any historical possibly-truncated entries automatically — no manual cleanup needed;
+- **Disk cache (resume)**: segments that pass the checks are cached under `userData/tts-segment-cache` keyed by `voice|rate|volume|pitch|text`; re-running a script that failed mid-way hits the cache and only synthesizes what is missing. The cache prunes to 200 entries (LRU) once it exceeds 300;
+- **Trailing silence guard**: 1 second of silence is appended to every export. Some playback chains (e.g. Bluetooth audio latency, players closing the audio device before the file finishes) cut off the last few hundred milliseconds of actual speech ("the last words are missing"); with the guard, only silence gets cut.
 
 ### 9.4 Formats & Encoders
 
 | Format | Encoder | Notes |
 | --- | --- | --- |
-| WAV | written directly | IEEE 32-bit float, stereo, 24 kHz |
-| MP3 | `libmp3lame` (quality q2) | lossy, small |
+| MP3 | `libmp3lame` (quality q2) | lossy, small; uniformly output at 44.1 kHz (MPEG-1), the most subtitle/lyrics-sync friendly, **default format** |
 | OGG | `libvorbis` (quality q4) | |
 | FLAC | `flac` | lossless |
+| WAV | written directly | IEEE 32-bit float, stereo, 24 kHz |
 
-Internal pipeline: Edge TTS streams MP3 → ffmpeg decodes to 24 kHz stereo 32-bit float PCM → silence and beeps are concatenated → audio extras are mixed → the final format is encoded. Everything is done by the **bundled ffmpeg**; no system tools are required.
+Internal pipeline: Edge TTS streams MP3 → ffmpeg decodes to 24 kHz stereo 32-bit float PCM → silence and beeps are concatenated (subtitle timestamps collected at the same time) → audio extras are mixed → 1 s of trailing silence is appended → the final format is encoded (MP3 resampled to 44.1 kHz). Everything is done by the **bundled ffmpeg**; no system tools are required.
+
+### 9.5 Subtitle Export
+
+Subtitles can be exported together with the audio in two formats:
+
+| Format | Use case | Role label |
+| --- | --- | --- |
+| LRC | music player lyrics panels, line-by-line karaoke scrolling | in-line prefix `【A】` (full-width brackets) |
+| SRT | standard subtitle track for video players and editors | text prefix `[A] ` |
+
+How alignment works: subtitle timestamps are **not estimated from speaking speed** — they are collected during the audio **concatenation stage by counting PCM samples** (pauses, beeps, intro/outro all advance the timeline, but only speech segments produce subtitle lines), and the actual speech start/end inside each segment is located via energy detection. The result is sample-aligned with the exported audio. When an intro/outro is present, all subtitle times are shifted automatically.
+
+Player compatibility notes:
+
+- The LRC role prefix deliberately uses **full-width 【】** instead of angle brackets `<A>`: angle brackets are the syntax position for per-word timestamps (`<mm:ss.xx>`) in the enhanced-LRC spec, and some players parse `<A>` as a timestamp, dropping the line or corrupting its time;
+- If lyrics appear out of sync in some player, first **quit and reopen the player** (some players cache an older copy of a same-named subtitle file), then cross-check with another standard player — the subtitle file itself is precisely aligned with the audio.
 
 ---
 
@@ -403,19 +424,22 @@ Arabic is written right-to-left. Choosing Arabic switches the entire UI (menus, 
 
 ### 11.1 When Checks Happen
 
-- About **5 seconds after launch** a silent check runs: if a new version exists it starts downloading and notifies you; if not, it stays quiet;
-- Use **Help → Check for Updates** anytime: if you are already up to date, a message **explicitly tells you so**; otherwise it offers the download.
+- About **5 seconds after launch** a silent check runs: if a new version exists a "New version available" dialog is shown; if not, it stays quiet;
+- Use **Help → Check for Updates** anytime: if you are already up to date, a message **explicitly tells you so**; a new version shows the same confirmation dialog.
 
 ### 11.2 Update Flow
 
-1. A new version is found (silently or manually) → download starts automatically with progress shown;
-2. When the download finishes you are prompted; the update installs on **app quit**;
-3. You may also postpone and let it install on the next restart.
+1. When a new version is found, a "New version available" dialog appears (with the new version number) and offers three choices:
+   - **Install now**: the download starts with progress shown; once finished you are prompted to install — the update installs on **app quit**;
+   - **Remind later**: nothing is downloaded this time; you are asked again after the next startup check;
+   - **Skip this version**: the version number is persisted; the startup check stays quiet for it, while a **higher version** still prompts normally. **Help → Check for Updates** is a manual action and always gives a result, ignoring the skip preference;
+2. The update download only starts after your confirmation (nothing is silently fetched in the background);
+3. You may also postpone the install and let it complete on the next restart.
 
 ### 11.3 Update Sources
 
-- **Primary**: GitHub Releases;
-- **Fallback**: GitCode Release assets (used when GitHub is unreachable; probe timeout ≈ 3.5 s).
+- **Source order**: GitHub Releases is probed first by default; systems with a Simplified Chinese locale (`zh-CN` / `zh-Hans*`) probe **GitCode first** instead — such systems are mostly in mainland China, where direct GitHub access is unstable and installer downloads are slow;
+- **Fallback**: the other platform (fallback works both ways; probe timeout ≈ 3.5 s).
 
 > Updates are only pulled from these official sources. Do not install builds from third-party sites.
 
@@ -484,6 +508,15 @@ Click "Save Config" in Voice Settings, send the JSON file, and the other person 
 
 Auto-update depends on GitHub or GitCode reachability. Try again later or use Help → Check for Updates manually. This never affects locally exported files.
 
+**Q11: The exported LRC lyrics are out of sync with the audio?**
+
+Subtitle timestamps are sample-aligned to the audio at generation time (verified against the waveform per segment within ±20 ms). If a particular player shows them out of sync, there are usually two causes:
+
+1. **The player cached an old subtitle**: after regenerating, fully quit and reopen the player so it re-reads `output.lrc`;
+2. **The player's lyrics engine itself is buggy**: some players (e.g. deepin-music) have timing issues in their lyrics parsing — cross-check with another standard player (NetEase Cloud Music, VLC, etc.); if the others are in sync, it is that player's problem.
+
+Also note the LRC role prefix uses full-width 【A】 instead of `<A>`, because angle brackets are parsed as per-word timestamps by some players, which drops the whole line.
+
 ---
 
 ## 14. Troubleshooting
@@ -495,6 +528,7 @@ Auto-update depends on GitHub or GitCode reachability. Try again later or use He
 | A role's voice is unclear | Voice or settings mismatch | Tune that role's volume/rate; lower BGM volume if it competes |
 | "Failed to load extra audio" | Unsupported format or corrupt file | Retry with a common format (MP3/WAV) or re-encode first |
 | Cached audio seems stale | Settings changed → cache key changed | Expected behavior; no cleanup needed, LRU prunes automatically |
+| Lyrics/subtitles out of sync with audio | The player cached an old subtitle file, or its lyrics engine is buggy | Fully quit and reopen the player; or cross-check with a standard player (NetEase Cloud Music, VLC, etc.) |
 | Menus switch back to the system language | Locale preference reset / first launch | Re-pick it in the Language menu; the choice persists |
 
 ---
@@ -509,13 +543,21 @@ edge_tts_roles_electron/
 │   ├── main/                 Electron main process
 │   │   ├── index.ts          App lifecycle, main window, startup init
 │   │   ├── ipc.ts            IPC handlers: dialogs, config import/export, agreement quit
-│   │   ├── ttsService.ts     Synthesis pipeline: parse → synthesize → retry → cache → mix → encode
+│   │   ├── ttsService.ts     Synthesis pipeline: parse → synthesize → subtitles → mix → encode
+│   │   ├── tts/              TTS submodules
+│   │   │   ├── provider/             TTS provider abstraction (TTSProvider interface +
+│   │   │   │                         default edgeTtsProvider implementation, swappable offline engines)
+│   │   │   ├── voiceCatalog.ts       Voice list caching
+│   │   │   ├── segmentCache.ts       Segment PCM disk cache (resume/LRU, versioned keys v3)
+│   │   │   └── segmentSynthesizer.ts Per-segment streaming synthesis, retries, watchdog, integrity checks
+│   │   ├── subtitles.ts      Subtitle generation (LRC/SRT, aligned by PCM sample counting)
 │   │   ├── audioProcessor.ts PCM math + ffmpeg decode/encode (24 kHz stereo f32)
 │   │   ├── ffmpegResolver.ts Runtime ffmpeg path resolution (packaged/dev/PATH)
-│   │   ├── updater.ts        electron-updater glue: event forwarding, silent/manual checks
+│   │   ├── updater.ts        electron-updater glue: event forwarding, silent/manual checks, prompt gating
+│   │   ├── updatePrompt.ts   "Skip this version" decision (pure function, unit-testable)
 │   │   ├── updateFeed.ts     Feed probing (pure logic, mockable for unit tests)
 │   │   ├── menu.ts           Localized application menu (File/Edit/Language/Help)
-│   │   └── settings.ts       Typed electron-store settings
+│   │   └── settings.ts       Typed electron-store settings (roles, output, locale, agreement, skipped version)
 │   ├── preload/
 │   │   └── index.ts          contextBridge API exposed as window.api
 │   ├── renderer/             Vue 3 renderer
@@ -524,7 +566,8 @@ edge_tts_roles_electron/
 │   │       ├── main.ts       Bootstrap: apply persisted locale, then mount
 │   │       ├── App.vue       Root component: state, agreement gate, update events
 │   │       ├── components/   TextEditor, RoleSettings, AudioExtrasPanel,
-│   │       │                 OutputPanel, PreviewDialog, AgreementDialog
+│   │       │                 OutputPanel, PreviewDialog, AgreementDialog,
+│   │       │                 UpdateDialog
 │   │       └── composables/  useI18n (reactive locale + RTL)
 │   └── shared/               Shared by main and renderer (no Electron deps)
 │       ├── types.ts          Request/response types and RendererApi contract
@@ -556,7 +599,7 @@ edge_tts_roles_electron/
 | Audio | `ffmpeg-static` (bundled ffmpeg binary) |
 | Persistence | `electron-store` |
 | Updates | `electron-updater` |
-| Tests | `vitest` |
+| Tests | `vitest` (unit) + `@playwright/test` (E2E, driving Electron) |
 | Static checks | ESLint 9 + Prettier + TypeScript strict (`noUnusedLocals`) |
 
 ## 17. Requirements & Local Development
@@ -594,7 +637,7 @@ npm run build        # typecheck + electron-vite build (output in out/)
 
 ### 18.1 Unit Tests (vitest)
 
-Tests use **vitest** 4.x with the config in `vitest.config.mts` (Node environment, pure-logic `tests/` only). Currently **6 test files, 76 tests**, all passing:
+Tests use **vitest** 4.x with the config in `vitest.config.mts` (Node environment, pure-logic `tests/` only). Currently **8 test files, 105 tests**, all passing:
 
 ```bash
 npm test
@@ -608,8 +651,10 @@ Coverage:
 | `voiceGroups` | Language-first grouping/sorting, same-language merge, stable order |
 | `voiceDisplay` | Person/region/gender formatting and fallbacks |
 | `audioProcessor` | Silence, beep with fades, PCM concat, loop-to-length, mixing hard-clip, gain scaling |
-| `tts/segmentCache` + `tts/segmentSynthesizer` | Segment cache key stability, backoff table ±20% jitter, stop interruption, inter-segment cooldown state machine |
-| `updateFeed` | GitHub-first preference, GitCode fallback (incl. HTML-page detection), dual-source failure, platform → latest*.yml mapping |
+| `subtitles` | LRC / SRT formatting, timestamp format and rollover, role prefixes (【A】 / [A]), line folding, empty-input edges |
+| `tts/segmentCache` + `tts/segmentSynthesizer` | Segment cache key stability (incl. version prefix), backoff table ±20% jitter, stop interruption, inter-segment cooldown state machine, word-boundary spoken-tail alignment check |
+| `updatePrompt` | Per-version persistence semantics of "skip this version"; manual checks ignoring the skip preference |
+| `updateFeed` | Simplified-Chinese locale → GitCode-first source order, GitHub-first elsewhere, two-way fallback (incl. HTML-page detection), dual-source failure, platform → latest*.yml mapping |
 
 Design rule: core business logic is extracted into **Electron-free pure functions/classes** (e.g. `updateFeed.ts`, the backoff helpers in `tts/segmentSynthesizer.ts`) so it can be unit-tested with injected mocks.
 
@@ -672,8 +717,9 @@ Platform notes:
 
 ### 20.1 Module Split
 
-- `src/main/updateFeed.ts` (pure logic): decides the right `latest*.yml` for the current platform, probes the GitHub feed, resolves the latest GitCode tag, and builds the fallback feed base;
-- `src/main/updater.ts` (Electron glue): configures `electron-updater`'s generic provider with the resolved base URL, forwards events to the renderer, and distinguishes silent vs. manual checks.
+- `src/main/updateFeed.ts` (pure logic): decides the right `latest*.yml` for the current platform, picks the source order (GitCode first for Simplified-Chinese locales, GitHub first otherwise), probes the primary feed, resolves the latest GitCode tag, and builds its feed base;
+- `src/main/updatePrompt.ts` (pure logic): `shouldPromptUpdate` decides whether a newly found version triggers the dialog — manual checks always prompt; during a silent startup check, "skip this version" only suppresses the skipped version itself, a higher version still prompts;
+- `src/main/updater.ts` (Electron glue): enabled only when `app.isPackaged`; configures `electron-updater`'s generic provider with the resolved base URL; `autoDownload = false` — a new version first goes through the renderer-side confirmation dialog, and `downloadUpdate` is only called after the user picks "Update Now"; forwards events to the renderer and distinguishes silent vs. manual checks.
 
 ### 20.2 Events & IPC
 
@@ -682,21 +728,23 @@ The renderer subscribes via `onUpdateEvent`:
 | Event | Payload | UI behavior |
 | --- | --- | --- |
 | `checking` | — | "Checking for updates..." |
-| `available` | version / releaseDate | Offer and download the new version |
+| `available` | version / releaseDate | Pop the UpdateDialog (Update Now / Remind Later / Skip This Version) |
 | `not-available` | version / manual | Show "already up to date" **only when manual** |
 | `download-progress` | percent / bytesPerSecond / total / transferred | Show download progress |
 | `downloaded` | version | Offer restart-to-install |
 | `error` | empty | Generic "check failed" dialog (details stay in the main-process log) |
 
+- Renderer-invokable update IPC: `update:check` (manual check), `update:download` (triggers the download after dialog confirmation), `update:skip-version` (persists "skip this version"), `update:install` (quit and install);
 - The error payload is intentionally **not forwarded verbatim**, so HTML/stacks never leak into the UI;
 - `update:install` calls `quitAndInstall(false, true)` — user-confirmed quit, install, restart.
 
 ### 20.3 Feed Resolution
 
 1. Pick the platform manifest: `win → latest.yml`, `mac → latest-mac.yml`, `linux → latest-linux.yml`;
-2. Probe `https://github.com/.../releases/latest/download/<file>` (3.5 s timeout, `Range: bytes=0-0`); use GitHub if reachable and not HTML;
-3. Otherwise call GitCode's public API for the latest release `tag_name` and probe `/releases/download/<tag>/<file>` as the fallback base;
-4. If both fail, skip the check for this run (no requests to invalid endpoints).
+2. Pick the source order: Simplified-Chinese locales (`zh-CN` / `zh-Hans*`, from `app.getLocale()`) probe **GitCode first** (such systems are mostly in mainland China), everything else probes **GitHub first**;
+3. Probe the primary feed (3.5 s timeout, `Range: bytes=0-0`). GitHub: `/releases/latest/download/<file>`; GitCode: the public API resolves the latest `tag_name` first, then `/releases/download/<tag>/<file>` is probed;
+4. Primary unreachable (or serving an HTML error page) → probe the other source;
+5. If both fail, skip the check for this run (no requests to invalid endpoints).
 
 ## 21. Adding a Language
 
@@ -797,6 +845,7 @@ Each release prepends a section to `UPGRADE.md` / `UPGRADE_CN.md` (categorized: 
 
 | Version | Highlights |
 | --- | --- |
+| v2.0.5 | **Synchronized subtitles** (LRC / SRT subtitles generated alongside the audio, timestamps sample-aligned via PCM sample counting; LRC role prefixes use full-width 【】 so they are never mistaken for word-by-word time tags); **update confirmation dialog** (a newly found version pops a three-way dialog: Update Now / Remind Later / Skip This Version, persisted per version, `autoDownload` disabled); **TTS provider abstraction** (`tts/provider/` interface + default implementation injected, an extension point reserved for offline engines); default export format changed to MP3 with uniform 44.1 kHz output; triple synthesis integrity check (adds the word-boundary spoken-tail alignment criterion, cache keys versioned to v3); 1 second of trailing silence appended; fixed the Generate button not restoring after stopping a task |
 | v2.0.4 | **TTS main-process modularization** (`ttsService.ts` split into `voiceCatalog` / `segmentCache` / `segmentSynthesizer` modules, public API unchanged); **Playwright/Electron E2E tests** (9 cases: agreement gate, language menu, marker insertion) with Xvfb in CI; fixed App.vue IPC subscriptions being registered after `await listVoices()` (language-switch broadcast could be lost); bilingual Issue / PR templates and Code of Conduct; README badges + product screenshot |
 | v2.0.3 | **Persisted language switching** (editor dropdown replaced by the "Language" menu radio items; choice saved); **first-launch User Agreement gate** (mandatory modal, persisted with "Do not show again"); **manual check feedback** ("already up to date" only for manual checks, silent startup check stays quiet); feed probing extracted into a mockable pure module (15 tests); CI (typecheck/lint/test) and automated release workflows; GitCode mirror script (`scripts/publish-gitcode.mjs`) |
 | v2.0.2 | **Auto-update** (GitHub primary + GitCode fallback); **runtime language switching** (editor dropdown in v2.0.2, moved to the native menu in v2.0.3); **Arabic (RTL) and Traditional Chinese**; fixed update-error content leaking into the status bar; agreement clause 4 aligned with AGPL-3.0 |
@@ -807,4 +856,4 @@ Full changelogs live in `UPGRADE.md` / `UPGRADE_CN.md` at the repository root.
 
 ---
 
-*This manual is written against v2.0.4. On-screen labels follow the selected language; wording may differ from the screenshots described here.*
+*This manual is written against v2.0.5. On-screen labels follow the selected language; wording may differ from the screenshots described here.*

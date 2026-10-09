@@ -23,10 +23,14 @@ export interface TtsSynthesisHooks {
  * complete 表示音频流按服务端收尾信号（turn.end）正常结束；
  * serverEndMs 为服务端宣告的语音终点（最后一个字的结束时刻，毫秒），
  * 用于调用方交叉校验音频时长是否被服务端提前收尾截断；未知时为 -1。
+ * spokenTail 为服务端逐词边界元数据（WordBoundary）的文本拼接（已去空白标点符号），
+ * 是唯一不依赖服务端自宣告的完整性先验：服务端提前收尾时，
+ * 被丢弃文本的词边界不会推送，调用方以此与源文本尾部比对判定吞字。
  */
 export interface SynthesisOutcome {
   complete: boolean
   serverEndMs: number
+  spokenTail: string
 }
 
 /**

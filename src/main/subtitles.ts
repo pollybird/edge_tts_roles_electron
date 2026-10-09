@@ -120,12 +120,15 @@ export function formatSrt(cues: SubtitleCue[]): string {
 
 /**
  * 生成 LRC 格式字幕：
- * 每段一行 `[MM:SS.xx]<角色>文本`，角色用增强 LRC 内联标签表示；
+ * 每段一行 `[MM:SS.xx]【角色】文本`。
+ * 角色前缀用全角【】而非 <角色>：尖括号在增强 LRC（A2）规范中是逐字时间标签
+ * （<mm:ss.xx>）的语法位置，部分播放器会把 <B> 当时间标签解析，导致该行被丢弃
+ * 或时间错乱；全角括号对所有解析器都只是普通文本，兼容性最好。
  * LRC 行格式不支持多行文本，段内换行折叠为空格。
  */
 export function formatLrc(cues: SubtitleCue[]): string {
   return cues
-    .map((c) => `[${formatLrcTimestamp(c.startMs)}]<${c.role}>${c.text.replace(/\r?\n/g, ' ')}\n`)
+    .map((c) => `[${formatLrcTimestamp(c.startMs)}]【${c.role}】${c.text.replace(/\r?\n/g, ' ')}\n`)
     .join('')
 }
 

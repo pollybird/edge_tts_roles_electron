@@ -49,8 +49,11 @@ export class SegmentCache {
 
   /** 由文本与语音参数计算稳定缓存键，任一参数变化都会得到不同片段 */
   keyFor(text: string, settings: SegmentVoiceSettings): string {
-    // v2：完整性校验上线后版本化缓存键，使历史（可能被服务端提前收尾截断的）条目全部失效
-    const raw = `v2|${settings.voice}|${settings.rate}|${settings.volume}|${settings.pitch}|${text}`
+    // v3：尾部对齐完整性校验（spokenTail）上线后版本化缓存键。
+    // 每当合成完整性判定逻辑升级，必须 bump 该版本前缀，
+    // 使历史（可能被服务端提前收尾截断且已落盘的）条目全部失效重新合成，
+    // 否则重跑任务会直接命中缓存中的截断片段，校验代码无从介入。
+    const raw = `v3|${settings.voice}|${settings.rate}|${settings.volume}|${settings.pitch}|${text}`
     return createHash('sha256').update(raw, 'utf8').digest('hex')
   }
 

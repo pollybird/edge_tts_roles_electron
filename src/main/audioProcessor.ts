@@ -238,7 +238,9 @@ export async function encodeWithFfmpeg(
     rawPath
   ]
   if (format === 'mp3') {
-    args.push('-c:a', 'libmp3lame', '-q:a', '2')
+    // MP3 统一输出 44.1kHz（MPEG-1）：24kHz 属于 MPEG-2 LSF 格式，
+    // 部分播放器对其进度计算不准确，导致字幕/歌词与音频不同步
+    args.push('-ar', '44100', '-c:a', 'libmp3lame', '-q:a', '2')
   } else if (format === 'ogg') {
     args.push('-c:a', 'libvorbis', '-q:a', '4')
   } else if (format === 'flac') {

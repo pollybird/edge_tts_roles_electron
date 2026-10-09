@@ -1,5 +1,33 @@
 # Upgrade Log
 
+## v2.0.5
+
+### New Features
+
+- **Synchronized subtitle generation**: audio generation can now also export **LRC / SRT subtitles**. Timestamps are collected during the concatenation stage by counting PCM samples (sample-aligned with the output audio), and the actual speech boundaries within each segment are located via energy detection; the LRC role prefix uses full-width 【A】 (avoiding the syntax conflict with enhanced-LRC per-word timestamps `<mm:ss.xx>` — some players parse `<B>` as a timestamp and drop the whole line), while SRT uses the `[A]` prefix; subtitle times are automatically offset when intro/outro audio is present.
+- **Update confirmation dialog**: when a new version is found, the app no longer downloads silently — it shows a "New version available" dialog (**Install now / Remind later / Skip this version**). The download (with progress) starts only after the user clicks "Install now", and installation is confirmed again once the download completes. "Skip this version" is persisted per version number; higher versions still prompt. The manual "Check for Updates" action ignores this preference.
+- **TTS provider abstraction layer**: the new `src/main/tts/provider/` module defines the `TTSProvider` interface and the per-segment synthesis contract; edge-tts-universal is the default implementation, injected into `SegmentSynthesizer` via a factory. This reserves an extension point for future local offline engines while keeping external behavior unchanged.
+
+### Improvements
+
+- **Default export format is now MP3**: the format dropdown order is MP3 / OGG / FLAC / WAV with MP3 selected by default.
+- **MP3 output unified at 44.1 kHz**: the previous 24 kHz output is MPEG-2 LSF, whose duration/position calculation is inaccurate in some players (subtitle drift); output is now resampled to 44.1 kHz (MPEG-1), the most compatible spec across players.
+- **Simplified-Chinese systems prefer GitCode**: when the OS locale is Simplified Chinese (`zh-CN` / `zh-Hans*`), the update feed probes GitCode first — these systems are mostly in mainland China, where direct GitHub access is unstable and installer downloads are slow even when the manifest probe succeeds — falling back to GitHub when GitCode is unreachable. All other locales keep GitHub first with GitCode fallback.
+
+### Bug Fixes
+
+- **UI reset after stopping a task**: the main process now sends a `task:stopped` event to the renderer when generation is stopped, fixing the generate button not recovering.
+- **Triple integrity check for synthesis**: on top of "stream finalization signal (`turn.end`)" and "cross-validation of the server-declared speech end against actual PCM duration", a third independent criterion is added — **tail alignment** between the server's word-boundary (WordBoundary) texts and the source text (`spokenTail`). When the server ends early and swallows trailing words, their word boundaries are never pushed, so the declared end and the audio remain "self-consistent" and duration checks cannot detect it; the mismatch between the spoken word sequence and the source text tail is the only prior that does not rely on server self-reporting. Failing segments are always discarded and retried, never written to the cache; the cache key is versioned to v3 so historical truncated entries self-heal.
+- **1 second of trailing silence**: every export now appends 1 second of silence at the end. Some playback chains (Bluetooth audio latency, players closing the audio device early) cut off the last few hundred milliseconds of actual speech before the file finishes ("the last few words are missing"); with the added silence, only silence gets cut.
+
+### Testing
+
+- Added `tests/subtitles.test.ts` (16 cases covering LRC / SRT formatting, timestamps, role prefixes and edge cases) and `tests/updatePrompt.test.ts` (4 cases covering per-version skip persistence and manual-check semantics); `ttsService` tests now cover the tail-alignment check (`isSpokenTailAligned`); `updateFeed` tests add the Simplified-Chinese GitCode-first paths and the `prefersGitCodeFirst` predicate (+5 cases). **8 test files, 105 cases all passing**.
+
+### Engineering
+
+- **Subtitle alignment debug switch**: with the environment variable `EDGE_TTS_DEBUG_CUES=1`, per-segment timeline data (segment start / length / detected speech boundaries) is written to `/tmp/cues-debug.json` to investigate subtitle/audio time offsets.
+
 ## v2.0.4
 
 ### Improvements

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   getFeedFileName,
+  prefersGitCodeFirst,
   probeUrl,
   resolveFeedUrl,
   resolveGitCodeFeedUrl,
@@ -252,5 +253,89 @@ describe('resolveFeedUrl - 路径三：双源均失败', () => {
         log: silentLog
       })
     ).toBeNull()
+  })
+})
+
+describe('prefersGitCodeFirst', () => {
+  it('简体中文区域返回 true（zh-CN / zh-Hans*，大小写不敏感）', () => {
+    expect(prefersGitCodeFirst('zh-CN')).toBe(true)
+    expect(prefersGitCodeFirst('ZH-CN')).toBe(true)
+    expect(prefersGitCodeFirst('zh-Hans-CN')).toBe(true)
+    expect(prefersGitCodeFirst('zh-hans')).toBe(true)
+  })
+
+  it('繁体区域与非中文语言返回 false', () => {
+    expect(prefersGitCodeFirst('zh-TW')).toBe(false)
+    expect(prefersGitCodeFirst('zh-HK')).toBe(false)
+    expect(prefersGitCodeFirst('zh-MO')).toBe(false)
+    expect(prefersGitCodeFirst('zh-Hant-TW')).toBe(false)
+    expect(prefersGitCodeFirst('en-US')).toBe(false)
+    expect(prefersGitCodeFirst('ja-JP')).toBe(false)
+    expect(prefersGitCodeFirst('')).toBe(false)
+  })
+})
+
+describe('resolveFeedUrl - gitCodeFirst：GitCode 优先', () => {
+  it('GitCode 可达时直接使用 GitCode，且完全不访问 GitHub', async () => {
+    const { fetchImpl, urls } = mockFetch({
+      'gh.test': { status: 500, ok: false },
+      'api.gc.test': { json: { tag_name: 'v2.0.5' } },
+      'dl.gc.test': { contentType: 'application/octet-stream' }
+    })
+    const base = await resolveFeedUrl({
+      feedFile: 'latest.yml',
+      fetchImpl,
+      endpoints: TEST_ENDPOINTS,
+      timeoutMs: 1000,
+      gitCodeFirst: true,
+      log: silentLog
+    })
+    expect(base).toBe('https://dl.gc.test/releases/download/v2.0.5/')
+    expect(urls).toEqual([
+      'https://api.gc.test/releases/latest',
+      'https://dl.gc.test/releases/download/v2.0.5/latest.yml'
+    ])
+  })
+
+  it('GitCode 优先但不可达时回退 GitHub', async () => {
+    const { fetchImpl, urls } = mockFetch({
+      'gh.test': { contentType: 'application/octet-stream' },
+      'api.gc.test': { status: 500, ok: false }
+    })
+    const base = await resolveFeedUrl({
+      feedFile: 'latest.yml',
+      fetchImpl,
+      endpoints: TEST_ENDPOINTS,
+      timeoutMs: 1000,
+      gitCodeFirst: true,
+      log: silentLog
+    })
+    expect(base).toBe(TEST_ENDPOINTS.githubBase)
+    expect(urls).toEqual([
+      'https://api.gc.test/releases/latest',
+      'https://gh.test/latest/latest.yml'
+    ])
+  })
+
+  it('GitCode 优先且附件清单为 HTML 错误页 → 回退 GitHub', async () => {
+    const { fetchImpl, urls } = mockFetch({
+      'gh.test': { contentType: 'application/octet-stream' },
+      'api.gc.test': { json: { tag_name: 'v2.0.5' } },
+      'dl.gc.test': { contentType: 'text/html; charset=utf-8' }
+    })
+    const base = await resolveFeedUrl({
+      feedFile: 'latest.yml',
+      fetchImpl,
+      endpoints: TEST_ENDPOINTS,
+      timeoutMs: 1000,
+      gitCodeFirst: true,
+      log: silentLog
+    })
+    expect(base).toBe(TEST_ENDPOINTS.githubBase)
+    expect(urls).toEqual([
+      'https://api.gc.test/releases/latest',
+      'https://dl.gc.test/releases/download/v2.0.5/latest.yml',
+      'https://gh.test/latest/latest.yml'
+    ])
   })
 })

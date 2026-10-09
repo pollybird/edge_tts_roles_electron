@@ -21,7 +21,7 @@ const emit = defineEmits<{
   stop: []
 }>()
 
-const formats: AudioFormat[] = ['wav', 'mp3', 'ogg', 'flac']
+const formats: AudioFormat[] = ['mp3', 'ogg', 'flac', 'wav']
 const subtitleOptions: Array<{ value: SubtitleFormat; label: string }> = [
   { value: '', label: 'subtitle.none' },
   { value: 'lrc', label: 'subtitle.lrc' },

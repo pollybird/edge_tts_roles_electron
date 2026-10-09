@@ -11,7 +11,7 @@ English | [简体中文](./README_CN.md)
 
 > If you find this project useful, please ⭐ **Star it on GitHub** — your support keeps the project alive.
 
-You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, `[R]`), assign a different neural voice to each of the four roles, and the app synthesizes every segment, stitches it together with pauses and beeps, optionally mixes in intro / outro / background music, and exports a WAV / MP3 / OGG / FLAC file.
+You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, `[R]`), assign a different neural voice to each of the four roles, and the app synthesizes every segment, stitches it together with pauses and beeps, optionally mixes in intro / outro / background music, and exports a WAV / MP3 / OGG / FLAC file — optionally together with sample-aligned LRC / SRT subtitles.
 
 > The speech synthesis itself is provided by Microsoft Edge's online speech service. **An internet connection is required.**
 
@@ -24,10 +24,11 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 - **Four switchable speaker roles (A–D)** — each role has its own neural voice plus independent rate, volume and pitch settings.
 - **Marker-based script format** — switch speakers, insert precise millisecond pauses and beeps without leaving the text.
 - **Full Edge TTS voice catalog** — voices are fetched from the service, grouped by language, and shown with localized display names.
-- **Reliable long-form generation** — every segment is retried automatically on network interruption (up to 15 attempts) with an idle-connection watchdog and adaptive backoff; completed segments are cached on disk, so re-running a failed job resumes from the breakpoint.
+- **Reliable long-form generation** — every segment is retried automatically on network interruption (up to 15 attempts) with an idle-connection watchdog and adaptive backoff; completed segments are cached on disk, so re-running a failed job resumes from the breakpoint. A triple integrity check (stream finalization signal, server-declared end vs. actual duration, and word-boundary text tail-aligned with the source text) guarantees truncated segments from early server finalization never reach the cache.
+- **Synchronized subtitles (v2.0.5)** — LRC / SRT subtitles are generated alongside the audio, timestamped sample-aligned to the exported file; LRC roles are prefixed with full-width 【A】 (SRT uses `[A]`), and intro/outro audio automatically shifts the times.
 - **Audio extras (v2.0.0)** — attach local audio files as **intro**, **outro** and **background music**, each with an independent 0–100 % volume control. Background music automatically loops for the duration of the narration.
 - **Instant preview** — preview the whole text or just the selection in a built-in player (extras included), before exporting.
-- **Four output formats** — WAV (32-bit float), MP3, OGG Vorbis and FLAC, all processed through a bundled ffmpeg binary (no system ffmpeg required).
+- **Four output formats** — WAV (32-bit float), MP3 (44.1 kHz, default), OGG Vorbis and FLAC, all processed through a bundled ffmpeg binary (no system ffmpeg required).
 - **Voice config import/export** — save the four roles' voice / rate / volume / pitch to a JSON file and reuse it across scripts.
 - **Editor conveniences** — find & replace, one-click marker insertion, quick-pause buttons, live character count, open/save text files.
 - **9 built-in languages** — English, Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese and Arabic (with RTL layout); the UI follows the system language automatically.
@@ -55,7 +56,7 @@ Text before the first role marker is spoken by role A.
    - Intro plays before the narration; outro plays after it.
    - Background music is mixed underneath the narration and loops automatically if it is shorter.
 4. **Preview** — use _Preview Selection_ / _Preview All Text_ to listen in the built-in player.
-5. **Export** — choose an output format and a save path at the bottom, then click _Generate Audio_. Progress is shown per segment and the job can be stopped at any time.
+5. **Export** — choose an output format, a subtitle format (none / LRC / SRT) and a save path at the bottom, then click _Generate Audio_. Progress is shown per segment and the job can be stopped at any time.
 
 Accepted extra-audio formats: MP3, WAV, OGG, FLAC, M4A, AAC, OPUS and WMA (anything the bundled ffmpeg can decode). Mixing is hard-clipped to ±1.0 to prevent clipping.
 
@@ -74,10 +75,10 @@ Accepted extra-audio formats: MP3, WAV, OGG, FLAC, M4A, AAC, OPUS and WMA (anyth
 ## How It Works
 
 1. **Parse** — the script is split into text / pause / beep segments ([textParser.ts](./src/shared/textParser.ts)).
-2. **Synthesize** — each text segment is streamed from Edge TTS as MP3. A per-segment idle watchdog (15 s) detects stalled connections; failures trigger up to 15 retries with jittered backoff, and every successful segment is written to a disk cache (`userData/tts-segment-cache`, LRU-pruned).
-3. **Decode & assemble** — segments are decoded to 24 kHz stereo 32-bit float PCM via the bundled ffmpeg, then concatenated with generated silence and beep tones.
-4. **Mix extras** — intro/outro are gain-scaled and concatenated; background music is gain-scaled, looped to the narration length and overlaid, with ±1.0 clipping.
-5. **Encode** — WAV is written directly; MP3 / OGG / FLAC are encoded through ffmpeg (`libmp3lame`, `libvorbis`, `flac`).
+2. **Synthesize** — each text segment is streamed as MP3 through the `TTSProvider` abstraction ([src/main/tts/provider](./src/main/tts/provider), default implementation edge-tts-universal). A per-segment idle watchdog (15 s) detects stalled connections; failures trigger up to 15 retries with jittered backoff; every segment passes a triple integrity check (stream finalization signal, server-declared end cross-validated against actual duration, and word-boundary text tail-aligned with the source) before being written to the disk cache (`userData/tts-segment-cache`, LRU-pruned).
+3. **Decode & assemble** — segments are decoded to 24 kHz stereo 32-bit float PCM via the bundled ffmpeg, then concatenated with generated silence and beep tones; subtitle timestamps are collected during this stage by counting PCM samples, with energy detection locating the actual speech boundaries inside each segment.
+4. **Mix extras** — intro/outro are gain-scaled and concatenated; background music is gain-scaled, looped to the narration length and overlaid, with ±1.0 clipping; subtitle times are shifted by the intro automatically.
+5. **Encode** — WAV is written directly; MP3 is uniformly resampled to 44.1 kHz (MPEG-1, the most player-compatible spec); OGG / FLAC are encoded through ffmpeg (`libvorbis`, `flac`). 1 second of trailing silence is appended to every export so playback chains that close early (Bluetooth latency, players shutting the device down before the file ends) only cut silence.
 
 ## Project Structure
 
@@ -85,10 +86,15 @@ Accepted extra-audio formats: MP3, WAV, OGG, FLAC, M4A, AAC, OPUS and WMA (anyth
 src/
 ├── main/                 Electron main process
 │   ├── index.ts          App lifecycle, maximized main window
-│   ├── ttsService.ts     Synthesis pipeline: retries, cache, extras mixing
+│   ├── ttsService.ts     Synthesis pipeline: progress, subtitle collection,
+│   │                     extras mixing, encoding
+│   ├── tts/              TTS submodules (provider/ abstraction, voiceCatalog,
+│   │                     segmentCache segment cache, segmentSynthesizer)
+│   ├── subtitles.ts      Subtitle generation (LRC/SRT, sample-aligned)
 │   ├── audioProcessor.ts PCM math + ffmpeg decode/encode (24 kHz stereo f32)
 │   ├── ipc.ts            IPC handlers, file dialogs, config import/export
 │   ├── menu.ts           Localized application menu
+│   ├── updater.ts        Auto-update (confirmation dialog, manual/silent checks)
 │   └── settings.ts       electron-store schema
 ├── preload/
 │   └── index.ts          contextBridge API exposed as window.api
@@ -96,14 +102,14 @@ src/
 │   └── src/
 │       ├── App.vue
 │       ├── components/   TextEditor, RoleSettings, AudioExtrasPanel,
-│       │                 OutputPanel, PreviewDialog
+│       │                 OutputPanel, PreviewDialog, UpdateDialog
 │       └── composables/  useI18n
 └── shared/               Code shared by main and renderer
     ├── types.ts          Request/response types and IPC contract
     ├── ipc.ts            IPC channel names
     ├── textParser.ts     Marker parser
     ├── voiceGroups.ts    Voice list grouping/sorting
-    └── i18n/             i18n core + 7 locale packs
+    └── i18n/             i18n core + 9 locale packs
 ```
 
 ## Tech Stack
@@ -154,10 +160,10 @@ Each platform script automatically runs `prepare:ffmpeg`, which downloads the FF
 
 ### Auto-Update
 
-The app checks for updates automatically on startup (5 s delay) and supports a manual check from **Help → Check for Updates**.
+The app checks for updates automatically on startup (5 s delay) and supports a manual check from **Help → Check for Updates**. When a new version is found, a "New version available" dialog is shown: **Install now** (start downloading, then confirm install & restart once complete), **Remind later**, or **Skip this version** (persisted per version number — higher versions still prompt; the manual check ignores this preference).
 
-- **Primary feed**: [GitHub Releases](https://github.com/pollybird/edge_tts_roles_electron/releases) (`/releases/latest/download/latest*.yml`).
-- **Fallback feed**: GitCode Release attachments. If GitHub is unreachable within 3.5 s, the app first calls the public GitCode API (`/api/v5/repos/<owner>/<repo>/releases/latest`, no auth) to resolve the latest release tag, then uses `/releases/download/<tag>/` as the feed base for the attached files with the same names. (GitCode has no GitHub-style `latest` alias, and its raw URLs serve HTML for missing files, so neither can be used as a feed directly.)
+- **Source order**: GitHub Releases is probed first by default (`/releases/latest/download/latest*.yml`); **systems with a Simplified Chinese locale (`zh-CN` / `zh-Hans*`) probe GitCode first instead** — such systems are mostly in mainland China, where direct GitHub access is unstable and installer downloads are slow.
+- **Fallback feed**: the other platform (fallback works both ways). If the GitHub probe fails (3.5 s timeout), the app calls the public GitCode API (`/api/v5/repos/<owner>/<repo>/releases/latest`, no auth) to resolve the latest release tag, then uses `/releases/download/<tag>/` as the feed base for the attached files with the same names. (GitCode has no GitHub-style `latest` alias, and its raw URLs serve HTML for missing files, so neither can be used as a feed directly.)
 
 #### Automated release (GitHub Actions, recommended)
 
