@@ -41,6 +41,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Windows NSIS 打包在 Linux runner 上需要 wine（rcedit / NSIS 辅助工具为 Windows 可执行文件）
+      - name: Install wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wine wine32 wine64
+
       # 单台 Linux runner 完成三平台双架构打包（与本地发版流程一致）：
       # Linux AppImage/deb/rpm(x64+arm64)、Windows NSIS(x64+arm64, wine)、macOS zip(x64+arm64)
       # prepare:ffmpeg 由各 build:* 的 pre 钩子自动执行
