@@ -132,11 +132,17 @@ try {
       ...baseYaml,
       // 关键：electron-builder 会以“配置文件所在目录”作为项目根，缓存键也基于文件名
       // 用临时目录且每次名字不同，强制重读
-      extraResources,
-      // 直接复用 node_modules 里的 electron dist，跳过 builder 的 dist 下载环节：
-      // 该下载对代理网络状态敏感（曾反复在 packaging 前静默挂起），本地 dist
-      // 与 devDependency 版本一致，打包结果等价。
-      electronDist: join(ROOT, 'node_modules', 'electron', 'dist')
+      extraResources
+      // 注意：不要对 win/mac 钉定 electronDist——node_modules/electron/dist 是当前
+      // 宿主平台的 dist（Linux 上无 electron.exe），win 打包会 ENOENT。仅 linux
+      // 沿用本地 dist 跳过下载（该下载对代理网络状态敏感，曾反复静默挂起）；
+      // win/mac 交给 builder 下载：本地走 ELECTRON_MIRROR 镜像，CI 直连（v2.0.5 已验证）。
+    }
+    if (platform === 'linux') {
+      config.electronDist = join(ROOT, 'node_modules', 'electron', 'dist')
+    } else if (!process.env.CI) {
+      // 本地（大陆网络）下载 electron dist 走镜像；CI 直连下载（v2.0.5 已验证）
+      process.env.ELECTRON_MIRROR ??= 'https://npmmirror.com/mirrors/electron/'
     }
     const configPath = join(tmpDir, `electron-builder-${platform}-${arch}-${Date.now()}.json`)
     writeFileSync(configPath, JSON.stringify(config))
