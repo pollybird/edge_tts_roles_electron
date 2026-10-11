@@ -7,6 +7,8 @@ import type {
   StoppedPayload,
   FinishedPayload,
   GenerateRequest,
+  PiperDownloadProgress,
+  PiperListPayload,
   PreviewRequest,
   ProgressPayload,
   RoleVoiceSettings,
@@ -90,6 +92,13 @@ const api = {
   // 主菜单动作
   onMenuAction: (cb: (actionId: string) => void): (() => void) =>
     subscribe(IpcChannels.menuAction, cb),
+
+  // Piper 离线引擎：模型清单 / 下载（进度推送）/ 删除
+  piperList: (): Promise<PiperListPayload> => ipcRenderer.invoke(IpcChannels.piperList),
+  piperDownload: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.piperDownload, id),
+  piperRemove: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.piperRemove, id),
+  onPiperDownloadProgress: (cb: (p: PiperDownloadProgress) => void): (() => void) =>
+    subscribe(IpcChannels.piperDownloadProgress, cb),
 
   // 事件订阅（返回取消订阅函数）
   onProgress: (cb: (payload: ProgressPayload) => void): (() => void) =>

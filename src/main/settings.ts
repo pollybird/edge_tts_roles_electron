@@ -1,6 +1,8 @@
 import Store from 'electron-store'
-import type { AudioFormat, RoleVoiceSettings } from '../shared/types'
+import type { AudioFormat, PiperFallback, RoleVoiceSettings } from '../shared/types'
 import { ROLE_IDS } from '../shared/types'
+
+export type { PiperFallback }
 
 export interface SettingsSchema {
   roleSettings: RoleVoiceSettings
@@ -12,6 +14,8 @@ export interface SettingsSchema {
   agreementAccepted: boolean
   /** 用户选择“不再提示”的更新版本号（'' = 未跳过任何版本；更高版本仍会弹出更新确认） */
   updateSkippedVersion: string
+  /** Piper 离线兜底策略（默认 fallback：单段在线重试耗尽后自动离线合成） */
+  piperFallback: PiperFallback
 }
 
 const defaultRoleSettings = (): RoleVoiceSettings =>
@@ -27,7 +31,8 @@ const store = new Store<SettingsSchema>({
     audioFormat: 'wav',
     locale: '',
     agreementAccepted: false,
-    updateSkippedVersion: ''
+    updateSkippedVersion: '',
+    piperFallback: 'fallback'
   }
 })
 

@@ -25,6 +25,7 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 - **Marker-based script format** — switch speakers, insert precise millisecond pauses and beeps without leaving the text.
 - **Full Edge TTS voice catalog** — voices are fetched from the service, grouped by language, and shown with localized display names.
 - **Reliable long-form generation** — every segment is retried automatically on network interruption (up to 15 attempts) with an idle-connection watchdog and adaptive backoff; completed segments are cached on disk, so re-running a failed job resumes from the breakpoint. A triple integrity check (stream finalization signal, server-declared end vs. actual duration, and word-boundary text tail-aligned with the source text) guarantees truncated segments from early server finalization never reach the cache.
+- **Offline engine (v2.0.6)** — neural TTS via a bundled [Piper](https://github.com/rhasspy/piper) runtime: download one curated model per language from a 53-language catalog (**Settings → Offline Engine**) and synthesize fully offline. **Online first** (default) falls back to a downloaded model per segment when the network keeps failing, **Online only** disables the engine, and **Offline only** switches the voice lists to downloaded models and never touches the network.
 - **Synchronized subtitles (v2.0.5)** — LRC / SRT subtitles are generated alongside the audio, timestamped sample-aligned to the exported file; LRC roles are prefixed with full-width 【A】 (SRT uses `[A]`), and intro/outro audio automatically shifts the times.
 - **Audio extras (v2.0.0)** — attach local audio files as **intro**, **outro** and **background music**, each with an independent 0–100 % volume control. Background music automatically loops for the duration of the narration.
 - **Instant preview** — preview the whole text or just the selection in a built-in player (extras included), before exporting.
@@ -118,6 +119,7 @@ src/
 - [Vue](https://vuejs.org/) 3.5 (Composition API, `<script setup>`) + TypeScript 5.9
 - [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) — Edge TTS client
 - [ffmpeg-static](https://www.npmjs.com/package/ffmpeg-static) — bundled ffmpeg binary
+- [Piper](https://github.com/rhasspy/piper) (MIT) — bundled offline TTS engine runtime (phonemization via bundled [eSpeak NG](https://github.com/espeak-ng/espeak-ng), GPL-3.0)
 - [electron-builder](https://www.electron.build/) — packaging (NSIS / DMG / AppImage, snap, deb)
 - electron-store — typed local settings
 

@@ -145,6 +145,42 @@ export interface RendererApi {
   onError(cb: (payload: ErrorPayload) => void): () => void
   /** 任务被用户停止（生成/试听中断） */
   onStopped(cb: (payload: StoppedPayload) => void): () => void
+  /** Piper 模型清单 + 引擎可用性 */
+  piperList(): Promise<PiperListPayload>
+  /** 下载 Piper 模型（进度经 onPiperDownloadProgress 推送；完成后需重新 piperList 刷新状态） */
+  piperDownload(id: string): Promise<void>
+  /** 删除已下载的 Piper 模型 */
+  piperRemove(id: string): Promise<void>
+  /** 订阅 Piper 模型下载进度，返回取消订阅函数 */
+  onPiperDownloadProgress(cb: (p: PiperDownloadProgress) => void): () => void
+}
+
+/** Piper 策略：fallback 在线优先（默认，失败时离线兜底）/ off 仅在线 / prefer 仅离线（发音人限已下载的离线模型） */
+export type PiperFallback = 'off' | 'fallback' | 'prefer'
+
+/** Piper 离线引擎模型清单条目（「设置→离线引擎」对话框展示用） */
+export interface PiperVoiceStatus {
+  id: string
+  /** 模型原生名（专有名词，不随界面语言变化，如 huayan） */
+  voiceName: string
+  /** 语言原生名（endonym，不随界面语言变化，如 简体中文） */
+  langName: string
+  quality: string
+  sizeMB: number
+  downloaded: boolean
+}
+
+/** Piper 引擎状态：engineAvailable=false 表示当前平台无可用二进制（如 win-arm64） */
+export interface PiperListPayload {
+  engineAvailable: boolean
+  voices: PiperVoiceStatus[]
+}
+
+/** Piper 模型下载进度事件（主进程 → 渲染进程推送；total=0 时按未知大小处理） */
+export interface PiperDownloadProgress {
+  id: string
+  received: number
+  total: number
 }
 
 /** 自动更新事件（主进程→渲染进程） */
@@ -160,4 +196,5 @@ export type UpdateEvent =
       transferred: number
     }
   | { type: 'downloaded'; version: string }
-  | { type: 'error'; message: string }
+  /** 更新检查失败：仅 manual=true（用户手动触发）时渲染进程提示；静默检查失败零打扰 */
+  | { type: 'error'; manual: boolean }

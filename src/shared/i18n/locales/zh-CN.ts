@@ -209,7 +209,9 @@ const zhCN: LocalePack = {
       agreement: '用户协议(&U)',
       checkUpdate: '检查更新(&U)',
       website: '官方网站(&W)',
-      about: '关于(&A)'
+      about: '关于(&A)',
+      settings: '设置(S)(&S)',
+      offlineEngine: '离线引擎设置(&O)'
     },
 
     editor: {
@@ -254,6 +256,7 @@ const zhCN: LocalePack = {
       roleLabel: '角色 {id}',
       voice: '语音',
       unselected: '（未选择）',
+      noOfflineModels: '未下载离线模型：请到「设置 → 离线引擎设置」下载',
       groupLabel: '--- {label}（{n}） ---',
       rate: '语速 {n}%',
       volume: '音量 {n}%',
@@ -367,7 +370,35 @@ const zhCN: LocalePack = {
       emptyAudio: '音频数据为空',
       edge50x: 'Edge TTS 服务器错误（{msg}），音频生成已中止。请稍后重试。',
       segmentFailed: '生成音频片段失败: {msg}',
+      piperOffline: '角色 {role} 由离线引擎（Piper）合成',
+      piperUnavailable:
+        '角色 {role} 的离线模型不可用：请到「设置 → 离线引擎设置」下载对应语言的模型',
+      piperFallback: '角色 {role} 在线合成失败，改用离线引擎（Piper）',
       unknownError: '未知错误'
+    },
+
+    piper: {
+      title: '离线引擎设置',
+      strategy: '使用策略',
+      strategyHint: '离线引擎（Piper）的参与方式；仅离线时发音人列表只显示已下载的离线模型',
+      strategy_off: '仅在线',
+      strategy_fallback: '在线优先（推荐）',
+      strategy_prefer: '仅离线',
+      engineUnavailable: '当前平台暂不支持离线引擎，语音合成将使用在线服务。',
+      size: '{n} MB',
+      state_downloaded: '已下载',
+      state_notDownloaded: '未下载',
+      download: '下载',
+      remove: '删除',
+      downloading: '正在下载…',
+      downloadingPercent: '正在下载… {percent}%',
+      downloadDone: '模型下载完成。',
+      downloadFailed: '下载模型失败：{msg}',
+      confirmRemove: '删除该模型？删除后需重新下载才能离线合成。',
+      removed: '模型已删除。',
+      downloadInProgress: '该模型正在下载中',
+      filterPlaceholder: '筛选语言或模型…',
+      close: '关闭'
     },
 
     dialog: {

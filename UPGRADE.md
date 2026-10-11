@@ -1,5 +1,32 @@
 # Upgrade Log
 
+## v2.0.6
+
+### New Features
+
+- **Offline engine (Piper)**: the app can now synthesize speech **fully offline** with a bundled [Piper](https://github.com/rhasspy/piper) runtime — no Microsoft Edge TTS service, no network. Models are downloaded on demand from a curated catalog (**one model per language family, 53 languages**, generated from the official `rhasspy/piper-voices` voices.json; displayed with native model/language names, e.g. "Huayan · 简体中文"). Downloads go through hf-mirror.com first (mainland-China friendly) with Hugging Face as fallback, show per-model progress, and are size-validated (a response below half the declared size is rejected as a mirror error page). Offline audio goes through the same resampling/wrapping pipeline as the online path and is cached under a separate per-engine key dimension (`piper:<modelId>`), so online and offline segments never collide.
+- **Settings menu with the Offline Engine dialog**: a new top-level **Settings** menu (between Language and Help) opens a modal dialog listing all models with a filter box (matches model name / language / model ID), per-model download/delete with progress, and the participation **strategy**. Everything takes effect immediately — no restart required.
+- **Three participation strategies** (persisted): **Online first (recommended, default)** — synthesize online; when a segment keeps failing online, it is retried once against a downloaded offline model matched by the voice's language prefix. **Online only** — the offline engine stays idle. **Offline only** — every segment is synthesized locally, the role voice dropdowns switch to downloaded offline models (Edge voices hidden), and a failure stops the job with an explicit error instead of silently falling back online — with this strategy text never leaves the machine.
+- **Offline voice semantics**: in offline-only mode each role picks a downloaded Piper model directly (rate maps to Piper length-scale, volume to output gain; pitch is ignored by the engine). Legacy configs with Edge voice IDs keep working in offline-capable strategies via the language-prefix mapping.
+
+### Improvements
+
+- **Update-check hardening**: `electron-updater` failure events are no longer forwarded directly (they fired alongside the promise rejection and could double-alert); all user-facing update errors flow through the check/download paths gated by the manual flag, so silent startup checks never pop errors. The update feed is resolved lazily with a 10-minute cache, IPC handlers are registered unconditionally (a startup with both sources unreachable no longer leaves missing handlers), and a failed primary source is excluded so the other source is retried once before any dialog shows.
+- **Simplified-Chinese source direct connection**: the GitCode probe sends an empty `Private-Token` header to bypass the WAF's no-cache 404 on `latest.yml` requests (the WAF only reliably serves GET), keeping the primary update source reachable.
+
+### Bug Fixes
+
+- **Piper model files were written with a double extension** (`<id>.onnx.onnx`), so the download-state check (`<id>.onnx`) never matched and freshly downloaded models kept showing "not downloaded". The download target now reuses the manager's model/config paths; a fetch-stubbed regression test asserts single-extension filenames. Files downloaded by the buggy build are recoverable by renaming.
+
+### Testing
+
+- New `tests/piperModels.test.ts` coverage for the 53-language catalog (URL construction, mirror order, longest-prefix voice mapping, manager paths, download naming regression with a stubbed fetch). **10 test files, 131 cases all passing.**
+
+### Engineering
+
+- **Piper packaging**: `scripts/download-piper-binaries.mjs` fetches the engine for 5 platform triplets into `resources/piper/`; the piper stage is wired into `package-dist.mjs` and the pre-build scripts; the builder config excludes the staging tree from the package; win-arm64 reuses the win32-x64 binary (same approach as ffmpeg).
+- **Deterministic packaging**: the temporary electron-builder config pins `electronDist` to the local `node_modules/electron/dist`, skipping the builder's network-sensitive Electron download that could hang builds silently.
+
 ## v2.0.5
 
 ### New Features

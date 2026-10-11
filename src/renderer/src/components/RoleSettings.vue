@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { RoleId, RoleVoiceSettings, VoiceInfo } from '../../../shared/types'
+import type { PiperVoiceStatus, RoleId, RoleVoiceSettings, VoiceInfo } from '../../../shared/types'
 import { ROLE_IDS } from '../../../shared/types'
 import { getVoiceDisplayName } from '../../../shared/voiceDisplay'
 import { groupVoices } from '../../../shared/voiceGroups'
@@ -9,7 +9,14 @@ import { useI18n } from '../composables/useI18n'
 
 const { t, locale } = useI18n()
 
-const props = defineProps<{ settings: RoleVoiceSettings; voices: VoiceInfo[] }>()
+const props = defineProps<{
+  settings: RoleVoiceSettings
+  voices: VoiceInfo[]
+  /** 仅离线模式（策略 = 仅离线）：发音人下拉不列 Edge 音色，改列已下载的 Piper 模型 */
+  offlineMode: boolean
+  /** Piper 模型清单（含下载状态），配合 offlineMode 过滤展示 */
+  offlineVoices: PiperVoiceStatus[]
+}>()
 const emit = defineEmits<{
   (e: 'save-config'): void
   (e: 'load-config'): void
@@ -39,6 +46,20 @@ const voiceGroups = computed<VoiceGroup[]>(() => groupVoices(props.voices, local
 /** 下拉显示文本：中文名 - 语言（国家/地区）- 性别；悬停可见 shortName */
 function optionLabel(v: VoiceInfo): string {
   return getVoiceDisplayName(v, locale.value)
+}
+
+/** 仅离线模式的发音人选项：已下载的 Piper 模型（目录顺序 = 语言族字母序） */
+const downloadedOffline = computed<PiperVoiceStatus[]>(() =>
+  props.offlineVoices.filter((v) => v.downloaded)
+)
+
+/** 仅离线且无已下载模型：下拉以下载引导项取代「未选择」 */
+const offlineEmpty = computed(() => props.offlineMode && downloadedOffline.value.length === 0)
+
+/** 离线模型显示名：原生模型名（首字母大写）· 语言原生名（官方目录专有数据，不随界面语言变化） */
+function offlineLabel(v: PiperVoiceStatus): string {
+  const name = v.voiceName.charAt(0).toUpperCase() + v.voiceName.slice(1)
+  return `${name} · ${v.langName}`
 }
 </script>
 
@@ -70,21 +91,29 @@ function optionLabel(v: VoiceInfo): string {
       <label class="field">
         <span>{{ t('roles.voice') }}</span>
         <select :value="settings[id].voice" @change="onVoiceChange(id, $event)">
-          <option value="">{{ t('roles.unselected') }}</option>
-          <optgroup
-            v-for="g in voiceGroups"
-            :key="g.lang"
-            :label="t('roles.groupLabel', { label: g.label, n: g.voices.length })"
-          >
-            <option
-              v-for="v in g.voices"
-              :key="v.shortName"
-              :value="v.shortName"
-              :title="v.shortName"
-            >
-              {{ optionLabel(v) }}
+          <option v-if="offlineEmpty" value="">{{ t('roles.noOfflineModels') }}</option>
+          <option v-else value="">{{ t('roles.unselected') }}</option>
+          <template v-if="offlineMode">
+            <option v-for="v in downloadedOffline" :key="v.id" :value="v.id" :title="v.id">
+              {{ offlineLabel(v) }}
             </option>
-          </optgroup>
+          </template>
+          <template v-else>
+            <optgroup
+              v-for="g in voiceGroups"
+              :key="g.lang"
+              :label="t('roles.groupLabel', { label: g.label, n: g.voices.length })"
+            >
+              <option
+                v-for="v in g.voices"
+                :key="v.shortName"
+                :value="v.shortName"
+                :title="v.shortName"
+              >
+                {{ optionLabel(v) }}
+              </option>
+            </optgroup>
+          </template>
         </select>
       </label>
       <label class="field">

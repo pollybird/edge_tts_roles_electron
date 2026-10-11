@@ -49,7 +49,9 @@ const ruRU: LocalePack = {
       agreement: 'Пользовательское согла&шение',
       checkUpdate: 'Проверить &обновления',
       website: '&Веб-сайт',
-      about: 'О &программе'
+      about: 'О &программе',
+      settings: '&Настройки',
+      offlineEngine: 'Офлайн-движок...'
     },
 
     editor: {
@@ -95,6 +97,7 @@ const ruRU: LocalePack = {
       roleLabel: 'Роль {id}',
       voice: 'Голос',
       unselected: '(не выбран)',
+      noOfflineModels: 'Офлайн-модели не загружены — см. Настройки → Офлайн-движок...',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'Скорость {n} %',
       volume: 'Громкость {n} %',
@@ -209,7 +212,37 @@ const ruRU: LocalePack = {
       emptyAudio: 'Пустые аудиоданные',
       edge50x: 'Ошибка сервера Edge TTS ({msg}), создание аудио прервано. Повторите попытку позже.',
       segmentFailed: 'Не удалось создать голосовой сегмент: {msg}',
+      piperOffline: 'Роль {role} синтезирована офлайн-движком (Piper)',
+      piperUnavailable:
+        'Офлайн-модель роли {role} недоступна — загрузите модель в разделе Настройки → Офлайн-движок...',
+      piperFallback: 'Онлайн-синтез роли {role} не удался, используется офлайн-движок (Piper)',
       unknownError: 'Неизвестная ошибка'
+    },
+
+    piper: {
+      title: 'Настройки офлайн-движка',
+      strategy: 'Стратегия использования',
+      strategyHint:
+        'Использование офлайн-движка (Piper); в режиме «Только офлайн» список голосов содержит только загруженные модели',
+      strategy_off: 'Только онлайн',
+      strategy_fallback: 'Сначала онлайн (рекомендуется)',
+      strategy_prefer: 'Только офлайн',
+      engineUnavailable:
+        'Офлайн-движок недоступен на этой платформе. Синтез речи будет выполняться онлайн-службой.',
+      size: '{n} МБ',
+      state_downloaded: 'Загружено',
+      state_notDownloaded: 'Не загружено',
+      download: 'Загрузить',
+      remove: 'Удалить',
+      downloading: 'Загрузка...',
+      downloadingPercent: 'Загрузка... {percent}%',
+      downloadDone: 'Модель загружена.',
+      downloadFailed: 'Не удалось загрузить модель: {msg}',
+      confirmRemove: 'Удалить эту модель? Для офлайн-синтеза потребуется повторная загрузка.',
+      removed: 'Модель удалена.',
+      downloadInProgress: 'Эта модель уже загружается',
+      filterPlaceholder: 'Фильтр по языкам и голосам...',
+      close: 'Закрыть'
     },
 
     dialog: {

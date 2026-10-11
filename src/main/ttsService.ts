@@ -1,4 +1,4 @@
-import type { BrowserWindow } from 'electron'
+import { app, type BrowserWindow } from 'electron'
 import { tmpdir } from 'os'
 import { basename, join } from 'path'
 import { IpcChannels } from '../shared/ipc'
@@ -20,6 +20,10 @@ import type { StereoPcm } from './audioProcessor'
 import { SegmentCache } from './tts/segmentCache'
 import { SegmentSynthesizer, RunState, DEFAULT_MAX_ATTEMPTS, delay } from './tts/segmentSynthesizer'
 import { createDefaultProvider } from './tts/provider'
+import { PiperProvider } from './tts/provider/piperProvider'
+import { PiperModelManager, resolvePiperVoiceId } from './tts/piper/models'
+import { locatePiperBinary } from './tts/piper/locate'
+import { getSetting } from './settings'
 import { VoiceCatalog } from './tts/voiceCatalog'
 import { buildSubtitleCues, detectSpeechRange, shiftCues, writeSubtitleFile } from './subtitles'
 import type { SubtitleSource } from './subtitles'
@@ -40,6 +44,10 @@ export class TtsService {
   private readonly voices = new VoiceCatalog()
   private readonly cache = new SegmentCache()
   private readonly synth = new SegmentSynthesizer(this.cache, this.state, createDefaultProvider())
+  /** Piper 模型管理器（设置页 IPC 与合成兜底共用同一实例） */
+  readonly piperModels = new PiperModelManager()
+  /** piper 二进制定位缓存：null=不可用，undefined=未探测（首次兜底时惰性执行） */
+  private piperBin: string | null | undefined
 
   /** 获取可用语音列表（带缓存） */
   async listVoices(): Promise<VoiceInfo[]> {
@@ -132,8 +140,8 @@ export class TtsService {
               total: segments.length
             })
           )
-          const pcm = await this.synth.synthesize(seg.text, settings, {
-            onRetry: (attempt, reason) => {
+          const synthHooks = {
+            onRetry: (attempt: number, reason: string) => {
               progress(
                 percent,
                 t('tts.retrying', {
@@ -150,7 +158,29 @@ export class TtsService {
                 t('tts.cacheHit', { role: seg.role, index: segIndex, total: segments.length })
               )
             }
-          })
+          }
+          // Piper 策略：fallback 在线优先（失败时单段离线兜底）；off 仅在线；
+          // prefer 仅离线——强制本地模型，失败不回退在线，避免违背用户预期把文本外发
+          const strategy = getSetting('piperFallback')
+          let pcm: StereoPcm | null
+          if (strategy === 'prefer') {
+            const piper = this.tryCreatePiperSynth(settings.voice)
+            if (!piper) {
+              throw new Error(t('tts.piperUnavailable', { role: seg.role }))
+            }
+            progress(percent, t('tts.piperOffline', { role: seg.role }))
+            pcm = await piper.synthesize(seg.text, settings, synthHooks)
+          } else {
+            try {
+              pcm = await this.synth.synthesize(seg.text, settings, synthHooks)
+            } catch (err) {
+              const piper =
+                strategy === 'fallback' ? this.tryCreatePiperSynth(settings.voice) : null
+              if (!piper) throw err
+              progress(percent, t('tts.piperFallback', { role: seg.role }))
+              pcm = await piper.synthesize(seg.text, settings)
+            }
+          }
           if (abortIfStopped()) return
           if (pcm) {
             audioSegments.push(pcm)
@@ -321,6 +351,32 @@ export class TtsService {
     parts.push(body)
     if (extras.outro.path) parts.push(await loadTrack(extras.outro.path, extras.outro.volume))
     return { pcm: concatenate(parts), introSamples }
+  }
+
+  /**
+   * 为指定发音人构造 Piper 离线合成器（策略触发时使用）：
+   * 发音人值已是离线模型 ID（仅离线模式的发音人列表）时直接采用，
+   * 否则按 Edge 音色语言前缀解析模型；不可用（无二进制 / 无匹配模型 / 未下载）返回 null。
+   * 本地合成一次即成（无网络重试概念），maxAttempts=1；缓存键带引擎与模型维度。
+   */
+  private tryCreatePiperSynth(voice: string): SegmentSynthesizer | null {
+    if (this.piperBin === undefined) {
+      try {
+        const located = locatePiperBinary(app?.isPackaged ?? false, app?.getAppPath?.() ?? '')
+        this.piperBin = located?.bin ?? null
+      } catch {
+        this.piperBin = null
+      }
+    }
+    if (!this.piperBin) return null
+    const voiceId = this.piperModels.byId(voice)?.id ?? resolvePiperVoiceId(voice)
+    if (!voiceId || !this.piperModels.isDownloadedSync(voiceId)) return null
+    const provider = new PiperProvider({
+      piperBin: this.piperBin,
+      modelPath: this.piperModels.modelPath(voiceId),
+      configPath: this.piperModels.configPath(voiceId)
+    })
+    return new SegmentSynthesizer(this.cache, this.state, provider, 1, `piper:${voiceId}`)
   }
 
   private sendError(win: BrowserWindow, kind: string, message: string): void {

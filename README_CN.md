@@ -25,6 +25,7 @@
 - **标记式脚本格式**——不离开文本即可切换发音人、插入精确到毫秒的停顿和蜂鸣声。
 - **完整 Edge TTS 音色库**——音色列表从服务端获取，按语言分组并显示本地化名称。
 - **长文本可靠生成**——网络中断时每个片段自动重试（最多 15 次），内置连接空闲看门狗与自适应退避；已完成片段写入磁盘缓存，失败后重新生成可从断点续跑。合成完整性三重校验（流收尾信号、宣告终点与实际时长交叉验证、逐词文本与源文本尾部对齐）确保服务端提前收尾的截断片段不会被落盘缓存。
+- **离线引擎（v2.0.6）**——通过内置的 [Piper](https://github.com/rhasspy/piper) 运行时进行神经网络语音合成：从 53 种语言的精选模型目录（**设置 → 离线引擎设置**）按需下载模型即可完全离线合成。**在线优先**（默认）在网络持续失败时逐段回退到已下载的本地模型，**仅在线**彻底停用离线引擎，**仅离线**则发音人列表切换为已下载模型且全程不访问网络。
 - **字幕同步生成（v2.0.5）**——导出音频的同时生成 LRC / SRT 字幕，时间戳与输出音频样本级对齐；LRC 角色以全角【A】前缀标注（SRT 为 `[A]` 前缀），前奏 / 尾声自动偏移。
 - **附加音频（v2.0.0）**——可选择本地音频文件作为**前奏**、**尾声**和**背景音乐**，每路支持独立的 0–100% 音量调节；背景音乐自动循环铺满整段语音。
 - **即时试听**——导出前可在内置播放器中试听全部文本或仅试听选中文本（试听同样包含附加音频混音）。
@@ -117,6 +118,7 @@ src/
 - [Vue](https://vuejs.org/) 3.5（组合式 API，`<script setup>`）+ TypeScript 5.9
 - [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal)——Edge TTS 客户端
 - [ffmpeg-static](https://www.npmjs.com/package/ffmpeg-static)——内置 ffmpeg 二进制
+- [Piper](https://github.com/rhasspy/piper)（MIT）——内置离线 TTS 引擎运行时（经内置的 [eSpeak NG](https://github.com/espeak-ng/espeak-ng) 完成音素化，GPL-3.0）
 - [electron-builder](https://www.electron.build/)——打包（NSIS / DMG / AppImage、snap、deb）
 - electron-store——带类型的本地配置存储
 

@@ -49,7 +49,9 @@ const deDE: LocalePack = {
       agreement: '&Nutzungsvereinbarung',
       checkUpdate: 'Nach Aktualisierungen &suchen',
       website: '&Webseite',
-      about: '&Über'
+      about: '&Über',
+      settings: '&Einstellungen',
+      offlineEngine: '&Offline-Engine...'
     },
 
     editor: {
@@ -96,6 +98,7 @@ const deDE: LocalePack = {
       roleLabel: 'Rolle {id}',
       voice: 'Stimme',
       unselected: '(nicht ausgewählt)',
+      noOfflineModels: 'Keine Offline-Modelle geladen – siehe Einstellungen → Offline-Engine...',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'Tempo {n} %',
       volume: 'Lautstärke {n} %',
@@ -212,7 +215,39 @@ const deDE: LocalePack = {
       edge50x:
         'Edge-TTS-Serverfehler ({msg}), Audioerzeugung abgebrochen. Bitte später erneut versuchen.',
       segmentFailed: 'Stimmensegment konnte nicht erzeugt werden: {msg}',
+      piperOffline: 'Rolle {role} wurde offline (Piper) synthetisiert',
+      piperUnavailable:
+        'Offline-Modell für Rolle {role} nicht verfügbar – bitte in Einstellungen → Offline-Engine ein Modell herunterladen',
+      piperFallback:
+        'Onlinesynthese für Rolle {role} fehlgeschlagen, Offline-Engine (Piper) wird verwendet',
       unknownError: 'Unbekannter Fehler'
+    },
+
+    piper: {
+      title: 'Offline-Engine-Einstellungen',
+      strategy: 'Verwendungsstrategie',
+      strategyHint:
+        'Nutzung der Offline-Engine (Piper); bei „Nur offline“ listet die Stimmenauswahl nur geladene Modelle',
+      strategy_off: 'Nur online',
+      strategy_fallback: 'Zuerst online (empfohlen)',
+      strategy_prefer: 'Nur offline',
+      engineUnavailable:
+        'Die Offline-Engine ist auf dieser Plattform nicht verfügbar. Die Sprachsynthese verwendet den Onlinedienst.',
+      size: '{n} MB',
+      state_downloaded: 'Heruntergeladen',
+      state_notDownloaded: 'Nicht heruntergeladen',
+      download: 'Herunterladen',
+      remove: 'Löschen',
+      downloading: 'Wird heruntergeladen ...',
+      downloadingPercent: 'Wird heruntergeladen ... {percent}%',
+      downloadDone: 'Modell heruntergeladen.',
+      downloadFailed: 'Modell-Download fehlgeschlagen: {msg}',
+      confirmRemove:
+        'Modell {name} löschen? Die Offline-Synthese ist erst nach erneuten Herunterladen verfügbar.',
+      removed: 'Modell entfernt.',
+      downloadInProgress: 'Dieses Modell wird bereits heruntergeladen',
+      filterPlaceholder: 'Sprachen oder Stimmen filtern...',
+      close: 'Schließen'
     },
 
     dialog: {

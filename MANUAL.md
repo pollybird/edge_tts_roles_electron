@@ -1,8 +1,8 @@
 # edge-tts-roles User Manual
 
-**Edge-TTS Multi-Voice Audio Generator** (v2.0.5)
+**Edge-TTS Multi-Voice Audio Generator** (v2.0.6)
 
-A desktop application that turns marker-based text scripts into multi-speaker audio. It uses Microsoft's online Edge speech synthesis service: assign a different neural voice to each speaker, switch roles freely in one script, control pauses and beeps, optionally add music, and export WAV / MP3 / OGG / FLAC files.
+A desktop application that turns marker-based text scripts into multi-speaker audio. It uses Microsoft's online Edge speech synthesis service by default (an optional bundled offline engine is also available): assign a different neural voice to each speaker, switch roles freely in one script, control pauses and beeps, optionally add music, and export WAV / MP3 / OGG / FLAC files.
 
 > This manual addresses both **end users** and **developers**: the first half is a usage guide, the second half covers development, building and releasing.
 
@@ -74,10 +74,11 @@ A desktop application that turns marker-based text scripts into multi-speaker au
 | Config import/export | Save the four roles' voice / rate / volume / pitch to a JSON file and reuse it |
 | 9 interface languages | English, Simplified Chinese, Traditional Chinese, French, German, Spanish, Russian, Japanese, Arabic (with RTL layout) |
 | Auto-update | Silent check after launch, or manual check anytime; a confirmation dialog appears for new versions (per-version skip supported); Simplified-Chinese systems probe GitCode first, others GitHub first (two-way fallback) |
+| Offline engine | Optional neural TTS via bundled Piper: download one curated model per language from a 53-language catalog and synthesize fully offline; three strategies — online first (default) / online only / offline only |
 
 ### 1.2 Important Notes
 
-- **Internet access is required**: speech synthesis is provided by Microsoft's online Edge speech service; nothing can be generated offline.
+- **Online by default, offline optional**: the built-in voices come from Microsoft's online Edge speech service and need internet access. The bundled Piper offline engine can also synthesize entirely offline with downloaded models (**Settings → Offline Engine**, see [5.4](#54-offline-engine-piper-models)); for offline models rate and volume apply, pitch is ignored.
 - This app is an **independent client** and is not affiliated with, sponsored by, or endorsed by Microsoft.
 - Please use the generated speech lawfully and respect the reasonable limits of voice and content use.
 
@@ -120,7 +121,7 @@ The window opens **maximized** by default:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Menu bar: File  Edit  Language  Help                          │
+│ Menu bar: File  Edit  Language  Settings  Help                │
 ├───────────────────────────────┬──────────────────────────────┤
 │                               │  Voice Settings (A/B/C/D)    │
 │        Text Editor            │  ─────────────────────────── │
@@ -255,6 +256,32 @@ Validation rules when loading:
 - Numeric fields are rounded and clamped to −100 ~ +100;
 - At least one role must have a voice, or the app reports "No selected voice was found in the config file";
 - Empty roles stay empty (you will be prompted to pick a voice when generating).
+
+### 5.4 Offline Engine (Piper models)
+
+Besides the online Edge voices, the app bundles the **Piper** neural TTS engine. After a one-time model download, that voice can be synthesized entirely offline — useful for privacy-sensitive text or unreliable networks.
+
+Opening the dialog: menu bar **Settings → Offline Engine...**. The dialog lists one curated model per language family (53 families in total) with a search box that matches model name, language and id (case-insensitive).
+
+Managing models:
+
+- Download: models are roughly 20–70 MB, fetched from the mirror first with the official source as fallback; a size sanity check rejects incomplete files;
+- Effective immediately: once a download finishes, the model list, the voice dropdown and synthesis availability all refresh without restarting the app;
+- Delete: removes the model files to free disk space.
+
+Strategy (dropdown at the top of the dialog, saved with settings):
+
+| Strategy | Behavior |
+| --- | --- |
+| Online first (recommended) | Edge online voices are used first; if a segment still fails online, the local Piper model synthesizes that segment as a fallback |
+| Online only | Offline synthesis is never used; online errors surface as usual |
+| Offline only | Synthesis runs exclusively on local Piper models — **no text leaves your machine**; voice dropdowns list downloaded Piper models instead of Edge voices, and a missing model reports an error rather than silently falling back online |
+
+Notes:
+
+- Offline voices honor **rate** and **volume**; **pitch is ignored** (Piper does not support it);
+- Downloaded models are stored in the app data folder under `piper-voices/`;
+- If no model is downloaded yet, an offline-only voice dropdown shows a hint pointing to this dialog.
 
 ---
 
@@ -407,7 +434,7 @@ The app ships **9 languages**: English, Simplified Chinese, Traditional Chinese,
 
 ### 10.2 Switching & Persistence
 
-- Language switching lives in the system menu's **"Language"** menu (between "Edit" and "Help");
+- Language switching lives in the system menu's **"Language"** menu (between "Edit" and "Settings");
 - The menu lists the 9 languages as radio items; the active one is checked;
 - Selecting one applies **immediately** and **persists** across restarts;
 - If you have never chosen one, the app **follows the system language**.
@@ -470,7 +497,7 @@ Inside the find/replace inputs: `Enter` next, `Shift + Enter` previous, `Esc` cl
 
 **Q1: Is internet access really required?**
 
-Yes. Voices are synthesized by Microsoft's online Edge service; the local app only parses, assembles and encodes.
+By default, yes: the built-in voices are synthesized by Microsoft's online Edge service, and the local app only parses, assembles and encodes. Offline is optional — after downloading models in **Settings → Offline Engine** (see [5.4](#54-offline-engine-piper-models)), the bundled Piper engine can synthesize entirely locally; with the "Offline only" strategy your text never leaves the machine.
 
 **Q2: It says "Role X has no voice selected". What do I do?**
 
@@ -719,7 +746,7 @@ Platform notes:
 
 - `src/main/updateFeed.ts` (pure logic): decides the right `latest*.yml` for the current platform, picks the source order (GitCode first for Simplified-Chinese locales, GitHub first otherwise), probes the primary feed, resolves the latest GitCode tag, and builds its feed base;
 - `src/main/updatePrompt.ts` (pure logic): `shouldPromptUpdate` decides whether a newly found version triggers the dialog — manual checks always prompt; during a silent startup check, "skip this version" only suppresses the skipped version itself, a higher version still prompts;
-- `src/main/updater.ts` (Electron glue): enabled only when `app.isPackaged`; configures `electron-updater`'s generic provider with the resolved base URL; `autoDownload = false` — a new version first goes through the renderer-side confirmation dialog, and `downloadUpdate` is only called after the user picks "Update Now"; forwards events to the renderer and distinguishes silent vs. manual checks.
+- `src/main/updater.ts` (Electron glue): enabled only when `app.isPackaged`; feed resolution is **lazy** — the reachable source is probed at check time and cached for 10 minutes, so IPC handlers exist even when neither source is reachable at startup; the GitCode feed carries an empty `Private-Token` header (the WAF rejects electron-updater's default `noCache` query and HEAD requests); `autoDownload = false` — a new version first goes through the renderer-side confirmation dialog, and `downloadUpdate` is only called after the user picks "Update Now"; events are forwarded to the renderer with silent vs. manual checks distinguished — failure prompts funnel through a single path and appear **only for manual checks** (electron-updater's own `error` event is only logged, since it fires alongside the rejected promise); as a defensive fallback, a check that throws on the primary source retries once on the other source before reporting failure.
 
 ### 20.2 Events & IPC
 
@@ -732,7 +759,7 @@ The renderer subscribes via `onUpdateEvent`:
 | `not-available` | version / manual | Show "already up to date" **only when manual** |
 | `download-progress` | percent / bytesPerSecond / total / transferred | Show download progress |
 | `downloaded` | version | Offer restart-to-install |
-| `error` | empty | Generic "check failed" dialog (details stay in the main-process log) |
+| `error` | manual | "Check failed" prompt, shown **only when manual** (silent startup failures stay quiet); details stay in the main-process log |
 
 - Renderer-invokable update IPC: `update:check` (manual check), `update:download` (triggers the download after dialog confirmation), `update:skip-version` (persists "skip this version"), `update:install` (quit and install);
 - The error payload is intentionally **not forwarded verbatim**, so HTML/stacks never leak into the UI;
@@ -742,9 +769,10 @@ The renderer subscribes via `onUpdateEvent`:
 
 1. Pick the platform manifest: `win → latest.yml`, `mac → latest-mac.yml`, `linux → latest-linux.yml`;
 2. Pick the source order: Simplified-Chinese locales (`zh-CN` / `zh-Hans*`, from `app.getLocale()`) probe **GitCode first** (such systems are mostly in mainland China), everything else probes **GitHub first**;
-3. Probe the primary feed (3.5 s timeout, `Range: bytes=0-0`). GitHub: `/releases/latest/download/<file>`; GitCode: the public API resolves the latest `tag_name` first, then `/releases/download/<tag>/<file>` is probed;
+3. Probe the primary feed (3.5 s timeout, `Range: bytes=0-0`). GitHub: `/releases/latest/download/<file>`; GitCode: the public API resolves the latest `tag_name` first, then `/releases/download/<tag>/<file>` is probed — requests carry an empty `Private-Token` header because the WAF answers HEAD and `noCache` requests with 401/404;
 4. Primary unreachable (or serving an HTML error page) → probe the other source;
-5. If both fail, skip the check for this run (no requests to invalid endpoints).
+5. If both fail, skip the check for this run (no requests to invalid endpoints);
+6. Successful resolutions are cached for 10 minutes; at check time, if electron-updater still throws on the primary source, the updater excludes that base, re-resolves and retries once on the other source before reporting failure.
 
 ## 21. Adding a Language
 
@@ -845,6 +873,7 @@ Each release prepends a section to `UPGRADE.md` / `UPGRADE_CN.md` (categorized: 
 
 | Version | Highlights |
 | --- | --- |
+| v2.0.6 | **Offline engine** (bundled Piper TTS: curated one-model-per-language catalog covering 53 language families, mirror-first downloads with size validation, **Settings → Offline Engine** dialog; three strategies — online first / online only / offline only, with offline-only voice dropdowns switching to local models); **check-update hardening** (lazy feed resolution with TTL cache, GitCode WAF HEAD-401 workaround via an empty token header, automatic fallback to the other source on failure, error prompt only for manual checks); fixed downloaded offline models still showing "not downloaded" (double-extension path bug) |
 | v2.0.5 | **Synchronized subtitles** (LRC / SRT subtitles generated alongside the audio, timestamps sample-aligned via PCM sample counting; LRC role prefixes use full-width 【】 so they are never mistaken for word-by-word time tags); **update confirmation dialog** (a newly found version pops a three-way dialog: Update Now / Remind Later / Skip This Version, persisted per version, `autoDownload` disabled); **TTS provider abstraction** (`tts/provider/` interface + default implementation injected, an extension point reserved for offline engines); default export format changed to MP3 with uniform 44.1 kHz output; triple synthesis integrity check (adds the word-boundary spoken-tail alignment criterion, cache keys versioned to v3); 1 second of trailing silence appended; fixed the Generate button not restoring after stopping a task |
 | v2.0.4 | **TTS main-process modularization** (`ttsService.ts` split into `voiceCatalog` / `segmentCache` / `segmentSynthesizer` modules, public API unchanged); **Playwright/Electron E2E tests** (9 cases: agreement gate, language menu, marker insertion) with Xvfb in CI; fixed App.vue IPC subscriptions being registered after `await listVoices()` (language-switch broadcast could be lost); bilingual Issue / PR templates and Code of Conduct; README badges + product screenshot |
 | v2.0.3 | **Persisted language switching** (editor dropdown replaced by the "Language" menu radio items; choice saved); **first-launch User Agreement gate** (mandatory modal, persisted with "Do not show again"); **manual check feedback** ("already up to date" only for manual checks, silent startup check stays quiet); feed probing extracted into a mockable pure module (15 tests); CI (typecheck/lint/test) and automated release workflows; GitCode mirror script (`scripts/publish-gitcode.mjs`) |
@@ -856,4 +885,4 @@ Full changelogs live in `UPGRADE.md` / `UPGRADE_CN.md` at the repository root.
 
 ---
 
-*This manual is written against v2.0.5. On-screen labels follow the selected language; wording may differ from the screenshots described here.*
+*This manual is written against v2.0.6. On-screen labels follow the selected language; wording may differ from the screenshots described here.*

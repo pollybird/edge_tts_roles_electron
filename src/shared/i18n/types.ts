@@ -38,6 +38,7 @@ export interface Messages {
   message: Record<string, string>
   update: Record<string, string>
   tts: Record<string, string>
+  piper: Record<string, string>
   dialog: Record<string, string>
   help: Record<string, string>
   agreement: Record<string, string>

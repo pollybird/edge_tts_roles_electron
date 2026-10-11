@@ -12,6 +12,9 @@ files:
   # 跨平台 ffmpeg 由 extraResources 单独按架构提供，禁止进入 app.asar
   - '!resources/ffmpeg'
   - '!resources/.ffmpeg-stage-*'
+  # Piper 离线引擎二进制同理（scripts/download-piper-binaries.mjs 下载 → resources/piper/）
+  - '!resources/piper'
+  - '!resources/.piper-stage-*'
   # 开发时 ffmpeg-static 自带的当前平台二进制也不应进入打包产物
   - '!**/node_modules/ffmpeg-static/ffmpeg'
   - '!**/node_modules/ffmpeg-static/ffmpeg.exe'

@@ -30,6 +30,11 @@ export const IpcChannels = {
   updateDownloadProgress: 'update:download-progress',
   updateDownloaded: 'update:downloaded',
   updateError: 'update:error',
+  // Piper 离线引擎（模型清单/下载/删除；下载进度主进程推送）
+  piperList: 'piper:list',
+  piperDownload: 'piper:download',
+  piperRemove: 'piper:remove',
+  piperDownloadProgress: 'piper:download-progress',
   // send（主 → 渲染，事件推送）
   progress: 'tts:progress',
   finished: 'tts:finished',

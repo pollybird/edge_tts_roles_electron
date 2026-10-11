@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import TextEditor from './components/TextEditor.vue'
 import RoleSettings from './components/RoleSettings.vue'
 import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
+import OfflineEngineDialog from './components/OfflineEngineDialog.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
 import AgreementDialog from './components/AgreementDialog.vue'
@@ -10,6 +11,8 @@ import UpdateDialog from './components/UpdateDialog.vue'
 import type {
   AudioExtras,
   AudioFormat,
+  PiperFallback,
+  PiperVoiceStatus,
   RoleId,
   RoleVoiceSettings,
   SubtitleFormat,
@@ -42,6 +45,32 @@ const agreementRequired = ref(false)
 
 /** 更新确认弹窗：发现新版本且未被“不再提示”跳过时弹出（'' = 隐藏） */
 const updateDialogVersion = ref('')
+
+/** 离线引擎设置对话框：主菜单「设置→离线引擎设置」触发（false = 隐藏） */
+const offlineEngineVisible = ref(false)
+
+/** Piper 离线模型清单与当前策略：仅离线模式下发音人下拉切换为已下载的离线模型 */
+const piperVoices = ref<PiperVoiceStatus[]>([])
+const piperStrategy = ref<PiperFallback>('fallback')
+
+/** 读取离线引擎策略与模型清单（启动与离线设置对话框关闭后调用） */
+async function refreshOfflineState(): Promise<void> {
+  const saved = await window.api.getSetting<PiperFallback>('piperFallback')
+  if (saved === 'off' || saved === 'fallback' || saved === 'prefer') {
+    piperStrategy.value = saved
+  }
+  try {
+    piperVoices.value = (await window.api.piperList()).voices
+  } catch {
+    piperVoices.value = []
+  }
+}
+
+/** 离线设置对话框关闭：策略或已下载模型可能已变更，刷新发音人下拉数据 */
+function handleOfflineDialogClose(): void {
+  offlineEngineVisible.value = false
+  void refreshOfflineState()
+}
 
 async function handleAcceptAgreement(doNotShowAgain: boolean): Promise<void> {
   // 勾选“下次不再弹出”才持久化同意状态；未勾选则下次启动继续弹出
@@ -281,10 +310,12 @@ onMounted(() => {
         break
       case 'available':
         // 发现新版本：弹出确认对话框（主进程已按“不再提示”过滤过静默检查场景）
+        progressMessage.value = ''
         updateDialogVersion.value = event.version
         break
       case 'not-available':
-        // 启动时的自动检查保持静默；用户手动检查时明确提示“已是最新版本”
+        // 清除“正在检查更新…”状态；启动时的自动检查保持静默，用户手动检查时明确提示“已是最新版本”
+        progressMessage.value = ''
         if (event.manual) {
           window.alert(t('update.notAvailable'))
         }
@@ -300,8 +331,11 @@ onMounted(() => {
         }
         break
       case 'error':
-        // 更新错误不写入主界面状态栏，仅弹出通用提示
-        window.alert(t('update.checkFailed'))
+        // 仅用户手动检查的失败才提示；启动静默检查失败零打扰（主进程已按 manual 标志过滤）
+        progressMessage.value = ''
+        if (event.manual) {
+          window.alert(t('update.checkFailed'))
+        }
         break
     }
   })
@@ -330,6 +364,9 @@ onMounted(() => {
       case 'replace':
         void editorRef.value?.openFindBar(true)
         break
+      case 'offline-engine-settings':
+        offlineEngineVisible.value = true
+        break
     }
   })
 
@@ -351,6 +388,9 @@ onMounted(() => {
     progressMessage.value = t('message.ready')
 
     voices.value = await window.api.listVoices()
+
+    // 离线引擎状态：决定发音人下拉在仅离线模式下的选项来源
+    await refreshOfflineState()
   })()
 })
 </script>
@@ -369,6 +409,8 @@ onMounted(() => {
         <RoleSettings
           :settings="roleSettings"
           :voices="voices"
+          :offline-mode="piperStrategy === 'prefer'"
+          :offline-voices="piperVoices"
           @save-config="handleSaveConfig"
           @load-config="handleLoadConfig"
           @update-role="handleUpdateRole"
@@ -403,5 +445,7 @@ onMounted(() => {
       @later="handleUpdateLater"
       @never="handleUpdateNever"
     />
+    <!-- 离线引擎设置：主菜单「设置→离线引擎设置」触发；关闭时刷新策略与模型清单 -->
+    <OfflineEngineDialog v-if="offlineEngineVisible" @close="handleOfflineDialogClose" />
   </div>
 </template>

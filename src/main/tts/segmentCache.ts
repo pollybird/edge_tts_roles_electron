@@ -47,13 +47,15 @@ export class SegmentCache {
     return this.dir
   }
 
-  /** 由文本与语音参数计算稳定缓存键，任一参数变化都会得到不同片段 */
-  keyFor(text: string, settings: SegmentVoiceSettings): string {
-    // v3：尾部对齐完整性校验（spokenTail）上线后版本化缓存键。
-    // 每当合成完整性判定逻辑升级，必须 bump 该版本前缀，
-    // 使历史（可能被服务端提前收尾截断且已落盘的）条目全部失效重新合成，
-    // 否则重跑任务会直接命中缓存中的截断片段，校验代码无从介入。
-    const raw = `v3|${settings.voice}|${settings.rate}|${settings.volume}|${settings.pitch}|${text}`
+  /**
+   * 由文本、语音参数与合成引擎计算稳定缓存键，任一参数变化都会得到不同片段。
+   * @param providerKey 引擎标识（'edge' 或 'piper:<modelId>'）：Edge 与 Piper 对同一
+   *   文本的发音完全不同，缓存绝不能互串；piper 不同模型（音色）同理。
+   */
+  keyFor(text: string, settings: SegmentVoiceSettings, providerKey = 'edge'): string {
+    // v4：接入 Piper 离线引擎，缓存键加入引擎/模型维度并整体 bump 版本，
+    // 使 v3 键空间（无引擎维度）全部失效重建，杜绝跨引擎产物复用。
+    const raw = `v4|${providerKey}|${settings.voice}|${settings.rate}|${settings.volume}|${settings.pitch}|${text}`
     return createHash('sha256').update(raw, 'utf8').digest('hex')
   }
 

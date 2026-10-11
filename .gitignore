@@ -3,9 +3,12 @@ dist
 out
 resources/ffmpeg
 resources/.ffmpeg-stage
+resources/piper
+resources/.piper-stage-*
 .DS_Store
 .eslintcache
 *.log*
 test-results
 playwright-report
 plans
+tools/

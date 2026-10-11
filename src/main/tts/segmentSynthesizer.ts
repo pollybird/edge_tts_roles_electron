@@ -115,7 +115,9 @@ export class SegmentSynthesizer {
     private readonly cache: SegmentCache,
     private readonly state: RunState,
     private readonly provider: TTSProvider,
-    maxAttempts = DEFAULT_MAX_ATTEMPTS
+    maxAttempts = DEFAULT_MAX_ATTEMPTS,
+    /** 缓存键引擎维度（默认取 provider.name；piper 多模型时传 'piper:<modelId>'） */
+    private readonly cacheKeyProvider: string = 'edge'
   ) {
     this.maxAttempts = maxAttempts
   }
@@ -130,8 +132,8 @@ export class SegmentSynthesizer {
     const trimmed = text.trim()
     if (!trimmed) return null
 
-    // 断点续传：同文本 + 同语音参数的片段直接读缓存，不再请求网络
-    const key = this.cache.keyFor(trimmed, settings)
+    // 断点续传：同文本 + 同语音参数 + 同引擎的片段直接读缓存，不再请求网络
+    const key = this.cache.keyFor(trimmed, settings, this.cacheKeyProvider)
     const cached = await this.cache.read(key)
     if (cached) {
       hooks.onCacheHit?.()

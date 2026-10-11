@@ -8,6 +8,8 @@ import { ROLE_IDS } from '../shared/types'
 import type {
   AudioFormat,
   GenerateRequest,
+  PiperDownloadProgress,
+  PiperListPayload,
   PreviewRequest,
   RoleId,
   RoleVoiceSettings
@@ -15,6 +17,8 @@ import type {
 import { getSetting, setSetting } from './settings'
 import type { SettingsSchema } from './settings'
 import { ttsService } from './ttsService'
+import { PIPER_VOICES } from './tts/piper/models'
+import { locatePiperBinary } from './tts/piper/locate'
 
 /** 允许读取的音频扩展名（与文件选择对话框保持一致） */
 const AUDIO_EXTENSIONS = new Set(['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus', 'wma'])
@@ -145,6 +149,59 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
       throw new Error(t('dialog.invalidJson'))
     }
     return normalizeRoleSettings(parsed)
+  })
+
+  // ── Piper 离线引擎：模型清单 / 下载 / 删除 ──────────────────────────────
+  // 防并发：同一模型同时仅允许一个下载任务
+  const piperDownloading = new Set<string>()
+
+  ipcMain.handle(IpcChannels.piperList, async (): Promise<PiperListPayload> => {
+    let engineAvailable = false
+    try {
+      engineAvailable = locatePiperBinary(app.isPackaged, app.getAppPath()) !== null
+    } catch {
+      engineAvailable = false
+    }
+    const mgr = ttsService.piperModels
+    const voices = await Promise.all(
+      PIPER_VOICES.map(async (v) => ({
+        id: v.id,
+        voiceName: v.voiceName,
+        langName: v.langName,
+        quality: v.quality,
+        sizeMB: v.sizeMB,
+        downloaded: await mgr.isDownloaded(v.id)
+      }))
+    )
+    return { engineAvailable, voices }
+  })
+
+  ipcMain.handle(IpcChannels.piperDownload, async (_e, id: string) => {
+    if (typeof id !== 'string' || !ttsService.piperModels.byId(id)) {
+      throw new Error(`unknown piper voice: ${id}`)
+    }
+    if (piperDownloading.has(id)) {
+      throw new Error(createT()('piper.downloadInProgress'))
+    }
+    piperDownloading.add(id)
+    try {
+      await ttsService.piperModels.download(id, (p) => {
+        const payload: PiperDownloadProgress = { id, received: p.received, total: p.total }
+        getWindow()?.webContents.send(IpcChannels.piperDownloadProgress, payload)
+      })
+    } finally {
+      piperDownloading.delete(id)
+    }
+  })
+
+  ipcMain.handle(IpcChannels.piperRemove, async (_e, id: string) => {
+    if (typeof id !== 'string' || !ttsService.piperModels.byId(id)) {
+      throw new Error(`unknown piper voice: ${id}`)
+    }
+    if (piperDownloading.has(id)) {
+      throw new Error(createT()('piper.downloadInProgress'))
+    }
+    await ttsService.piperModels.remove(id)
   })
 }
 

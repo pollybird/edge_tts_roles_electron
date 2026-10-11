@@ -49,7 +49,9 @@ const esES: LocalePack = {
       agreement: 'Acuerdo de &usuario',
       checkUpdate: 'Buscar &actualizaciones',
       website: '&Sitio web',
-      about: 'Acerca &de'
+      about: 'Acerca &de',
+      settings: '&Configuración',
+      offlineEngine: 'Motor &sin conexión...'
     },
 
     editor: {
@@ -96,6 +98,7 @@ const esES: LocalePack = {
       roleLabel: 'Rol {id}',
       voice: 'Voz',
       unselected: '(ninguna seleccionada)',
+      noOfflineModels: 'No hay modelos sin conexión: vaya a Configuración → Motor sin conexión...',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'Velocidad {n} %',
       volume: 'Volumen {n} %',
@@ -211,7 +214,39 @@ const esES: LocalePack = {
       edge50x:
         'Error del servidor de Edge TTS ({msg}), generación de audio cancelada. Inténtelo más tarde.',
       segmentFailed: 'Error al generar el segmento de voz: {msg}',
+      piperOffline: 'Rol {role} sintetizado por el motor sin conexión (Piper)',
+      piperUnavailable:
+        'Modelo sin conexión del rol {role} no disponible: descargue un modelo en Configuración → Motor sin conexión...',
+      piperFallback:
+        'Falló la síntesis en línea del rol {role}, usando el motor sin conexión (Piper)',
       unknownError: 'Error desconocido'
+    },
+
+    piper: {
+      title: 'Ajustes del motor sin conexión',
+      strategy: 'Estrategia de uso',
+      strategyHint:
+        'Uso del motor sin conexión (Piper); con «Solo sin conexión», la lista de voces muestra solo modelos descargados',
+      strategy_off: 'Solo en línea',
+      strategy_fallback: 'Primero en línea (recomendado)',
+      strategy_prefer: 'Solo sin conexión',
+      engineUnavailable:
+        'El motor sin conexión no está disponible en esta plataforma. La síntesis de voz utilizará el servicio en línea.',
+      size: '{n} MB',
+      state_downloaded: 'Descargado',
+      state_notDownloaded: 'No descargado',
+      download: 'Descargar',
+      remove: 'Eliminar',
+      downloading: 'Descargando...',
+      downloadingPercent: 'Descargando... {percent}%',
+      downloadDone: 'Modelo descargado.',
+      downloadFailed: 'Error al descargar el modelo: {msg}',
+      confirmRemove:
+        '¿Eliminar el modelo {name}? La síntesis sin conexión no estará disponible hasta volver a descargarlo.',
+      removed: 'Modelo eliminado.',
+      downloadInProgress: 'Este modelo ya se está descargando',
+      filterPlaceholder: 'Filtrar idiomas o voces...',
+      close: 'Cerrar'
     },
 
     dialog: {

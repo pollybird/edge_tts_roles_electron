@@ -65,7 +65,9 @@ const arSA: LocalePack = {
       agreement: 'اتفاقية &المستخدم',
       checkUpdate: 'التحقق من التحديثات(&U)',
       website: '&الموقع الإلكتروني',
-      about: '&حول'
+      about: '&حول',
+      settings: 'الإعدادات(&S)',
+      offlineEngine: 'إعدادات المحرك دون اتصال(&O)'
     },
 
     editor: {
@@ -110,6 +112,7 @@ const arSA: LocalePack = {
       roleLabel: 'الدور {id}',
       voice: 'الصوت',
       unselected: '(غير محدد)',
+      noOfflineModels: 'لم يتم تنزيل نماذج غير متصلة؛ يرجى التنزيل من إعدادات المحرك غير المتصل',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'السرعة {n}%',
       volume: 'مستوى الصوت {n}%',
@@ -224,7 +227,37 @@ const arSA: LocalePack = {
       emptyAudio: 'بيانات صوتية فارغة',
       edge50x: 'خطأ في خادم Edge TTS ({msg})، تم إيقاف إنشاء الصوت. الرجاء المحاولة لاحقاً.',
       segmentFailed: 'فشل إنشاء مقطع الصوت: {msg}',
+      piperOffline: 'تم تركيب دور {role} بواسطة المحرك غير المتصل (Piper)',
+      piperUnavailable:
+        'النموذج غير المتصل للدور {role} غير متاح؛ يرجى تنزيل النموذج المناسب من إعدادات المحرك غير المتصل',
+      piperFallback: 'فشل التركيب عبر الإنترنت للدور {role}، يتم استخدام المحرك غير المتصل (Piper)',
       unknownError: 'خطأ غير معروف'
+    },
+
+    piper: {
+      title: 'إعدادات المحرك دون اتصال',
+      strategy: 'استراتيجية الاستخدام',
+      strategyHint:
+        'طريقة استخدام المحرك غير المتصل (Piper)؛ في وضع «غير متصل فقط» تعرض قائمة الأصوات النماذج المنزّلة فقط',
+      strategy_off: 'عبر الإنترنت فقط',
+      strategy_fallback: 'عبر الإنترنت أولاً (موصى به)',
+      strategy_prefer: 'غير متصل فقط',
+      engineUnavailable:
+        'المحرك غير المتصل غير متاح على هذه المنصة. سيستخدم تركيب الصوت الخدمة عبر الإنترنت.',
+      size: '{n} م.ب',
+      state_downloaded: 'تم التنزيل',
+      state_notDownloaded: 'لم يتم التنزيل',
+      download: 'تنزيل',
+      remove: 'حذف',
+      downloading: 'جارٍ التنزيل...',
+      downloadingPercent: 'جارٍ التنزيل... {percent}%',
+      downloadDone: 'تم تنزيل النموذج.',
+      downloadFailed: 'فشل تنزيل النموذج: {msg}',
+      confirmRemove: 'إزالة هذا النموذج؟ سيلزم تنزيله مجددًا للمحرك دون اتصال.',
+      removed: 'تمت إزالة النموذج.',
+      downloadInProgress: 'هذا النموذج قيد التنزيل بالفعل',
+      filterPlaceholder: 'تصفية اللغات أو الأصوات...',
+      close: 'إغلاق'
     },
 
     dialog: {

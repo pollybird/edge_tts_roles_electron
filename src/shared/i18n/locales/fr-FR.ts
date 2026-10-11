@@ -49,7 +49,9 @@ const frFR: LocalePack = {
       agreement: "Conditions d'uti&lisation",
       checkUpdate: 'Rechercher des mises &à jour',
       website: '&Site web',
-      about: 'À &propos'
+      about: 'À &propos',
+      settings: '&Paramètres',
+      offlineEngine: 'Moteur &hors ligne...'
     },
 
     editor: {
@@ -97,6 +99,8 @@ const frFR: LocalePack = {
       roleLabel: 'Rôle {id}',
       voice: 'Voix',
       unselected: '(aucune sélection)',
+      noOfflineModels:
+        'Aucun modèle hors ligne téléchargé — voir Paramètres → Moteur hors ligne...',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'Débit {n} %',
       volume: 'Volume {n} %',
@@ -213,7 +217,39 @@ const frFR: LocalePack = {
       edge50x:
         'Erreur du serveur Edge TTS ({msg}), génération audio annulée. Veuillez réessayer plus tard.',
       segmentFailed: 'Échec de la génération du segment vocal : {msg}',
+      piperOffline: 'Rôle {role} synthétisé par le moteur hors ligne (Piper)',
+      piperUnavailable:
+        'Modèle hors ligne du rôle {role} indisponible — téléchargez un modèle dans Paramètres → Moteur hors ligne...',
+      piperFallback:
+        'Échec de la synthèse en ligne pour le rôle {role}, basculement vers le moteur hors ligne (Piper)',
       unknownError: 'Erreur inconnue'
+    },
+
+    piper: {
+      title: 'Paramètres du moteur hors ligne',
+      strategy: "Stratégie d'utilisation",
+      strategyHint:
+        'Utilisation du moteur hors ligne (Piper) ; en « Hors ligne uniquement », la liste des voix n’affiche que les modèles téléchargés',
+      strategy_off: 'En ligne uniquement',
+      strategy_fallback: 'En ligne d’abord (recommandé)',
+      strategy_prefer: 'Hors ligne uniquement',
+      engineUnavailable:
+        "Le moteur hors ligne n'est pas disponible sur cette plateforme. La synthèse vocale utilisera le service en ligne.",
+      size: '{n} Mo',
+      state_downloaded: 'Téléchargé',
+      state_notDownloaded: 'Non téléchargé',
+      download: 'Télécharger',
+      remove: 'Supprimer',
+      downloading: 'Téléchargement...',
+      downloadingPercent: 'Téléchargement... {percent}%',
+      downloadDone: 'Modèle téléchargé.',
+      downloadFailed: 'Échec du téléchargement du modèle : {msg}',
+      confirmRemove:
+        'Supprimer le modèle {name} ? La synthèse hors ligne sera indisponible jusqu’au prochain téléchargement.',
+      removed: 'Modèle supprimé.',
+      downloadInProgress: 'Ce modèle est déjà en cours de téléchargement',
+      filterPlaceholder: 'Filtrer les langues ou les voix...',
+      close: 'Fermer'
     },
 
     dialog: {

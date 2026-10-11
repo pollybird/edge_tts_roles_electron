@@ -49,7 +49,9 @@ const jaJP: LocalePack = {
       agreement: '利用規約(&U)',
       checkUpdate: '更新を確認(&U)',
       website: '公式サイト(&W)',
-      about: 'バージョン情報(&A)'
+      about: 'バージョン情報(&A)',
+      settings: '設定(&S)',
+      offlineEngine: 'オフラインエンジン設定(&O)'
     },
 
     editor: {
@@ -94,6 +96,8 @@ const jaJP: LocalePack = {
       roleLabel: 'ロール {id}',
       voice: 'ボイス',
       unselected: '（未選択）',
+      noOfflineModels:
+        'オフラインモデル未ダウンロード：「設定 → オフラインエンジン設定」からダウンロードしてください',
       groupLabel: '--- {label}（{n}） ---',
       rate: '速度 {n}%',
       volume: '音量 {n}%',
@@ -212,7 +216,39 @@ const jaJP: LocalePack = {
       edge50x:
         'Edge TTS サーバーエラー（{msg}）。音声生成を中止しました。後でもう一度お試しください。',
       segmentFailed: '音声セグメントの生成に失敗しました: {msg}',
+      piperOffline: '役割 {role} はオフラインエンジン（Piper）で合成しました',
+      piperUnavailable:
+        '役割 {role} のオフラインモデルを利用できません：「設定 → オフラインエンジン設定」から該当言語のモデルをダウンロードしてください',
+      piperFallback:
+        '役割 {role} のオンライン合成に失敗したため、オフラインエンジン（Piper）を使用します',
       unknownError: '不明なエラー'
+    },
+
+    piper: {
+      title: 'オフラインエンジン設定',
+      strategy: '利用戦略',
+      strategyHint:
+        'オフラインエンジン（Piper）の利用方法。「オフラインのみ」では音声リストにダウンロード済みモデルのみ表示されます',
+      strategy_off: 'オンラインのみ',
+      strategy_fallback: 'オンライン優先（推奨）',
+      strategy_prefer: 'オフラインのみ',
+      engineUnavailable:
+        'このプラットフォームではオフラインエンジンを利用できません。音声合成にはオンラインサービスを使用します。',
+      size: '{n} MB',
+      state_downloaded: 'ダウンロード済み',
+      state_notDownloaded: '未ダウンロード',
+      download: 'ダウンロード',
+      remove: '削除',
+      downloading: 'ダウンロード中…',
+      downloadingPercent: 'ダウンロード中… {percent}%',
+      downloadDone: 'モデルのダウンロードが完了しました。',
+      downloadFailed: 'モデルのダウンロードに失敗しました: {msg}',
+      confirmRemove:
+        'モデル {name} を削除しますか？削除後は再ダウンロードするまでオフライン合成できません。',
+      removed: 'モデルを削除しました。',
+      downloadInProgress: 'このモデルはダウンロード中です',
+      filterPlaceholder: '言語やモデルを絞り込み…',
+      close: '閉じる'
     },
 
     dialog: {

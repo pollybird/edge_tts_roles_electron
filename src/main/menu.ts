@@ -7,7 +7,13 @@ import { checkForUpdates } from './updater'
 
 /** 菜单动作 id（渲染进程据此分发） */
 export type MenuActionId =
-  'open-text' | 'save-text' | 'load-config' | 'save-config' | 'find' | 'replace'
+  | 'open-text'
+  | 'save-text'
+  | 'load-config'
+  | 'save-config'
+  | 'find'
+  | 'replace'
+  | 'offline-engine-settings'
 
 const WEBSITE_URL = 'https://www.tzzhy.cn/'
 
@@ -20,6 +26,8 @@ const OPEN_SOURCE_SOFTWARE: string[] = [
   'Electron (MIT) - https://www.electronjs.org/',
   'Vue.js (MIT) - https://vuejs.org/',
   'edge-tts-universal (AGPL-3.0) - https://www.npmjs.com/package/edge-tts-universal',
+  'Piper (MIT) - https://github.com/rhasspy/piper',
+  'eSpeak NG (GPL-3.0) - https://github.com/espeak-ng/espeak-ng',
   'FFmpeg / ffmpeg-static (GPL-3.0-or-later) - https://ffmpeg.org/',
   'electron-store (MIT) - https://github.com/sindresorhus/electron-store',
   '@electron-toolkit/* (MIT) - https://github.com/alex8088/electron-toolkit',
@@ -84,6 +92,15 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
         checked: detectLocale() === code,
         click: () => changeLocale(code, getWindow)
       }))
+    },
+    {
+      label: t('menu.settings'),
+      submenu: [
+        {
+          label: t('menu.offlineEngine'),
+          click: send('offline-engine-settings')
+        }
+      ]
     },
     {
       label: t('menu.help'),

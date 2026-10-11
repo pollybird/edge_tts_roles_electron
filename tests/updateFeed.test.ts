@@ -339,3 +339,61 @@ describe('resolveFeedUrl - gitCodeFirst：GitCode 优先', () => {
     ])
   })
 })
+
+describe('resolveFeedUrl - excludeBase：换源重试', () => {
+  it('排除可达的 GitHub base → 跳过探测直接走 GitCode', async () => {
+    const { fetchImpl, urls } = mockFetch({
+      'gh.test': { contentType: 'application/octet-stream' },
+      'api.gc.test': { json: { tag_name: 'v2.0.6' } },
+      'dl.gc.test': { contentType: 'application/octet-stream' }
+    })
+    const base = await resolveFeedUrl({
+      feedFile: 'latest.yml',
+      fetchImpl,
+      endpoints: TEST_ENDPOINTS,
+      timeoutMs: 1000,
+      excludeBase: TEST_ENDPOINTS.githubBase,
+      log: silentLog
+    })
+    expect(base).toBe('https://dl.gc.test/releases/download/v2.0.6/')
+    // 被排除的 GitHub 不应发起任何请求
+    expect(urls.some((u) => u.includes('gh.test'))).toBe(false)
+  })
+
+  it('排除 GitCode base（主源检查失败）→ 回退 GitHub', async () => {
+    const { fetchImpl, urls } = mockFetch({
+      'gh.test': { contentType: 'application/octet-stream' },
+      'api.gc.test': { json: { tag_name: 'v2.0.6' } },
+      'dl.gc.test': { contentType: 'application/octet-stream' }
+    })
+    const base = await resolveFeedUrl({
+      feedFile: 'latest.yml',
+      fetchImpl,
+      endpoints: TEST_ENDPOINTS,
+      timeoutMs: 1000,
+      gitCodeFirst: true,
+      excludeBase: 'https://dl.gc.test/releases/download/v2.0.6/',
+      log: silentLog
+    })
+    expect(base).toBe(TEST_ENDPOINTS.githubBase)
+    // GitCode 附件清单被排除，不应探测
+    expect(urls.some((u) => u.includes('dl.gc.test/latest'))).toBe(false)
+  })
+
+  it('排除 GitHub 后 GitCode 也不可达 → null', async () => {
+    const { fetchImpl } = mockFetch({
+      'gh.test': { contentType: 'application/octet-stream' },
+      'api.gc.test': { status: 500, ok: false }
+    })
+    expect(
+      await resolveFeedUrl({
+        feedFile: 'latest.yml',
+        fetchImpl,
+        endpoints: TEST_ENDPOINTS,
+        timeoutMs: 1000,
+        excludeBase: TEST_ENDPOINTS.githubBase,
+        log: silentLog
+      })
+    ).toBeNull()
+  })
+})

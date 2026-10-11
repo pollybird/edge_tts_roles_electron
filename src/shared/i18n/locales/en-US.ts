@@ -46,7 +46,9 @@ const enUS: LocalePack = {
       agreement: 'User &Agreement',
       checkUpdate: 'Check for &Updates',
       website: '&Website',
-      about: '&About'
+      about: '&About',
+      settings: '&Settings',
+      offlineEngine: '&Offline Engine...'
     },
 
     editor: {
@@ -92,6 +94,7 @@ const enUS: LocalePack = {
       roleLabel: 'Role {id}',
       voice: 'Voice',
       unselected: '(none selected)',
+      noOfflineModels: 'No offline models downloaded — go to Settings → Offline Engine...',
       groupLabel: '--- {label} ({n}) ---',
       rate: 'Rate {n}%',
       volume: 'Volume {n}%',
@@ -206,7 +209,38 @@ const enUS: LocalePack = {
       emptyAudio: 'Empty audio data',
       edge50x: 'Edge TTS server error ({msg}), audio generation aborted. Please try again later.',
       segmentFailed: 'Failed to generate voice segment: {msg}',
+      piperOffline: 'Role {role} synthesized by offline engine (Piper)',
+      piperUnavailable:
+        'Offline model for role {role} unavailable — download a model for its language in Settings → Offline Engine...',
+      piperFallback: 'Role {role} online synthesis failed, falling back to offline engine (Piper)',
       unknownError: 'Unknown error'
+    },
+
+    piper: {
+      title: 'Offline Engine Settings',
+      strategy: 'Usage Strategy',
+      strategyHint:
+        'How the offline engine (Piper) is used; with Offline only, the voice list shows downloaded offline models',
+      strategy_off: 'Online only',
+      strategy_fallback: 'Online first (recommended)',
+      strategy_prefer: 'Offline only',
+      engineUnavailable:
+        'The offline engine is not available on this platform. Voice synthesis uses the online service.',
+      size: '{n} MB',
+      state_downloaded: 'Downloaded',
+      state_notDownloaded: 'Not downloaded',
+      download: 'Download',
+      remove: 'Delete',
+      downloading: 'Downloading...',
+      downloadingPercent: 'Downloading... {percent}%',
+      downloadDone: 'Model downloaded.',
+      downloadFailed: 'Failed to download model: {msg}',
+      confirmRemove:
+        'Delete model {name}? Offline synthesis will be unavailable until re-downloaded.',
+      removed: 'Model removed.',
+      downloadInProgress: 'A download for this model is already in progress',
+      filterPlaceholder: 'Filter languages or voices...',
+      close: 'Close'
     },
 
     dialog: {

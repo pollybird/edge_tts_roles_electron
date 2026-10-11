@@ -110,13 +110,33 @@ try {
     })
     console.log(`已暂存 ffmpeg: ${triplet} → .ffmpeg-stage/${triplet}`)
 
+    // piper 离线引擎（可选）：与 ffmpeg 同 triplet 布局；缺失时仅告警不阻断打包
+    const piperSrc = join(ROOT, 'resources', 'piper', triplet)
+    const piperStage = join(ROOT, 'resources', `.piper-stage-${platform}`)
+    let extraResources = [
+      { from: join('resources', `.ffmpeg-stage-${platform}`), to: 'ffmpeg', filter: ['**/*'] }
+    ]
+    if (existsSync(piperSrc)) {
+      cpSync(piperSrc, join(piperStage, triplet), { recursive: true, errorOnExist: false })
+      console.log(`已暂存 piper: ${triplet} → .piper-stage/${triplet}`)
+      extraResources.push({
+        from: join('resources', `.piper-stage-${platform}`),
+        to: 'piper',
+        filter: ['**/*']
+      })
+    } else {
+      console.warn(`警告：缺少 ${triplet} 的 piper，本安装包不含离线引擎（npm run prepare:piper）`)
+    }
+
     const config = {
       ...baseYaml,
       // 关键：electron-builder 会以“配置文件所在目录”作为项目根，缓存键也基于文件名
       // 用临时目录且每次名字不同，强制重读
-      extraResources: [
-        { from: join('resources', `.ffmpeg-stage-${platform}`), to: 'ffmpeg', filter: ['**/*'] }
-      ]
+      extraResources,
+      // 直接复用 node_modules 里的 electron dist，跳过 builder 的 dist 下载环节：
+      // 该下载对代理网络状态敏感（曾反复在 packaging 前静默挂起），本地 dist
+      // 与 devDependency 版本一致，打包结果等价。
+      electronDist: join(ROOT, 'node_modules', 'electron', 'dist')
     }
     const configPath = join(tmpDir, `electron-builder-${platform}-${arch}-${Date.now()}.json`)
     writeFileSync(configPath, JSON.stringify(config))

@@ -75,6 +75,8 @@ export interface ResolveFeedOptions {
   timeoutMs?: number
   /** GitCode 优先（简体中文系统置 true）；默认 GitHub 优先 */
   gitCodeFirst?: boolean
+  /** 排除指定 feed base（主源检查失败后强制换源重试用）；命中排除的源视为不可达 */
+  excludeBase?: string
   /** 诊断日志（默认 console.log） */
   log?: (message: string) => void
 }
@@ -163,6 +165,8 @@ export async function resolveGitCodeFeedUrl(options: ResolveFeedOptions): Promis
   if (!tag) return null
 
   const base = `${ctx.endpoints.gitcodeDownloadBase}${tag}/`
+  // 换源重试：被排除的 base（刚在 electron-updater 上失败的源）直接视为不可达
+  if (options.excludeBase && base === options.excludeBase) return null
   const ok = await probeUrl(base + ctx.feedFile, ctx.fetchImpl, ctx.timeoutMs)
   return ok ? base : null
 }
@@ -177,6 +181,7 @@ export async function resolveFeedUrl(options: ResolveFeedOptions): Promise<strin
   const ctx = buildContext(options)
 
   const resolveGitHub = async (): Promise<string | null> => {
+    if (options.excludeBase === ctx.endpoints.githubBase) return null
     const githubFeed = ctx.endpoints.githubBase + ctx.feedFile
     const ok = await probeUrl(githubFeed, ctx.fetchImpl, ctx.timeoutMs)
     return ok ? ctx.endpoints.githubBase : null
