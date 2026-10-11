@@ -26,7 +26,7 @@ const TRIPLETS = [
   { triplet: 'linux-arm64', archive: 'piper_linux_aarch64.tar.gz', type: 'tar', inner: 'piper', bin: 'piper' },
   { triplet: 'darwin-x64', archive: 'piper_macos_x64.tar.gz', type: 'tar', inner: 'piper', bin: 'piper' },
   { triplet: 'darwin-arm64', archive: 'piper_macos_aarch64.tar.gz', type: 'tar', inner: 'piper', bin: 'piper' },
-  { triplet: 'win32-x64', archive: 'piper_windows_x86_64.zip', type: 'zip', inner: 'piper', bin: 'piper.exe' }
+  { triplet: 'win32-x64', archive: 'piper_windows_amd64.zip', type: 'zip', inner: 'piper', bin: 'piper.exe' }
 ]
 
 const proxyIdx = process.argv.indexOf('--proxy')
