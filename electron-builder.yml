@@ -15,6 +15,9 @@ files:
   # Piper 离线引擎二进制同理（scripts/download-piper-binaries.mjs 下载 → resources/piper/）
   - '!resources/piper'
   - '!resources/.piper-stage-*'
+  # 开发机 tools/piper/ 的 Piper 二进制（locate.ts 的 dev 探测路径）不得进入 app.asar，
+  # 否则本地产物体积虚增 ~100MB 且泄露开发文件（CI 上因 .gitignore 不存在不受影响）
+  - '!tools/piper'
   # 开发时 ffmpeg-static 自带的当前平台二进制也不应进入打包产物
   - '!**/node_modules/ffmpeg-static/ffmpeg'
   - '!**/node_modules/ffmpeg-static/ffmpeg.exe'
