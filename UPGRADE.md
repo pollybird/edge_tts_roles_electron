@@ -1,5 +1,25 @@
 # Upgrade Log
 
+## v2.0.7
+
+### New Features
+
+- **Diagnostics panel**: a new **Help → Diagnostics** menu item collects the app version, platform, FFmpeg/Piper binary paths, eSpeak data directory, segment-cache disk usage, and the list of downloaded offline models into one native dialog with a **Copy** button for instant bug reports. Localized in all 9 languages.
+- **Unified EDGE_TTS_DEBUG switch**: setting `EDGE_TTS_DEBUG=1` makes the main process log every segment's synthesis source (`edge` / `piper`) and sample count. It remains a superset of the pre-existing `EDGE_TTS_DEBUG_CUES=1` (subtitle alignment debug dump to `/tmp/cues-debug.json`).
+
+### Improvements
+
+- **Piper multi-speaker models**: models with more than one speaker (12 catalog entries, up to 125 speakers) now automatically get `--speaker 0`, preventing arbitrary speaker selection on synthesis.
+- **Raw PCM passthrough for offline synthesis**: Piper no longer round-trips through a WAV file (`buildWav → writeFile → readFile → decodeAudioToPcm`). The provider optionally exposes `synthesizeRaw()` returning s16le PCM plus sample rate/channel count; `SegmentSynthesizer` prefers it when present and converts directly via the new `pcmFromS16le()`, eliminating temp-file I/O for the offline path.
+- **Catalog automation**: new `scripts/sync-piper-catalog.mjs` regenerates `catalog.ts` from the official `rhasspy/piper-voices` voices.json (53 language families, one curated model each), with `--dry-run` (preview) and `--check` (CI drift detection) modes; model sizes and speaker counts are queried live.
+- **Hardened model downloads**: resumable downloads via `.part` files + HTTP Range with mirror fallback, integrity verification (MD5 when the catalog provides one, magic-number check otherwise), live resume status in the progress UI (`Resuming... N%`), and `.part` cleanup when a model is removed.
+- **audioProcessor module split**: the 272-line monolith is now an `audioProcessor/` directory (`index.ts` facade re-exporting the public API, `types.ts`, `pcmOps.ts` pure PCM math, `ffmpegOps.ts` codec/ffmpeg operations). All existing import paths keep working.
+- **Offline-strategy test coverage**: 3 new E2E specs (offline-only with no models → guidance entry, offline-only synthesis → `piperUnavailable` error surfaced to the UI, online-only → Edge voice optgroups restored) and 10 new vitest integration cases (Piper maxAttempts=1 with no retries, Edge 15-attempt retry success/exhaustion, per-engine cache-key isolation/no cross-contamination), plus `data-testid` hooks on the role voice select and progress message.
+
+### Testing
+
+- New `tests/piperStrategy.test.ts` (10 cases) and `e2e/offline-strategy.spec.ts` (3 cases); `piperProvider.test.ts` gains `--speaker` argument and `synthesizeRaw` coverage; `audioProcessor.test.ts` gains `pcmFromS16le` conversion plus `mixPcm` / `loopToLength` boundary cases. **11 test files, 157 cases all passing.**
+
 ## v2.0.6
 
 ### New Features
