@@ -1,5 +1,25 @@
 # 更新日志
 
+## v2.0.7
+
+### 新功能
+
+- **诊断信息面板**：帮助菜单新增「诊断信息」，一键收集版本、平台、FFmpeg/Piper 引擎路径、分段缓存占用与已下载离线模型列表，支持复制到剪贴板，大幅降低报障沟通成本。9 种语言全覆盖。
+- **EDGE_TTS_DEBUG 统一开关**：新增 `EDGE_TTS_DEBUG=1` 环境变量，启用后主进程控制台输出每段合成来源（edge/piper）与样本数，便于定位「哪段走了哪个引擎」的问题；向后兼容 `EDGE_TTS_DEBUG_CUES=1`（字幕对齐调试落盘 `/tmp/cues-debug.json`，v2.0.3 既有行为不变）。
+
+### 改进
+
+- **Piper 多说话人模型支持**：离线目录中 12 个多说话人模型（如 en_US-amy-medium 16 人、en_US-ryan-medium 125 人）合成时自动追加 `--speaker 0` 参数，不再因缺少说话人 ID 而随机选人。
+- **Piper 合成直通模式**：离线引擎合成跳过 WAV 中间层编解码（`buildWav → writeFile → readFile → decodeAudioToPcm` 往返开销），Piper 直接返回原始 s16le PCM 由调用方经 `pcmFromS16le` 转换为 StereoPcm，减少临时文件 I/O。
+- **Piper 目录自动化**：新增 `scripts/sync-piper-catalog.mjs` 脚本，从官方 `rhasspy/piper-voices` 仓库拉取 `voices.json` 自动生成 `catalog.ts`（53 语言族每族精选一模型），支持 `--dry-run`（预览）与 `--check`（CI 校验是否与远端一致）模式，模型体积与说话人数量实时查询。
+- **Piper 模型下载加固**：支持断点续传（`.part` 文件 + HTTP Range 请求 + 镜像间失败回退）与完整性校验（目录中 MD5 优先、无 MD5 时魔数回退），进度条实时显示续传状态（`Resuming... N%`）；删除模型时清理 `.part` 拖留。
+- **audioProcessor 模块拆分**：将 272 行单文件拆分为 `audioProcessor/` 目录（`index.ts` 统一导出 + `types.ts` 类型定义 + `pcmOps.ts` 纯 PCM 运算 + `ffmpegOps.ts` ffmpeg 编解码），对外导入路径不变，可测试性提升。
+- **离线策略 E2E 与单元测试覆盖**：新增 3 个 E2E 用例（仅离线无模型→下载引导提示、仅离线合成→piperUnavailable 报错、仅在线→列出 Edge 语音带 optgroup）与 10 个 vitest 集成用例（Piper maxAttempts=1 不重试、Edge 重试 15 次成功/耗尽、缓存键引擎维度隔离），data-testid 选择器基础设施同步就位。
+
+### 测试
+
+- 新增 `tests/piperStrategy.test.ts`（10 用例）、`e2e/offline-strategy.spec.ts`（3 用例）；`tests/piperProvider.test.ts` 增 `--speaker` 参数与 `synthesizeRaw` 直通模式用例；`tests/audioProcessor.test.ts` 增 `pcmFromS16le` 转换与 `mixPcm`/`loopToLength` 边界用例。当前 **11 个测试文件、157 个用例全部通过**。
+
 ## v2.0.6
 
 ### 新功能
