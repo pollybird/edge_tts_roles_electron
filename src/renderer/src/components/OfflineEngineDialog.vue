@@ -16,8 +16,10 @@ const strategies: PiperFallback[] = ['fallback', 'off', 'prefer']
 const strategy = ref<PiperFallback>('fallback')
 const engineAvailable = ref(true)
 const voices = ref<PiperVoiceStatus[]>([])
-/** 各模型下载进度（received/total；total=0 视为未知大小） */
-const downloading = reactive<Record<string, { received: number; total: number }>>({})
+/** 各模型下载进度（received/total/resuming；total=0 视为未知大小） */
+const downloading = reactive<
+  Record<string, { received: number; total: number; resuming: boolean }>
+>({})
 /** 对话框内一次性状态消息（下载/删除结果、错误） */
 const statusMessage = ref('')
 /** 列表过滤关键词（匹配模型名 / 语言名 / 模型 ID） */
@@ -47,9 +49,13 @@ function percentOf(id: string): number | null {
   return Math.min(100, Math.round((p.received / p.total) * 100))
 }
 
-/** 下载中进度文案：总大小已知显示百分比，未知显示“下载中” */
+/** 下载中进度文案：总大小已知显示百分比，未知显示“下载中”；续传时显示“继续下载（x%）” */
 function progressText(id: string): string {
   const p = percentOf(id)
+  const entry = downloading[id]
+  if (entry?.resuming) {
+    return p !== null ? t('piper.resumingPercent', { percent: p }) : t('piper.resuming')
+  }
   return p !== null ? t('piper.downloadingPercent', { percent: p }) : t('piper.downloading')
 }
 
@@ -71,7 +77,7 @@ async function handleStrategyChange(e: Event): Promise<void> {
 
 async function handleDownload(id: string): Promise<void> {
   statusMessage.value = ''
-  downloading[id] = { received: 0, total: 0 }
+  downloading[id] = { received: 0, total: 0, resuming: false }
   try {
     await window.api.piperDownload(id)
     statusMessage.value = t('piper.downloadDone')
@@ -107,7 +113,11 @@ function onKeydown(e: KeyboardEvent): void {
 onMounted(() => {
   // 订阅下载进度推送（先订阅后取列表，避免丢首帧）
   unsubscribe = window.api.onPiperDownloadProgress((p) => {
-    downloading[p.id] = { received: p.received, total: p.total }
+    downloading[p.id] = {
+      received: p.received,
+      total: p.total,
+      resuming: p.resuming ?? false
+    }
   })
   void (async () => {
     const saved = await window.api.getSetting<PiperFallback>('piperFallback')

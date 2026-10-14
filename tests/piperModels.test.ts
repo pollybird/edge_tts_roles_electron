@@ -4,7 +4,8 @@ import {
   PIPER_VOICES,
   PiperModelManager,
   resolvePiperVoiceId,
-  voiceDownloadUrl
+  voiceDownloadUrl,
+  type PiperVoiceDef
 } from '../src/main/tts/piper/models'
 
 describe('voiceDownloadUrl', () => {
@@ -87,40 +88,170 @@ describe('PiperModelManager', () => {
     await expect(mgr.download('nonexistent')).rejects.toThrow('unknown piper voice')
   })
 
-  it('download 落盘为单扩展名 <id>.onnx（回归：曾写成 <id>.onnx.onnx 导致 isDownloaded 永远 false）', async () => {
+  /** 构造分片式 ReadableStream（避免整体读入内存），fetch stub 复用 */
+  function chunkedStream(buf: Buffer, chunkSize = 64 * 1024): ReadableStream<Uint8Array> {
+    let pos = 0
+    return new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (pos >= buf.length) controller.close()
+        else {
+          const end = Math.min(pos + chunkSize, buf.length)
+          controller.enqueue(buf.subarray(pos, end))
+          pos = end
+        }
+      }
+    })
+  }
+
+  /** 选目录最小模型，构造全 0x01 的假响应体及其 md5（注入到夹具 voice 上） */
+  async function makeFakeVoice(): Promise<{
+    voice: PiperVoiceDef
+    content: Buffer
+    need: number
+  }> {
+    const { createHash } = await import('crypto')
+    const voice = [...PIPER_VOICES].sort((a, b) => a.sizeMB - b.sizeMB)[0]
+    const need = Math.ceil((voice.sizeMB / 2) * 1024 * 1024)
+    const content = Buffer.alloc(need, 1)
+    const md5 = createHash('md5').update(content).digest('hex')
+    return { voice: { ...voice, md5Digest: md5 }, content, need }
+  }
+
+  it('download 落盘为单扩展名 <id>.onnx 且通过 md5 完整性校验（回归：曾写成 <id>.onnx.onnx）', async () => {
     const os = await import('os')
     const { mkdtemp, readdir, rm } = await import('fs/promises')
     const dir = await mkdtemp(os.tmpdir() + '/piper-dl-')
     const mgr = new PiperModelManager(dir)
-    // 选目录中最小的模型，使假响应体刚好越过「体积下限」门槛即可
-    const voice = [...PIPER_VOICES].sort((a, b) => a.sizeMB - b.sizeMB)[0]
-    const need = Math.ceil((voice.sizeMB / 2) * 1024 * 1024)
-    vi.stubGlobal('fetch', () => {
-      let served = 0
-      const chunk = new Uint8Array(64 * 1024).fill(1)
-      const body = new ReadableStream<Uint8Array>({
-        pull(controller) {
-          if (served >= need) controller.close()
-          else {
-            controller.enqueue(chunk)
-            served += chunk.length
-          }
-        }
-      })
-      return Promise.resolve(new Response(body, { status: 200 }))
-    })
+    const { voice, content, need } = await makeFakeVoice()
+    vi.spyOn(mgr, 'byId').mockReturnValue(voice)
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(chunkedStream(content), {
+          status: 200,
+          headers: { 'content-length': String(need) }
+        })
+      )
+    )
     try {
       await mgr.download(voice.id)
       const files = await readdir(dir)
       expect(files).toContain(`${voice.id}.onnx`)
       expect(files).toContain(`${voice.id}.onnx.json`)
-      expect(files.some((f) => f.endsWith('.onnx.onnx') || f.endsWith('.onnx.onnx.json'))).toBe(
-        false
-      )
+      // 无 .part 残留、无双扩展名
+      expect(files.some((f) => f.endsWith('.part'))).toBe(false)
+      expect(files.some((f) => f.endsWith('.onnx.onnx'))).toBe(false)
       expect(await mgr.isDownloaded(voice.id)).toBe(true)
     } finally {
       vi.unstubAllGlobals()
+      vi.restoreAllMocks()
       await rm(dir, { recursive: true, force: true })
     }
+  })
+
+  it('断点续传：.part 残留从断点继续，最终文件完整且 md5 匹配', async () => {
+    const os = await import('os')
+    const { createHash } = await import('crypto')
+    const { mkdtemp, readdir, rm, stat, writeFile } = await import('fs/promises')
+    const dir = await mkdtemp(os.tmpdir() + '/piper-resume-')
+    const mgr = new PiperModelManager(dir)
+    // 全量内容（全 0x42）与对应 md5
+    const voice = [...PIPER_VOICES].sort((a, b) => a.sizeMB - b.sizeMB)[0]
+    const need = Math.ceil((voice.sizeMB / 2) * 1024 * 1024)
+    const full = Buffer.alloc(need, 0x42)
+    const md5 = createHash('md5').update(full).digest('hex')
+    const fakeVoice = { ...voice, md5Digest: md5 }
+    vi.spyOn(mgr, 'byId').mockReturnValue(fakeVoice)
+    // 预置 .onnx.part 半截（前半），.onnx.json 无残留走全量
+    const half = Math.floor(full.length / 2)
+    await writeFile(`${mgr.modelPath(voice.id)}.part`, full.subarray(0, half))
+    // fetch：json 全量 200；onnx 带 Range 时返 206 + content-range + 后半段
+    vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+      const u = String(url)
+      const range = (init?.headers as Record<string, string> | undefined)?.Range
+      if (u.endsWith('.onnx.json')) {
+        return Promise.resolve(
+          new Response(chunkedStream(full), {
+            status: 200,
+            headers: { 'content-length': String(full.length) }
+          })
+        )
+      }
+      // .onnx
+      if (range) {
+        const start = Number(/bytes=(\d+)-/.exec(range)![1])
+        const rest = full.subarray(start)
+        return Promise.resolve(
+          new Response(chunkedStream(rest), {
+            status: 206,
+            headers: {
+              'content-length': String(rest.length),
+              'content-range': `bytes ${start}-${full.length - 1}/${full.length}`
+            }
+          })
+        )
+      }
+      return Promise.resolve(
+        new Response(chunkedStream(full), {
+          status: 200,
+          headers: { 'content-length': String(full.length) }
+        })
+      )
+    })
+    try {
+      await mgr.download(voice.id)
+      const files = await readdir(dir)
+      expect(files).toContain(`${voice.id}.onnx`)
+      // 断点续传后最终文件大小 = 全量
+      expect((await stat(mgr.modelPath(voice.id))).size).toBe(full.length)
+      expect(files.some((f) => f.endsWith('.part'))).toBe(false)
+    } finally {
+      vi.unstubAllGlobals()
+      vi.restoreAllMocks()
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('md5 不匹配时拒绝下载且不留最终文件', async () => {
+    const os = await import('os')
+    const { mkdtemp, readdir, rm } = await import('fs/promises')
+    const dir = await mkdtemp(os.tmpdir() + '/piper-badmd5-')
+    const mgr = new PiperModelManager(dir)
+    const { voice, content, need } = await makeFakeVoice()
+    // 注入错误的 md5，使校验必失败
+    const badVoice = { ...voice, md5Digest: 'deadbeef'.repeat(4) }
+    vi.spyOn(mgr, 'byId').mockReturnValue(badVoice)
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(chunkedStream(content), {
+          status: 200,
+          headers: { 'content-length': String(need) }
+        })
+      )
+    )
+    try {
+      await expect(mgr.download(voice.id)).rejects.toThrow('md5 mismatch')
+      const files = await readdir(dir)
+      // 最终文件不应存在（仅可能留 .part）
+      expect(files).not.toContain(`${voice.id}.onnx`)
+      expect(await mgr.isDownloaded(voice.id)).toBe(false)
+    } finally {
+      vi.unstubAllGlobals()
+      vi.restoreAllMocks()
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('remove 一并清理 .part 残留', async () => {
+    const os = await import('os')
+    const { mkdtemp, writeFile, rm, readdir } = await import('fs/promises')
+    const dir = await mkdtemp(os.tmpdir() + '/piper-rm-')
+    const mgr = new PiperModelManager(dir)
+    const id = PIPER_VOICES[0].id
+    await writeFile(`${mgr.modelPath(id)}.part`, 'partial')
+    await writeFile(`${mgr.configPath(id)}.part`, 'partial')
+    await mgr.remove(id)
+    const files = await readdir(dir)
+    expect(files.some((f) => f.endsWith('.part'))).toBe(false)
+    await rm(dir, { recursive: true, force: true })
   })
 })

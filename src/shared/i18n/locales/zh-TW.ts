@@ -210,7 +210,8 @@ const zhTW: LocalePack = {
       website: '官方網站(&W)',
       about: '關於(&A)',
       settings: '設定(S)(&S)',
-      offlineEngine: '離線引擎設定(&O)'
+      offlineEngine: '離線引擎設定(&O)',
+      diagnostics: '診斷資訊(&D)'
     },
 
     editor: {
@@ -391,6 +392,8 @@ const zhTW: LocalePack = {
       remove: '刪除',
       downloading: '正在下載…',
       downloadingPercent: '正在下載… {percent}%',
+      resuming: '繼續下載…（已存在部分檔案）',
+      resumingPercent: '繼續下載… {percent}%',
       downloadDone: '模型下載完成。',
       downloadFailed: '下載模型失敗：{msg}',
       confirmRemove: '刪除該模型？刪除後需重新下載才能離線合成。',
@@ -459,6 +462,12 @@ const zhTW: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: '授權條款：GNU AGPL v3',
       opensource: '使用的開放原始碼軟體：'
+    },
+
+    diagnostics: {
+      title: '診斷資訊',
+      summary: '系統診斷資訊',
+      copy: '複製'
     }
   }
 }

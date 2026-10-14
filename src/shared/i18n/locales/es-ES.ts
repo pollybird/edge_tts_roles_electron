@@ -51,7 +51,8 @@ const esES: LocalePack = {
       website: '&Sitio web',
       about: 'Acerca &de',
       settings: '&Configuración',
-      offlineEngine: 'Motor &sin conexión...'
+      offlineEngine: 'Motor &sin conexión...',
+      diagnostics: '&Diagnóstico'
     },
 
     editor: {
@@ -239,6 +240,8 @@ const esES: LocalePack = {
       remove: 'Eliminar',
       downloading: 'Descargando...',
       downloadingPercent: 'Descargando... {percent}%',
+      resuming: 'Reanudando... (archivo parcial encontrado)',
+      resumingPercent: 'Reanudando... {percent}%',
       downloadDone: 'Modelo descargado.',
       downloadFailed: 'Error al descargar el modelo: {msg}',
       confirmRemove:
@@ -310,6 +313,12 @@ const esES: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: 'Licencia: GNU AGPL v3',
       opensource: 'Software de código abierto utilizado:'
+    },
+
+    diagnostics: {
+      title: 'Diagnóstico',
+      summary: 'Información de diagnóstico del sistema',
+      copy: 'Copiar'
     }
   }
 }

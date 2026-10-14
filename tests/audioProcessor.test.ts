@@ -10,6 +10,7 @@ import {
   createSilence,
   loopToLength,
   mixPcm,
+  pcmFromS16le,
   type StereoPcm
 } from '../src/main/audioProcessor'
 
@@ -142,6 +143,18 @@ describe('loopToLength', () => {
     expect(out.left.length).toBe(0)
     expect(out.right.length).toBe(0)
   })
+
+  it('目标长度为 0 时返回空数组', () => {
+    const out = loopToLength(pcmOf([1, 2, 3]), 0)
+    expect(out.left.length).toBe(0)
+    expect(out.right.length).toBe(0)
+  })
+
+  it('源长度 1 时循环为常量数组', () => {
+    const out = loopToLength(pcmOf([0.5]), 5)
+    expect(Array.from(out.left)).toEqual([0.5, 0.5, 0.5, 0.5, 0.5])
+    expect(Array.from(out.right)).toEqual([0.5, 0.5, 0.5, 0.5, 0.5])
+  })
 })
 
 describe('mixPcm', () => {
@@ -169,5 +182,65 @@ describe('mixPcm', () => {
   it('采样率取 base 一侧', () => {
     const out = mixPcm(pcmOf([0], 16000), pcmOf([0], 48000))
     expect(out.sampleRate).toBe(16000)
+  })
+
+  it('两路均为空时输出空数组', () => {
+    const out = mixPcm(pcmOf([]), pcmOf([]))
+    expect(out.left.length).toBe(0)
+    expect(out.right.length).toBe(0)
+  })
+
+  it('base 为空时输出等于 overlay（缺失视为静音叠加）', () => {
+    const out = mixPcm(pcmOf([]), pcmOf([0.3, -0.4]))
+    expect(out.left.length).toBe(2)
+    expect(out.left[0]).toBeCloseTo(0.3, 6)
+    expect(out.left[1]).toBeCloseTo(-0.4, 6)
+  })
+
+  it('叠加恰为 ±1 时不削波（边界值保留）', () => {
+    const out = mixPcm(pcmOf([0.5, -0.5]), pcmOf([0.5, -0.5]))
+    expect(out.left[0]).toBe(1)
+    expect(out.left[1]).toBe(-1)
+  })
+})
+
+describe('pcmFromS16le', () => {
+  it('单声道 s16le 正确转为 Float32 StereoPcm', () => {
+    // 16384 = 0.5, -16384 = -0.5, 32767 ≈ 1.0, -32768 = -1.0
+    const buf = Buffer.alloc(8)
+    buf.writeInt16LE(16384, 0)
+    buf.writeInt16LE(-16384, 2)
+    buf.writeInt16LE(32767, 4)
+    buf.writeInt16LE(-32768, 6)
+    const pcm = pcmFromS16le(buf, 22050, 1)
+    expect(pcm.sampleRate).toBe(22050)
+    expect(pcm.left.length).toBe(4)
+    expect(pcm.left[0]).toBeCloseTo(0.5, 4)
+    expect(pcm.left[1]).toBeCloseTo(-0.5, 4)
+    expect(pcm.left[2]).toBeCloseTo(1, 3)
+    expect(pcm.left[3]).toBe(-1)
+    // 单声道时 right === left
+    expect(pcm.right[0]).toBe(pcm.left[0])
+  })
+
+  it('立体声 s16le 交错解包', () => {
+    const buf = Buffer.alloc(8)
+    buf.writeInt16LE(10000, 0) // L
+    buf.writeInt16LE(5000, 2) // R
+    buf.writeInt16LE(20000, 4) // L
+    buf.writeInt16LE(10000, 6) // R
+    const pcm = pcmFromS16le(buf, 22050, 2)
+    expect(pcm.left.length).toBe(2)
+    expect(pcm.right.length).toBe(2)
+    expect(pcm.left[0]).toBeCloseTo(10000 / 32768, 4)
+    expect(pcm.right[0]).toBeCloseTo(5000 / 32768, 4)
+    expect(pcm.left[1]).toBeCloseTo(20000 / 32768, 4)
+    expect(pcm.right[1]).toBeCloseTo(10000 / 32768, 4)
+  })
+
+  it('空 buffer 返回零长度 PCM', () => {
+    const pcm = pcmFromS16le(Buffer.alloc(0), 22050, 1)
+    expect(pcm.left.length).toBe(0)
+    expect(pcm.right.length).toBe(0)
   })
 })

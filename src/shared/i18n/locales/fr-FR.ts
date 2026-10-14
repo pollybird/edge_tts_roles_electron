@@ -51,7 +51,8 @@ const frFR: LocalePack = {
       website: '&Site web',
       about: 'À &propos',
       settings: '&Paramètres',
-      offlineEngine: 'Moteur &hors ligne...'
+      offlineEngine: 'Moteur &hors ligne...',
+      diagnostics: '&Diagnostics'
     },
 
     editor: {
@@ -242,6 +243,8 @@ const frFR: LocalePack = {
       remove: 'Supprimer',
       downloading: 'Téléchargement...',
       downloadingPercent: 'Téléchargement... {percent}%',
+      resuming: 'Reprise... (fichier partiel détecté)',
+      resumingPercent: 'Reprise... {percent}%',
       downloadDone: 'Modèle téléchargé.',
       downloadFailed: 'Échec du téléchargement du modèle : {msg}',
       confirmRemove:
@@ -313,6 +316,12 @@ const frFR: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: 'Licence : GNU AGPL v3',
       opensource: 'Logiciels open source utilisés :'
+    },
+
+    diagnostics: {
+      title: 'Diagnostics',
+      summary: 'Informations de diagnostic système',
+      copy: 'Copier'
     }
   }
 }

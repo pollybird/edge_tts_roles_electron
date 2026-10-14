@@ -90,7 +90,11 @@ function offlineLabel(v: PiperVoiceStatus): string {
       <h3 class="role-title">{{ t('roles.roleLabel', { id }) }}</h3>
       <label class="field">
         <span>{{ t('roles.voice') }}</span>
-        <select :value="settings[id].voice" @change="onVoiceChange(id, $event)">
+        <select
+          :data-testid="`role-voice-${id}`"
+          :value="settings[id].voice"
+          @change="onVoiceChange(id, $event)"
+        >
           <option v-if="offlineEmpty" value="">{{ t('roles.noOfflineModels') }}</option>
           <option v-else value="">{{ t('roles.unselected') }}</option>
           <template v-if="offlineMode">

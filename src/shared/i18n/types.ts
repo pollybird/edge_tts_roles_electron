@@ -43,6 +43,7 @@ export interface Messages {
   help: Record<string, string>
   agreement: Record<string, string>
   about: Record<string, string>
+  diagnostics: Record<string, string>
 }
 
 /** 单个语言的完整资源包 */

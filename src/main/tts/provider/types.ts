@@ -34,6 +34,20 @@ export interface SynthesisOutcome {
 }
 
 /**
+ * 直通模式合成结果：跳过 WAV 中间层编解码，直接返回原始 PCM。
+ * 由 PiperProvider 等本地引擎实现，SegmentSynthesizer 优先调用以省去
+ * buildWav → writeFile → readFile → decodeAudioToPcm 的往返开销。
+ */
+export interface RawSynthesisResult {
+  /** 完整性判据（与 synthesizeSegment 相同语义） */
+  outcome: SynthesisOutcome
+  /** 原始 s16le interleaved PCM 数据 */
+  rawPcm: Buffer
+  sampleRate: number
+  channels: number
+}
+
+/**
  * TTS 语音合成 Provider 抽象：
  * 将「单片段文本 → 音频文件」的传输实现与合成器的重试编排、磁盘缓存解耦。
  * 当前默认实现为 {@link EdgeTTSProvider}（edge-tts-universal 在线服务）；
@@ -57,4 +71,15 @@ export interface TTSProvider {
     hooks: TtsSynthesisHooks,
     isStopped: () => boolean
   ): Promise<SynthesisOutcome>
+
+  /**
+   * 可选直通模式：直接返回原始 PCM，跳过 WAV 编解码往返。
+   * SegmentSynthesizer 在此方法存在时优先调用，省去临时文件 I/O。
+   * 本地引擎（Piper）宜实现；在线流式引擎（Edge）不实现。
+   */
+  synthesizeRaw?(
+    req: TtsSegmentRequest,
+    hooks: TtsSynthesisHooks,
+    isStopped: () => boolean
+  ): Promise<RawSynthesisResult>
 }

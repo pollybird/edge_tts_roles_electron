@@ -51,7 +51,8 @@ const ruRU: LocalePack = {
       website: '&Веб-сайт',
       about: 'О &программе',
       settings: '&Настройки',
-      offlineEngine: 'Офлайн-движок...'
+      offlineEngine: 'Офлайн-движок...',
+      diagnostics: '&Диагностика'
     },
 
     editor: {
@@ -236,6 +237,8 @@ const ruRU: LocalePack = {
       remove: 'Удалить',
       downloading: 'Загрузка...',
       downloadingPercent: 'Загрузка... {percent}%',
+      resuming: 'Возобновление... (найден неполный файл)',
+      resumingPercent: 'Возобновление... {percent}%',
       downloadDone: 'Модель загружена.',
       downloadFailed: 'Не удалось загрузить модель: {msg}',
       confirmRemove: 'Удалить эту модель? Для офлайн-синтеза потребуется повторная загрузка.',
@@ -306,6 +309,12 @@ const ruRU: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: 'Лицензия: GNU AGPL v3',
       opensource: 'Используемое ПО с открытым исходным кодом:'
+    },
+
+    diagnostics: {
+      title: 'Диагностика',
+      summary: 'Системная диагностическая информация',
+      copy: 'Копировать'
     }
   }
 }

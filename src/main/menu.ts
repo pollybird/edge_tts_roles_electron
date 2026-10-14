@@ -4,6 +4,7 @@ import { IpcChannels } from '../shared/ipc'
 import { availableLocales, createT, detectLocale, setLocale } from '../shared/i18n'
 import { setSetting } from './settings'
 import { checkForUpdates } from './updater'
+import { showDiagnosticsDialog } from './diagnostics'
 
 /** 菜单动作 id（渲染进程据此分发） */
 export type MenuActionId =
@@ -112,6 +113,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
         },
         { label: t('menu.agreement'), click: () => showAgreement(getWindow()) },
         { label: t('menu.checkUpdate'), click: () => checkForUpdates() },
+        { label: t('menu.diagnostics'), click: () => showDiagnostics(getWindow()) },
         { type: 'separator' },
         { label: t('menu.website'), click: () => void shell.openExternal(WEBSITE_URL) },
         { label: t('menu.about'), click: () => showAbout(getWindow()) }
@@ -177,4 +179,15 @@ function showAbout(win: BrowserWindow | null): void {
     ].join('\n'),
     buttons: [t('dialog.ok')]
   })
+}
+
+function showDiagnostics(win: BrowserWindow | null): void {
+  const t = createT()
+  void showDiagnosticsDialog(
+    win,
+    t('diagnostics.title'),
+    t('diagnostics.summary'),
+    t('diagnostics.copy'),
+    t('dialog.ok')
+  )
 }

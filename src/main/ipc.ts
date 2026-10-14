@@ -186,7 +186,12 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
     piperDownloading.add(id)
     try {
       await ttsService.piperModels.download(id, (p) => {
-        const payload: PiperDownloadProgress = { id, received: p.received, total: p.total }
+        const payload: PiperDownloadProgress = {
+          id,
+          received: p.received,
+          total: p.total,
+          resuming: p.resuming
+        }
         getWindow()?.webContents.send(IpcChannels.piperDownloadProgress, payload)
       })
     } finally {

@@ -1,6 +1,6 @@
 import { unlink } from 'fs/promises'
 import { createT } from '../../shared/i18n'
-import { decodeAudioToPcm, tempPath } from '../audioProcessor'
+import { decodeAudioToPcm, pcmFromS16le, tempPath } from '../audioProcessor'
 import type { StereoPcm } from '../audioProcessor'
 import type { SegmentCache, SegmentVoiceSettings } from './segmentCache'
 import type { TTSProvider } from './provider/types'
@@ -156,44 +156,70 @@ export class SegmentSynthesizer {
       }
 
       try {
-        // 传输实现（edge-tts 在线流式）写入临时 MP3 文件，支持中途停止
-        const outcome = await this.provider.synthesizeSegment(
-          request,
-          mp3Path,
-          {},
-          () => this.state.stopped
-        )
-        if (this.state.stopped) return null
+        // 优先使用直通模式（synthesizeRaw）：本地引擎直接返回原始 PCM，
+        // 省去 buildWav → writeFile → readFile → decodeAudioToPcm 的往返开销
+        if (this.provider.synthesizeRaw) {
+          const { outcome, rawPcm, sampleRate, channels } = await this.provider.synthesizeRaw(
+            request,
+            {},
+            () => this.state.stopped
+          )
+          if (this.state.stopped) return null
 
-        if (!outcome.complete) {
-          // 连接在收到服务端 turn.end 前断开（或数据间隔超时），MP3 尾部被截断
-          lastErr = new Error(t('tts.streamInterrupted'))
-          failReason = t('tts.connClosedEarly')
-        } else {
-          const pcm = await decodeAudioToPcm(mp3Path)
-          if (pcm.left.length === 0) {
-            lastErr = new Error(t('tts.emptyAudio'))
-            failReason = t('tts.emptyAudio')
-          } else if (
-            outcome.serverEndMs > 0 &&
-            (pcm.left.length / pcm.sampleRate) * 1000 < outcome.serverEndMs - 200
-          ) {
-            // 流正常收尾但音频时长明显短于服务端宣告的语音终点：
-            // 服务端提前 turn.end 丢掉尾部音频，按不完整处理触发重试，
-            // 防止截断片段落盘缓存后永久复现“结尾几秒语音丢失”
-            lastErr = new Error(t('tts.audioTruncated'))
-            failReason = t('tts.connClosedEarly')
-          } else if (!isSpokenTailAligned(outcome.spokenTail, request.text)) {
-            // 服务端提前收尾时连最后几字的词边界宣告也会一并缺失，
-            // 宣告终点与实际音频“自洽”，时长校验无法察觉；
-            // 唯一独立先验是逐词文本序列与源文本的尾部对齐——被吞的字不在序列里
-            lastErr = new Error(t('tts.audioTruncated'))
+          if (!outcome.complete) {
+            lastErr = new Error(t('tts.streamInterrupted'))
             failReason = t('tts.connClosedEarly')
           } else {
-            this.state.recordAttempt(attempt)
-            // 落盘缓存，后续重跑（即使本次整体失败）该片段无需再请求网络
-            await this.cache.write(key, pcm)
-            return pcm
+            const pcm = pcmFromS16le(rawPcm, sampleRate, channels)
+            if (pcm.left.length === 0) {
+              lastErr = new Error(t('tts.emptyAudio'))
+              failReason = t('tts.emptyAudio')
+            } else {
+              this.state.recordAttempt(attempt)
+              await this.cache.write(key, pcm)
+              return pcm
+            }
+          }
+        } else {
+          // 传输实现（edge-tts 在线流式）写入临时 MP3 文件，支持中途停止
+          const outcome = await this.provider.synthesizeSegment(
+            request,
+            mp3Path,
+            {},
+            () => this.state.stopped
+          )
+          if (this.state.stopped) return null
+
+          if (!outcome.complete) {
+            // 连接在收到服务端 turn.end 前断开（或数据间隔超时），MP3 尾部被截断
+            lastErr = new Error(t('tts.streamInterrupted'))
+            failReason = t('tts.connClosedEarly')
+          } else {
+            const pcm = await decodeAudioToPcm(mp3Path)
+            if (pcm.left.length === 0) {
+              lastErr = new Error(t('tts.emptyAudio'))
+              failReason = t('tts.emptyAudio')
+            } else if (
+              outcome.serverEndMs > 0 &&
+              (pcm.left.length / pcm.sampleRate) * 1000 < outcome.serverEndMs - 200
+            ) {
+              // 流正常收尾但音频时长明显短于服务端宣告的语音终点：
+              // 服务端提前 turn.end 丢掉尾部音频，按不完整处理触发重试，
+              // 防止截断片段落盘缓存后永久复现“结尾几秒语音丢失”
+              lastErr = new Error(t('tts.audioTruncated'))
+              failReason = t('tts.connClosedEarly')
+            } else if (!isSpokenTailAligned(outcome.spokenTail, request.text)) {
+              // 服务端提前收尾时连最后几字的词边界宣告也会一并缺失，
+              // 宣告终点与实际音频“自洽”，时长校验无法察觉；
+              // 唯一独立先验是逐词文本序列与源文本的尾部对齐——被吞的字不在序列里
+              lastErr = new Error(t('tts.audioTruncated'))
+              failReason = t('tts.connClosedEarly')
+            } else {
+              this.state.recordAttempt(attempt)
+              // 落盘缓存，后续重跑（即使本次整体失败）该片段无需再请求网络
+              await this.cache.write(key, pcm)
+              return pcm
+            }
           }
         }
       } catch (err) {

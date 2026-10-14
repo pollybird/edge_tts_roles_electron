@@ -67,7 +67,8 @@ const arSA: LocalePack = {
       website: '&الموقع الإلكتروني',
       about: '&حول',
       settings: 'الإعدادات(&S)',
-      offlineEngine: 'إعدادات المحرك دون اتصال(&O)'
+      offlineEngine: 'إعدادات المحرك دون اتصال(&O)',
+      diagnostics: 'تشخيص(&D)'
     },
 
     editor: {
@@ -251,6 +252,8 @@ const arSA: LocalePack = {
       remove: 'حذف',
       downloading: 'جارٍ التنزيل...',
       downloadingPercent: 'جارٍ التنزيل... {percent}%',
+      resuming: 'جارٍ الاستئناف... (تم العثور على ملف جزئي)',
+      resumingPercent: 'جارٍ الاستئناف... {percent}%',
       downloadDone: 'تم تنزيل النموذج.',
       downloadFailed: 'فشل تنزيل النموذج: {msg}',
       confirmRemove: 'إزالة هذا النموذج؟ سيلزم تنزيله مجددًا للمحرك دون اتصال.',
@@ -321,6 +324,12 @@ const arSA: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: 'الترخيص: GNU AGPL v3',
       opensource: 'البرمجيات مفتوحة المصدر المستخدمة:'
+    },
+
+    diagnostics: {
+      title: 'التشخيص',
+      summary: 'معلومات تشخيص النظام',
+      copy: 'نسخ'
     }
   }
 }

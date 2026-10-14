@@ -2,7 +2,7 @@ node_modules
 dist
 out
 resources/ffmpeg
-resources/.ffmpeg-stage
+resources/.ffmpeg-stage*
 resources/piper
 resources/.piper-stage-*
 .DS_Store

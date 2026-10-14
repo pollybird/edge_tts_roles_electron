@@ -27,6 +27,7 @@ import { getSetting } from './settings'
 import { VoiceCatalog } from './tts/voiceCatalog'
 import { buildSubtitleCues, detectSpeechRange, shiftCues, writeSubtitleFile } from './subtitles'
 import type { SubtitleSource } from './subtitles'
+import { isCuesDebugEnabled, debugLog } from './debug'
 
 /**
  * TTS 生成服务（管线编排 + 进度上报）：
@@ -106,7 +107,7 @@ export class TtsService {
       const audioSegments: StereoPcm[] = []
       // 字幕素材：语音段在旁白时间轴上的起止（样本计数推进，停顿/蜂鸣不产出 cue）
       const cueSources: SubtitleSource[] = []
-      // 字幕对齐调试（EDGE_TTS_DEBUG_CUES=1 时落盘 /tmp/cues-debug.json）
+      // 字幕对齐调试（isCuesDebugEnabled 时落盘 /tmp/cues-debug.json）
       const cueDebug: Array<Record<string, unknown>> = []
       const sampleRate = 24000
       let sampleCursor = 0
@@ -163,6 +164,7 @@ export class TtsService {
           // prefer 仅离线——强制本地模型，失败不回退在线，避免违背用户预期把文本外发
           const strategy = getSetting('piperFallback')
           let pcm: StereoPcm | null
+          let pcmSource = 'edge'
           if (strategy === 'prefer') {
             const piper = this.tryCreatePiperSynth(settings.voice)
             if (!piper) {
@@ -170,6 +172,7 @@ export class TtsService {
             }
             progress(percent, t('tts.piperOffline', { role: seg.role }))
             pcm = await piper.synthesize(seg.text, settings, synthHooks)
+            pcmSource = 'piper'
           } else {
             try {
               pcm = await this.synth.synthesize(seg.text, settings, synthHooks)
@@ -179,8 +182,13 @@ export class TtsService {
               if (!piper) throw err
               progress(percent, t('tts.piperFallback', { role: seg.role }))
               pcm = await piper.synthesize(seg.text, settings)
+              pcmSource = 'piper'
             }
           }
+          debugLog(
+            'segment',
+            `seg ${segIndex}/${segments.length} role ${seg.role} source ${pcmSource} samples ${pcm?.left.length ?? 0}`
+          )
           if (abortIfStopped()) return
           if (pcm) {
             audioSegments.push(pcm)
@@ -195,7 +203,7 @@ export class TtsService {
               startMs: ((sampleCursor + startSample) / sampleRate) * 1000,
               endMs: ((sampleCursor + endSample) / sampleRate) * 1000
             })
-            if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+            if (isCuesDebugEnabled()) {
               cueDebug.push({
                 type: 'text',
                 role: seg.role,
@@ -213,7 +221,7 @@ export class TtsService {
           progress(percent, t('tts.pauseAdded', { ms: seg.durationMs }))
           const silence = createSilence(seg.durationMs, sampleRate)
           audioSegments.push(silence)
-          if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+          if (isCuesDebugEnabled()) {
             cueDebug.push({
               type: 'pause',
               durationMs: seg.durationMs,
@@ -225,7 +233,7 @@ export class TtsService {
           progress(percent, t('tts.beepAdded'))
           const beep = createBeep(500, 1000, sampleRate)
           audioSegments.push(beep)
-          if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+          if (isCuesDebugEnabled()) {
             cueDebug.push({
               type: 'beep',
               segStartMs: (sampleCursor / sampleRate) * 1000,
@@ -243,7 +251,7 @@ export class TtsService {
       }
 
       // 字幕对齐调试：逐段记录样本游标/段长/检测结果，用于排查字幕与音频的时间偏差
-      if (process.env.EDGE_TTS_DEBUG_CUES === '1') {
+      if (isCuesDebugEnabled()) {
         const { appendFileSync } = await import('fs')
         appendFileSync('/tmp/cues-debug.json', JSON.stringify(cueDebug) + '\n')
       }
@@ -369,12 +377,14 @@ export class TtsService {
       }
     }
     if (!this.piperBin) return null
-    const voiceId = this.piperModels.byId(voice)?.id ?? resolvePiperVoiceId(voice)
+    const voiceDef = this.piperModels.byId(voice)
+    const voiceId = voiceDef?.id ?? resolvePiperVoiceId(voice)
     if (!voiceId || !this.piperModels.isDownloadedSync(voiceId)) return null
     const provider = new PiperProvider({
       piperBin: this.piperBin,
       modelPath: this.piperModels.modelPath(voiceId),
-      configPath: this.piperModels.configPath(voiceId)
+      configPath: this.piperModels.configPath(voiceId),
+      numSpeakers: voiceDef?.numSpeakers
     })
     return new SegmentSynthesizer(this.cache, this.state, provider, 1, `piper:${voiceId}`)
   }

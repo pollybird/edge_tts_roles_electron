@@ -28,6 +28,8 @@ export interface LaunchOptions {
   accepted?: boolean
   /** 预置 locale 偏好（'' 表示跟随系统） */
   locale?: string
+  /** 预置 Piper 离线策略；默认不写入（应用使用 fallback 缺省值） */
+  piperFallback?: 'off' | 'fallback' | 'prefer'
 }
 
 /** 读取隔离 userData 中的 electron-store 配置 */
@@ -51,10 +53,11 @@ export async function launchApp(opts: LaunchOptions = {}): Promise<AppContext> {
     existing = false
   }
   if (!existing) {
-    const settings = {
+    const settings: Record<string, unknown> = {
       agreementAccepted: opts.accepted ?? false,
       locale: opts.locale ?? ''
     }
+    if (opts.piperFallback) settings.piperFallback = opts.piperFallback
     await writeFile(configPath, JSON.stringify(settings), 'utf8')
   }
 

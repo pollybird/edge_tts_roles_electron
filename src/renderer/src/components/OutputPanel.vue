@@ -75,7 +75,7 @@ function onSubtitleFormatChange(e: Event): void {
         {{ t('output.stop') }}
       </button>
       <progress class="progress" :value="progress" max="100" />
-      <span class="progress-message">{{ progressMessage }}</span>
+      <span class="progress-message" data-testid="progress-message">{{ progressMessage }}</span>
     </div>
   </footer>
 </template>

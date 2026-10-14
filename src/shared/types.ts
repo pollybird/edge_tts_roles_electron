@@ -181,6 +181,8 @@ export interface PiperDownloadProgress {
   id: string
   received: number
   total: number
+  /** 本次是否为断点续传（检测到 .part 残留从断点继续） */
+  resuming?: boolean
 }
 
 /** 自动更新事件（主进程→渲染进程） */

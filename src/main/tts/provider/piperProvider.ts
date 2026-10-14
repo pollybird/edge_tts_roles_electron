@@ -1,6 +1,12 @@
 import { spawn } from 'child_process'
 import { readFile, writeFile } from 'fs/promises'
-import type { SynthesisOutcome, TTSProvider, TtsSegmentRequest, TtsSynthesisHooks } from './types'
+import type {
+  RawSynthesisResult,
+  SynthesisOutcome,
+  TTSProvider,
+  TtsSegmentRequest,
+  TtsSynthesisHooks
+} from './types'
 
 /**
  * Piper 本地离线合成 Provider（rhasspy/piper，MIT）：
@@ -24,6 +30,8 @@ export class PiperProvider implements TTSProvider {
       modelPath: string
       /** .onnx.json 配置绝对路径（读取采样率） */
       configPath: string
+      /** 多说话人模型的说话人数量（>1 时追加 --speaker 0） */
+      numSpeakers?: number
     }
   ) {}
 
@@ -49,6 +57,35 @@ export class PiperProvider implements TTSProvider {
     return { complete: true, serverEndMs: -1, spokenTail: '' }
   }
 
+  /**
+   * 直通模式：返回原始 s16le PCM，由调用方直接转 StereoPcm，
+   * 省去 buildWav → writeFile → readFile → decodeAudioToPcm 的往返开销。
+   */
+  async synthesizeRaw(
+    req: TtsSegmentRequest,
+    _hooks: TtsSynthesisHooks,
+    isStopped: () => boolean
+  ): Promise<RawSynthesisResult> {
+    let sampleRate = 22050
+    try {
+      const config = JSON.parse(await readFile(this.options.configPath, 'utf8')) as {
+        audio?: { sample_rate?: number }
+      }
+      if (config.audio?.sample_rate) sampleRate = config.audio.sample_rate
+    } catch {
+      // 配置缺失时按 piper medium 模型默认采样率处理
+    }
+
+    const pcm = await this.runPiper(req.text, req.rate, isStopped)
+    const gained = applyGainS16(pcm, volumeToGain(req.volume))
+    return {
+      outcome: { complete: true, serverEndMs: -1, spokenTail: '' },
+      rawPcm: gained,
+      sampleRate,
+      channels: 1
+    }
+  }
+
   /** spawn piper 收集原始 PCM；停止信号或进程异常时抛错 */
   private runPiper(text: string, rate: number, isStopped: () => boolean): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -59,6 +96,9 @@ export class PiperProvider implements TTSProvider {
         '--length_scale',
         String(rateToLengthScale(rate))
       ]
+      if ((this.options.numSpeakers ?? 1) > 1) {
+        args.push('--speaker', '0')
+      }
       const child = spawn(this.options.piperBin, args, { stdio: ['pipe', 'pipe', 'pipe'] })
 
       const chunks: Buffer[] = []

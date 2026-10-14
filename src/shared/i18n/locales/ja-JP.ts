@@ -51,7 +51,8 @@ const jaJP: LocalePack = {
       website: '公式サイト(&W)',
       about: 'バージョン情報(&A)',
       settings: '設定(&S)',
-      offlineEngine: 'オフラインエンジン設定(&O)'
+      offlineEngine: 'オフラインエンジン設定(&O)',
+      diagnostics: '診断情報(&D)'
     },
 
     editor: {
@@ -241,6 +242,8 @@ const jaJP: LocalePack = {
       remove: '削除',
       downloading: 'ダウンロード中…',
       downloadingPercent: 'ダウンロード中… {percent}%',
+      resuming: '再開中…（部分ファイルを検出）',
+      resumingPercent: '再開中… {percent}%',
       downloadDone: 'モデルのダウンロードが完了しました。',
       downloadFailed: 'モデルのダウンロードに失敗しました: {msg}',
       confirmRemove:
@@ -312,6 +315,12 @@ const jaJP: LocalePack = {
       website: 'https://www.tzzhy.cn/',
       license: 'ライセンス: GNU AGPL v3',
       opensource: '使用しているオープンソースソフトウェア:'
+    },
+
+    diagnostics: {
+      title: '診断情報',
+      summary: 'システム診断情報',
+      copy: 'コピー'
     }
   }
 }

@@ -1,10 +1,43 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { EventEmitter } from 'events'
 import {
   applyGainS16,
   buildWav,
   rateToLengthScale,
-  volumeToGain
+  volumeToGain,
+  PiperProvider
 } from '../src/main/tts/provider/piperProvider'
+import type { TtsSegmentRequest } from '../src/main/tts/provider/types'
+
+/** 捕获 spawn 参数，模拟子进程在下一个 tick 成功返回 PCM */
+const spawnCapture = vi.hoisted(() => {
+  return { args: null as string[] | null }
+})
+
+vi.mock('child_process', () => ({
+  spawn: vi.fn((bin: string, args: string[]) => {
+    spawnCapture.args = args
+    const child = new EventEmitter() as unknown as {
+      stdout: EventEmitter
+      stdin: { on: (e: string, fn: (err: Error) => void) => void; end: (data: string) => void }
+    } & EventEmitter
+    Object.assign(child, {
+      stdout: new EventEmitter(),
+      stderr: new EventEmitter(),
+      stdin: { on: vi.fn(), end: vi.fn() }
+    })
+    setImmediate(() => {
+      child.stdout.emit('data', Buffer.alloc(4))
+      child.emit('close', 0, null)
+    })
+    return child
+  })
+}))
+
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn().mockResolvedValue(JSON.stringify({ audio: { sample_rate: 22050 } })),
+  writeFile: vi.fn().mockResolvedValue(undefined)
+}))
 
 describe('rateToLengthScale', () => {
   it('rate 0 → 原速 1.0', () => {
@@ -89,5 +122,85 @@ describe('buildWav', () => {
     expect(wav.toString('ascii', 36, 40)).toBe('data')
     expect(wav.readUInt32LE(40)).toBe(pcm.length)
     expect(wav.readUInt32LE(4)).toBe(36 + pcm.length) // RIFF size
+  })
+})
+
+describe('PiperProvider --speaker 参数', () => {
+  const baseReq: TtsSegmentRequest = {
+    text: 'hello',
+    voice: 'test',
+    rate: 0,
+    volume: 0,
+    pitch: 0
+  }
+
+  it('numSpeakers > 1 时追加 --speaker 0', async () => {
+    const provider = new PiperProvider({
+      piperBin: '/fake/piper',
+      modelPath: '/fake/model.onnx',
+      configPath: '/fake/model.onnx.json',
+      numSpeakers: 16
+    })
+    await provider.synthesizeSegment(baseReq, '/fake/out.wav', {}, () => false)
+    expect(spawnCapture.args).toContain('--speaker')
+    expect(spawnCapture.args).toContain('0')
+  })
+
+  it('numSpeakers <= 1 时不追加 --speaker', async () => {
+    const provider = new PiperProvider({
+      piperBin: '/fake/piper',
+      modelPath: '/fake/model.onnx',
+      configPath: '/fake/model.onnx.json',
+      numSpeakers: 1
+    })
+    await provider.synthesizeSegment(baseReq, '/fake/out.wav', {}, () => false)
+    expect(spawnCapture.args).not.toContain('--speaker')
+  })
+
+  it('numSpeakers 未指定时不追加 --speaker', async () => {
+    const provider = new PiperProvider({
+      piperBin: '/fake/piper',
+      modelPath: '/fake/model.onnx',
+      configPath: '/fake/model.onnx.json'
+    })
+    await provider.synthesizeSegment(baseReq, '/fake/out.wav', {}, () => false)
+    expect(spawnCapture.args).not.toContain('--speaker')
+  })
+})
+
+describe('PiperProvider synthesizeRaw 直通模式', () => {
+  const baseReq: TtsSegmentRequest = {
+    text: 'hello',
+    voice: 'test',
+    rate: 0,
+    volume: 0,
+    pitch: 0
+  }
+
+  it('返回原始 PCM、采样率与通道数，且 outcome 固定为完整', async () => {
+    const provider = new PiperProvider({
+      piperBin: '/fake/piper',
+      modelPath: '/fake/model.onnx',
+      configPath: '/fake/model.onnx.json'
+    })
+    const result = await provider.synthesizeRaw(baseReq, {}, () => false)
+    expect(result.outcome.complete).toBe(true)
+    expect(result.outcome.serverEndMs).toBe(-1)
+    expect(result.outcome.spokenTail).toBe('')
+    expect(result.sampleRate).toBe(22050)
+    expect(result.channels).toBe(1)
+    expect(result.rawPcm.length).toBe(4) // mock 返回 4 字节 PCM
+  })
+
+  it('synthesizeRaw 也追加 --speaker（numSpeakers > 1）', async () => {
+    const provider = new PiperProvider({
+      piperBin: '/fake/piper',
+      modelPath: '/fake/model.onnx',
+      configPath: '/fake/model.onnx.json',
+      numSpeakers: 7
+    })
+    await provider.synthesizeRaw(baseReq, {}, () => false)
+    expect(spawnCapture.args).toContain('--speaker')
+    expect(spawnCapture.args).toContain('0')
   })
 })

@@ -1,64 +1,11 @@
 /**
- * 音频 PCM 处理与编解码：ffmpeg 解码、声道合成、静音/蜂鸣生成与 WAV 等格式编码。
- *
- * 依赖：随安装包分发的 ffmpeg（resources/ffmpeg，见 ffmpegResolver.ts）；
- * 开发环境直接使用 ffmpeg-static 下载的当前平台二进制。
+ * 纯 PCM 运算：静音/蜂鸣生成、拼接、增益、循环/截断、混音。
+ * 不依赖 ffmpeg 或外部进程，仅做 Float32 数组运算。
  */
 
-import { spawn } from 'child_process'
-import { randomUUID } from 'crypto'
-import { mkdir, readFile, unlink, writeFile } from 'fs/promises'
-import { tmpdir } from 'os'
-import { dirname, join } from 'path'
-import { createT } from '../shared/i18n'
-import { resolveFfmpegPath } from './ffmpegResolver'
-
-const FFMPEG = resolveFfmpegPath()
-
-/** 双声道 PCM（planar：左右声道各一个 Float32Array，对应 numpy 的 (N, 2) 结构） */
-export interface StereoPcm {
-  left: Float32Array
-  right: Float32Array
-  sampleRate: number
-}
-
-/** 生成临时文件路径（可选指定父目录） */
-export function tempPath(suffix: string, dir?: string): string {
-  return join(dir ?? tmpdir(), `${randomUUID()}${suffix}`)
-}
-
-/** 确保目录存在 */
-async function ensureDir(p: string): Promise<void> {
-  await mkdir(p, { recursive: true }).catch(() => {})
-}
-
-/** 用 ffmpeg 解码 MP3（或任意 ffmpeg 支持的格式）为 f32le 立体声 PCM */
-export async function decodeAudioToPcm(inputPath: string, sampleRate = 24000): Promise<StereoPcm> {
-  const rawPath = tempPath('.raw')
-  await runFfmpeg([
-    '-y',
-    '-i',
-    inputPath,
-    '-f',
-    'f32le',
-    '-ac',
-    '2',
-    '-ar',
-    String(sampleRate),
-    rawPath
-  ])
-  const buf = await readFile(rawPath)
-  await unlink(rawPath).catch(() => {})
-
-  const samples = Math.floor(buf.length / 8)
-  const left = new Float32Array(samples)
-  const right = new Float32Array(samples)
-  for (let i = 0; i < samples; i++) {
-    left[i] = buf.readFloatLE(i * 8)
-    right[i] = buf.readFloatLE(i * 8 + 4)
-  }
-  return { left, right, sampleRate }
-}
+import { readFile, writeFile } from 'fs/promises'
+import { createT } from '../../shared/i18n'
+import type { StereoPcm } from './types'
 
 /** 创建静音片段 */
 export function createSilence(durationMs: number, sampleRate = 24000): StereoPcm {
@@ -155,13 +102,26 @@ export function mixPcm(base: StereoPcm, overlay: StereoPcm): StereoPcm {
 }
 
 /** 将 StereoPcm 交错写入 f32le raw Buffer */
-function interleaveToBuffer(pcm: StereoPcm): Buffer {
+export function interleaveToBuffer(pcm: StereoPcm): Buffer {
   const buf = Buffer.alloc(pcm.left.length * 8)
   for (let i = 0; i < pcm.left.length; i++) {
     buf.writeFloatLE(pcm.left[i], i * 8)
     buf.writeFloatLE(pcm.right[i], i * 8 + 4)
   }
   return buf
+}
+
+/** 将 s16le interleaved Buffer 直接转为 StereoPcm（Float32），省去 WAV 编解码往返 */
+export function pcmFromS16le(buffer: Buffer, sampleRate: number, channels: number): StereoPcm {
+  const samples = new Int16Array(buffer.buffer, buffer.byteOffset, Math.floor(buffer.length / 2))
+  const frames = Math.floor(samples.length / channels)
+  const left = new Float32Array(frames)
+  const right = new Float32Array(frames)
+  for (let i = 0; i < frames; i++) {
+    left[i] = samples[i * channels] / 32768
+    right[i] = channels > 1 ? samples[i * channels + 1] / 32768 : left[i]
+  }
+  return { left, right, sampleRate }
 }
 
 /** 将 PCM 写入 f32le 立体声 raw 缓存文件（断点续传用） */
@@ -189,84 +149,4 @@ export async function readPcmCache(
     right[i] = buf.readFloatLE(i * 8 + 4)
   }
   return { left, right, sampleRate }
-}
-
-/** 编码为 WAV（IEEE float 32-bit, 双声道） */
-export async function encodeWav(pcm: StereoPcm, filePath: string): Promise<void> {
-  await ensureDir(dirname(filePath))
-  const dataSize = pcm.left.length * 8
-  const fileSize = 44 + dataSize
-
-  const header = Buffer.alloc(44)
-  header.write('RIFF', 0)
-  header.writeUInt32LE(fileSize - 8, 4)
-  header.write('WAVE', 8)
-  header.write('fmt ', 12)
-  header.writeUInt32LE(16, 16) // fmt chunk size
-  header.writeUInt16LE(3, 20) // IEEE float
-  header.writeUInt16LE(2, 22) // stereo
-  header.writeUInt32LE(pcm.sampleRate, 24)
-  header.writeUInt32LE(pcm.sampleRate * 2 * 4, 28) // byteRate
-  header.writeUInt16LE(2 * 4, 32) // blockAlign
-  header.writeUInt16LE(32, 34) // bitsPerSample
-  header.write('data', 36)
-  header.writeUInt32LE(dataSize, 40)
-
-  const data = interleaveToBuffer(pcm)
-  await writeFile(filePath, Buffer.concat([header, data]))
-}
-
-/** 编码为 MP3 / OGG / FLAC（ffmpeg） */
-export async function encodeWithFfmpeg(
-  pcm: StereoPcm,
-  filePath: string,
-  format: 'mp3' | 'ogg' | 'flac'
-): Promise<void> {
-  await ensureDir(dirname(filePath))
-  const rawPath = tempPath('.raw')
-  await writeFile(rawPath, interleaveToBuffer(pcm))
-
-  const args: string[] = [
-    '-y',
-    '-f',
-    'f32le',
-    '-ac',
-    '2',
-    '-ar',
-    String(pcm.sampleRate),
-    '-i',
-    rawPath
-  ]
-  if (format === 'mp3') {
-    // MP3 统一输出 44.1kHz（MPEG-1）：24kHz 属于 MPEG-2 LSF 格式，
-    // 部分播放器对其进度计算不准确，导致字幕/歌词与音频不同步
-    args.push('-ar', '44100', '-c:a', 'libmp3lame', '-q:a', '2')
-  } else if (format === 'ogg') {
-    args.push('-c:a', 'libvorbis', '-q:a', '4')
-  } else if (format === 'flac') {
-    args.push('-c:a', 'flac')
-  }
-  args.push(filePath)
-
-  try {
-    await runFfmpeg(args)
-  } finally {
-    await unlink(rawPath).catch(() => {})
-  }
-}
-
-/** 执行 ffmpeg 进程并等待完成 */
-function runFfmpeg(args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(FFMPEG, args, { windowsHide: true })
-    let stderr = ''
-    proc.stderr?.on('data', (d) => {
-      stderr += d
-    })
-    proc.on('error', reject)
-    proc.on('close', (code) => {
-      if (code === 0) resolve()
-      else reject(new Error(`ffmpeg exit ${code}: ${stderr.slice(0, 200)}`))
-    })
-  })
 }
