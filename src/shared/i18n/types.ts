@@ -39,6 +39,9 @@ export interface Messages {
   update: Record<string, string>
   tts: Record<string, string>
   piper: Record<string, string>
+  cloud: Record<string, string>
+  /** 语气显示名（editor 工具栏的语气下拉） */
+  tones: Record<string, string>
   dialog: Record<string, string>
   help: Record<string, string>
   agreement: Record<string, string>

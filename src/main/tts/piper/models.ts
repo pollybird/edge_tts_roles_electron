@@ -230,8 +230,7 @@ export class PiperModelManager {
         if (sum !== voice.md5Digest) throw new Error(`config md5 mismatch: ${sum}`)
       } else {
         const txt = (await readFile(path, 'utf8')).trim()
-        if (!txt.startsWith('{') || !txt.endsWith('}'))
-          throw new Error('invalid json config')
+        if (!txt.startsWith('{') || !txt.endsWith('}')) throw new Error('invalid json config')
       }
     }
   }

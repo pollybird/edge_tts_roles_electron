@@ -41,6 +41,13 @@ const arSA: LocalePack = {
   messages: {
     app: {
       title: 'مولد الصوت متعدد الأصوات Edge-TTS',
+      proxyMode: 'وكيل الشبكة',
+      proxyDirect: 'اتصال مباشر بالإنترنت',
+      proxySystem: 'استخدام وكيل النظام',
+      proxyCustom: 'خادم وكيل مخصص',
+      proxyProtocol: 'البروتوكول',
+      proxyHost: 'المضيف',
+      proxyPort: 'المنفذ',
       copyright: 'Copyright © 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -67,6 +74,7 @@ const arSA: LocalePack = {
       website: '&الموقع الإلكتروني',
       about: '&حول',
       settings: 'الإعدادات(&S)',
+      cloudServices: 'خدمات الصوت السحابية(&V)',
       offlineEngine: 'إعدادات المحرك دون اتصال(&O)',
       diagnostics: 'تشخيص(&D)'
     },
@@ -94,6 +102,8 @@ const arSA: LocalePack = {
       pauseMs: 'الزمن (مللي ثانية):',
       insertBeep: '🔊 إدراج صفارة [R]',
       quickPause: 'إيقاف مؤقت سريع:',
+      tone: 'النبرة:',
+      insertTone: 'إدراج نبرة',
       secondsShort: '{n}ث',
       openText: '📂 فتح نص',
       saveText: '💾 حفظ النص',
@@ -192,6 +202,14 @@ const arSA: LocalePack = {
       dialogLater: 'ذكّرني لاحقاً',
       dialogNever: 'لا تُذكّرني لهذا الإصدار'
     },
+    tones: {
+      happy: 'سعيد',
+      sad: 'حزين',
+      angry: 'غاضب',
+      gentle: 'لطيف',
+      excited: 'متحمس',
+      calm: 'هادئ'
+    },
     subtitle: {
       label: 'الترجمة',
       none: 'بدون',
@@ -261,6 +279,40 @@ const arSA: LocalePack = {
       downloadInProgress: 'هذا النموذج قيد التنزيل بالفعل',
       filterPlaceholder: 'تصفية اللغات أو الأصوات...',
       close: 'إغلاق'
+    },
+
+    cloud: {
+      title: 'خدمات الصوت السحابية',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'إظهار/إخفاء النص',
+      helpTitle: 'كيفية الحصول على مفاتيح API',
+      openConsole: 'فتح وحدة التحكم',
+      helpGoogle:
+        '1. افتح Google Cloud Console وأنشئ مشروعًا أو حدّده.\n2. فعِّل Cloud Text-to-Speech API.\n3. انتقل إلى «واجهات برمجة التطبيقات والخدمات» ← «بيانات الاعتماد» ← «إنشاء بيانات اعتماد» ← «مفتاح API».\n4. انسخ المفتاح والصقه في حقل API Key أعلاه.',
+      helpXfyun:
+        '1. سجِّل الدخول إلى منصة iFlytek المفتوحة (www.xfyun.cn) وأكمل التحقق.\n2. أنشئ تطبيقًا، ثم افتح «تركيب الكلام ← النسخة المتدفقة» واحصل على حزمة التجربة المجانية.\n3. انسخ APPID وAPISecret وAPIKey من صفحة الخدمة (يجب أن ينتمي الثلاثة إلى التطبيق نفسه).\n4. أدخلها في الحقول أعلاه بترتيب وحدة التحكم.',
+      helpVolc:
+        '1. سجِّل الدخول إلى وحدة تحكم Volcengine وفعِّل خدمة تقنيات الصوت.\n2. انسخ App ID الخاص بالتطبيق من صفحة إدارة التطبيقات.\n3. أنشئ وانسخ مفتاح API من صفحة إدارة مفاتيح API.\n4. الصقهما في حقلَي App ID وAPI Key أعلاه.',
+      test: 'اختبار الاتصال',
+      testing: 'جارٍ الاختبار…',
+      testOk: 'تم الاتصال بنجاح',
+      testFailed: 'فشل الاتصال: {msg}',
+      keysNote:
+        'تُحفظ بيانات الاعتماد على الجهاز فقط (في ملف الإعدادات داخل مجلد بيانات المستخدم) ولا يتم رفعها أبداً؛ احصل عليها من لوحة تحكم المزوّد.',
+      close: 'إغلاق',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'قبل استخدام صوت مزوّد سحابي، يرجى إعداد بيانات الاعتماد وتفعيله من الإعدادات → خدمات الصوت السحابية',
+      googleFailed: 'فشل تركيب كلام Google: {msg}',
+      xfyunFailed: 'فشل تركيب كلام iFlytek: {msg}',
+      xfyunAuthHint:
+        '401 يعني عادةً أن بيانات الاعتماد غير صالحة: استخدم APIKey/APISecret لخدمة تركيب الكلام (البث) (لوحة التحكم → تركيب الكلام → البث)، وليست مفاتيح خدمات أخرى مثل Spark LLM',
+      volcFailed: 'فشل تركيب كلام Volcengine: {msg}'
     },
 
     dialog: {

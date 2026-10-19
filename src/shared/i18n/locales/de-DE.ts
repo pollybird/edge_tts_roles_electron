@@ -25,6 +25,13 @@ const deDE: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS Audio-Generator mit mehreren Stimmen',
+      proxyMode: 'Netzwerk-Proxy',
+      proxyDirect: 'Direkte Internetverbindung',
+      proxySystem: 'Systemproxy verwenden',
+      proxyCustom: 'Benutzerdefinierter Proxy-Server',
+      proxyProtocol: 'Protokoll',
+      proxyHost: 'Host',
+      proxyPort: 'Port',
       copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -51,6 +58,7 @@ const deDE: LocalePack = {
       website: '&Webseite',
       about: '&Über',
       settings: '&Einstellungen',
+      cloudServices: '&Cloud-Sprachdienste...',
       offlineEngine: '&Offline-Engine...',
       diagnostics: '&Diagnose'
     },
@@ -79,6 +87,8 @@ const deDE: LocalePack = {
       pauseMs: 'Zeit (ms):',
       insertBeep: '🔊 Signalton [R] einfügen',
       quickPause: 'Schnellpausen:',
+      tone: 'Tonfall:',
+      insertTone: 'Tonfall einfügen',
       secondsShort: '{n} s',
       openText: '📂 Text öffnen',
       saveText: '💾 Text speichern',
@@ -178,6 +188,14 @@ const deDE: LocalePack = {
       dialogLater: 'Später erinnern',
       dialogNever: 'Für diese Version nicht mehr erinnern'
     },
+    tones: {
+      happy: 'Fröhlich',
+      sad: 'Traurig',
+      angry: 'Verärgert',
+      gentle: 'Sanft',
+      excited: 'Aufgeregt',
+      calm: 'Ruhig'
+    },
     subtitle: {
       label: 'Untertitel',
       none: 'Keine',
@@ -251,6 +269,40 @@ const deDE: LocalePack = {
       downloadInProgress: 'Dieses Modell wird bereits heruntergeladen',
       filterPlaceholder: 'Sprachen oder Stimmen filtern...',
       close: 'Schließen'
+    },
+
+    cloud: {
+      title: 'Cloud-Sprachdienste',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'Klartext anzeigen/verbergen',
+      helpTitle: 'So erhalten Sie API-Schlüssel',
+      openConsole: 'Konsole öffnen',
+      helpGoogle:
+        '1. Öffnen Sie die Google Cloud Console und erstellen bzw. wählen Sie ein Projekt aus.\n2. Aktivieren Sie die Cloud Text-to-Speech API.\n3. Gehen Sie zu „APIs & Dienste“ → „Anmeldedaten“ → „Anmeldedaten erstellen“ → „API-Schlüssel“.\n4. Kopieren Sie den Schlüssel und fügen Sie ihn oben in das Feld API Key ein.',
+      helpXfyun:
+        '1. Melden Sie sich bei der iFlytek Open Platform (www.xfyun.cn) an und schließen Sie die Verifizierung ab.\n2. Erstellen Sie eine App und öffnen Sie „Sprachsynthese → Streaming-TTS“, um das kostenlose Testpaket zu erhalten.\n3. Kopieren Sie APPID, APISecret und APIKey von der Serviceseite (alle drei müssen zur selben App gehören).\n4. Tragen Sie sie in der Reihenfolge der Konsole in die Felder oben ein.',
+      helpVolc:
+        '1. Melden Sie sich bei der Volcengine-Konsole an und aktivieren Sie Speech Technology.\n2. Kopieren Sie die App-ID der Anwendung auf der App-Verwaltungsseite.\n3. Erstellen und kopieren Sie einen API-Schlüssel auf der Verwaltungsseite für API-Schlüssel.\n4. Fügen Sie sie oben in die Felder App ID und API Key ein.',
+      test: 'Verbindung testen',
+      testing: 'Wird getestet…',
+      testOk: 'Verbindung erfolgreich',
+      testFailed: 'Verbindung fehlgeschlagen: {msg}',
+      keysNote:
+        'Zugangsdaten werden nur lokal gespeichert (in der Konfigurationsdatei Ihres Benutzerdatenverzeichnisses) und nie hochgeladen. Erhalten Sie sie in der Konsole des jeweiligen Anbieters.',
+      close: 'Schließen',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'Bevor Sie eine Cloud-Stimme verwenden, konfigurieren Sie die Zugangsdaten unter Einstellungen → Cloud-Sprachdienste und aktivieren Sie den Anbieter',
+      googleFailed: 'Google-Sprachsynthese fehlgeschlagen: {msg}',
+      xfyunFailed: 'iFlytek-Sprachsynthese fehlgeschlagen: {msg}',
+      xfyunAuthHint:
+        '401 bedeutet meist, dass die Zugangsdaten ungültig sind: Verwenden Sie APIKey/APISecret des Dienstes Sprachsynthese (Streaming) (Konsole → Sprachsynthese → Streaming), nicht Schlüssel anderer Dienste wie Spark LLM',
+      volcFailed: 'Volcengine-Sprachsynthese fehlgeschlagen: {msg}'
     },
 
     dialog: {

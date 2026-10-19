@@ -1,5 +1,24 @@
 # 更新日志
 
+## v2.0.8
+
+### 新功能
+
+- **云语音服务商（v2.0.8）**：在 Edge TTS 与离线 Piper 引擎之外，新增三家商用云 TTS 服务支持：**Google Cloud Text-to-Speech**、**科大讯飞**、**火山引擎（豆包语音）**。在新增的「设置 → 语音服务商」对话框中自行配置凭据（启用开关 + 各自字段：API Key / App ID / API Secret——火山采用 App ID + API Key 鉴权，API Key 为新版控制台签发、替代旧版 Access Token，每张卡片附「？」按钮可展开密钥申请说明并直达控制台），并提供一键「测试连接」——用首个目录音色做一次微型合成后丢弃音频。凭据仅保存在本机（用户数据目录的 electron-store 配置文件），不上传。启用后，该服务商的音色会以独立分组出现在每个角色的发音人下拉中（`google:<name>` / `xfyun:<vcn>` / `volc:<voiceType>` 前缀命名——Google 清单实时从 `/v1/voices` 拉取，讯飞/火山使用精选目录）。合成走与 Edge/Piper 相同的 `SegmentSynthesizer` 管线与磁盘缓存（缓存键带音色维度），付费 API 重试上限 3 次，出错明确报错（含「请先配置凭据」提示）而非静默回退。**仅离线**模式下云音色隐藏，维持「文本不出本机」的保证。
+- **语气标签（v2.0.8）**：六种语气标记 `[happy]` `[sad]` `[angry]` `[gentle]` `[excited]` `[calm]`，以对应的 `[/tone]` 闭合标签收尾，改变所围文本的朗读方式。语气折算为韵律偏移（语速 / 音量 / 音调），叠加在角色自身设置之上并夹取到滑块范围，因此对**所有引擎**（Edge、Piper 与三家云服务商）通用。标签可嵌套（内层优先生效），未闭合时延续到文末。编辑器工具栏新增语气下拉与「插入语气」按钮——有选区时两端包裹选区，无选区时插入空的 `[tone][/tone]` 并把光标置于两标签之间；编辑器对语气标签做独立配色高亮。
+
+### Bug 修复
+
+- **Edge TTS 全线合成失败（端点迁移）**：微软已将朗读合成 WebSocket 从 `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1` 迁移至 `wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1`（鉴权参数由 `TrustedClientToken` 改为 `Ocp-Apim-Subscription-Key`，旧端点握手返回 403 导致合成必败），而依赖的 edge-tts-universal@1.4.0 尚未跟进。现通过 patch-package 在安装期打补丁（`patches/edge-tts-universal+1.4.0.patch`，覆盖该库全部 8 个 dist 产物；`postinstall` 先执行 patch-package 再做原生模块重建，CI 的 `npm ci` 同样生效）。音色清单接口保留在旧域名（实测仍正常），合成端点已实测完成真实合成（握手 101 → 音频流 → turn.end → MP3 解码通过）。上游发布修复后删除补丁即可。
+
+### 测试
+
+- 新增 `tests/googleProvider.test.ts`（7 例：语速/音调/音量映射、请求结构、错误传播、停止检查）、`tests/xfyunProvider.test.ts`（mock ws 覆盖 WebSocket 鉴权/载荷/音频帧/错误帧）与 `tests/volcProvider.test.ts`（10 例：二进制协议帧、gzip 错误帧、参数夹取、WAV 组装）。`tests/textParser.test.ts` 新增 9 个语气解析用例（开/闭、嵌套、跨停顿与角色切换持续、未知标签按字面保留）；`tests/applyTone.test.ts` 覆盖韵律映射（6 种语气、夹取、入参不可变）。E2E 新增 2 个编辑器用例（空对插入与光标落位、选区包裹）。
+
+### 工程
+
+- **Windows 安装包代码签名**：Windows 安装包（NSIS，x64/arm64）现使用自签名代码签名证书做 Authenticode 签名——主程序、卸载器与安装器统一签名（SHA-256 + DigiCert RFC3161 时间戳，证书有效期至 2046 年）；`latest.yml`/blockmap 基于签名后文件计算哈希，自动更新校验不受影响。CI 构建后用 `osslsigncode verify` 校验签名，未签名产物将使发布失败。证书 `build/win-codesign.cer` 随仓库分发：自签名无商业信任链，Windows 仍可能提示「未知发布者」——如需消除提示，可将该证书导入「受信任的根证书颁发机构」与「受信任的发布者」。构建侧注意：electron-builder 内置 osslsigncode 依赖已移除的 libssl1.1，Linux 宿主需 `USE_SYSTEM_SIGNCODE=true` 使用系统版本（已写入 `build:win` 脚本与 release.yml）。
+
 ## v2.0.7
 
 ### 新功能

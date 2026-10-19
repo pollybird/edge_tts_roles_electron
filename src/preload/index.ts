@@ -3,6 +3,9 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { IpcChannels } from '../shared/ipc'
 import type {
   AudioFormat,
+  CloudProviderId,
+  CloudTestResult,
+  CloudVoicesPayload,
   ErrorPayload,
   StoppedPayload,
   FinishedPayload,
@@ -99,6 +102,14 @@ const api = {
   piperRemove: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.piperRemove, id),
   onPiperDownloadProgress: (cb: (p: PiperDownloadProgress) => void): (() => void) =>
     subscribe(IpcChannels.piperDownloadProgress, cb),
+
+  // 云服务商：音色清单 / 凭据连接测试
+  cloudVoices: (): Promise<CloudVoicesPayload> => ipcRenderer.invoke(IpcChannels.cloudVoices),
+  cloudTest: (provider: CloudProviderId): Promise<CloudTestResult> =>
+    ipcRenderer.invoke(IpcChannels.cloudTest, { provider }),
+
+  // 外部链接（主进程 https 白名单校验后经 shell.openExternal 打开系统浏览器）
+  openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IpcChannels.openExternal, url),
 
   // 事件订阅（返回取消订阅函数）
   onProgress: (cb: (payload: ProgressPayload) => void): (() => void) =>

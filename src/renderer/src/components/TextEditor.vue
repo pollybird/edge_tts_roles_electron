@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import type { ToneId } from '../../../shared/types'
+import { TONE_IDS } from '../../../shared/types'
 import { useI18n } from '../composables/useI18n'
 
 const { t } = useI18n()
@@ -33,13 +35,18 @@ const ROLE_TAGS = ['A', 'B', 'C', 'D'] as const
 const highlightedHtml = computed(() => {
   const escaped = props.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   // 尾部补换行，保证文本满行时 backdrop 与 textarea 滚动高度一致
+  const toneSource = TONE_IDS.join('|')
   return (
-    escaped.replace(/\[([ABCD]|\d+|R)\]/g, (m, inner: string) => {
-      let cls = 'hl-pause'
-      if ('ABCD'.includes(inner)) cls = 'hl-role'
-      else if (inner === 'R') cls = 'hl-beep'
-      return `<mark class="${cls}">${m}</mark>`
-    }) + '\n'
+    escaped.replace(
+      new RegExp(`\\[(/?(?:[ABCD]|\\d+|R|${toneSource}))\\]`, 'g'),
+      (m, inner: string) => {
+        let cls = 'hl-pause'
+        if ('ABCD'.includes(inner)) cls = 'hl-role'
+        else if (inner === 'R') cls = 'hl-beep'
+        else if (inner.startsWith('/') || TONE_IDS.includes(inner as ToneId)) cls = 'hl-tone'
+        return `<mark class="${cls}">${m}</mark>`
+      }
+    ) + '\n'
   )
 })
 
@@ -62,6 +69,33 @@ async function insertTag(tag: string): Promise<void> {
 
 function insertPause(): void {
   void insertTag(`[${pauseMs.value}]`)
+}
+
+/** 语气插入下拉当前选中项（默认开心） */
+const selectedTone = ref<ToneId>('happy')
+
+/**
+ * 插入语气标签：有选区时两端包裹 [tone]选区[/tone]；
+ * 无选区时插入成对标签并把光标置于两标签之间。
+ */
+async function insertTone(): Promise<void> {
+  const ta = textareaRef.value
+  if (!ta) return
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const open = `[${selectedTone.value}]`
+  const close = `[/${selectedTone.value}]`
+  const selected = props.text.slice(start, end)
+  const insert = selected ? `${open}${selected}${close}` : `${open}${close}`
+  emit('update:text', props.text.slice(0, start) + insert + props.text.slice(end))
+  await nextTick()
+  ta.focus()
+  if (selected) {
+    const pos = start + insert.length
+    ta.setSelectionRange(pos, pos)
+  } else {
+    ta.setSelectionRange(start + open.length, start + open.length)
+  }
 }
 
 /** textarea 滚动时同步高亮层 */
@@ -343,6 +377,20 @@ defineExpose({ openFindBar })
         >
           ⏱️ {{ t('editor.secondsShort', { n: ms / 1000 }) }}
         </button>
+      </div>
+
+      <!-- 语气标签：选中文本则两端包裹，未选中则插入成对标签 -->
+      <div class="tool-row">
+        <span class="tool-label">{{ t('editor.tone') }}</span>
+        <select v-model="selectedTone" class="tone-select" data-testid="tone-select">
+          <option v-for="tone in TONE_IDS" :key="tone" :value="tone">
+            {{ t(`tones.${tone}`) }}
+          </option>
+        </select>
+        <button class="btn small" data-testid="insert-tone" @click="insertTone">
+          🎭 {{ t('editor.insertTone') }}
+        </button>
+        <span class="tool-spacer" />
       </div>
 
       <!-- 文件操作 + 试听 -->

@@ -184,6 +184,13 @@ const zhTW: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS 多角色音訊產生器',
+      proxyMode: '網路代理',
+      proxyDirect: '直接連線 Internet',
+      proxySystem: '使用系統代理',
+      proxyCustom: '自訂代理伺服器',
+      proxyProtocol: '協定',
+      proxyHost: '主機',
+      proxyPort: '連接埠',
       copyright: '© 2026 泰州姜堰鍾毓信息技術有限公司'
     },
 
@@ -210,6 +217,7 @@ const zhTW: LocalePack = {
       website: '官方網站(&W)',
       about: '關於(&A)',
       settings: '設定(S)(&S)',
+      cloudServices: '語音服務商(&V)',
       offlineEngine: '離線引擎設定(&O)',
       diagnostics: '診斷資訊(&D)'
     },
@@ -237,6 +245,8 @@ const zhTW: LocalePack = {
       pauseMs: '時間(ms):',
       insertBeep: '🔊 插入嗶聲[R]',
       quickPause: '快速停頓:',
+      tone: '語氣:',
+      insertTone: '插入語氣',
       secondsShort: '{n}秒',
       openText: '📂 開啟文字',
       saveText: '💾 儲存文字',
@@ -335,6 +345,14 @@ const zhTW: LocalePack = {
       dialogLater: '稍後提示',
       dialogNever: '不再提示'
     },
+    tones: {
+      happy: '開心',
+      sad: '難過',
+      angry: '憤怒',
+      gentle: '溫柔',
+      excited: '興奮',
+      calm: '平靜'
+    },
     subtitle: {
       label: '字幕',
       none: '不產生',
@@ -401,6 +419,38 @@ const zhTW: LocalePack = {
       downloadInProgress: '該模型正在下載中',
       filterPlaceholder: '篩選語言或模型…',
       close: '關閉'
+    },
+
+    cloud: {
+      title: '語音服務商',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: '科大訊飛',
+      volc: '火山引擎',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: '顯示/隱藏明文',
+      helpTitle: '如何申請金鑰',
+      openConsole: '開啟主控台',
+      helpGoogle:
+        '1. 開啟 Google Cloud Console 並建立或選取專案。\n2. 啟用「Cloud Text-to-Speech API」。\n3. 前往「API 和服務 → 憑證」→「建立憑證 → API 金鑰」。\n4. 複製金鑰並貼入上方 API Key 欄位。',
+      helpXfyun:
+        '1. 登入訊飛開放平台（www.xfyun.cn）並完成實名認證。\n2. 建立應用程式，進入「語音合成 → 語音合成（串流版）」領取免費試用包。\n3. 在該服務頁複製 APPID、APISecret、APIKey（三者須同屬一個應用程式）。\n4. 依主控台順序填入上方輸入框。',
+      helpVolc:
+        '1. 登入火山引擎主控台並開通「語音技術」服務。\n2. 在「應用程式管理」頁複製應用程式的 App ID。\n3. 在「API Key 管理」建立並複製 API Key。\n4. 分別填入上方 App ID 與 API Key 欄位。',
+      test: '測試連線',
+      testing: '測試中…',
+      testOk: '連線成功',
+      testFailed: '連線失敗：{msg}',
+      keysNote: '憑證僅儲存在本機（使用者資料目錄的設定檔），不會上傳；請從對應服務商控制台取得。',
+      close: '關閉',
+      groupLabel: '--- {label}（{n}） ---',
+      notConfigured: '使用雲端服務商音色前，請先在「設定 → 語音服務商」中設定憑證並啟用',
+      googleFailed: 'Google 語音合成失敗：{msg}',
+      xfyunFailed: '訊飛語音合成失敗：{msg}',
+      xfyunAuthHint:
+        '401 通常表示憑證無效：請使用「語音合成（串流版）」服務的 APIKey/APISecret（控制台 → 語音合成 → 串流版），而非星火大模型等其他服務的密鑰',
+      volcFailed: '火山引擎語音合成失敗：{msg}'
     },
 
     dialog: {

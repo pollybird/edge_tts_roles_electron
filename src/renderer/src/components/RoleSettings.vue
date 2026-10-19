@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PiperVoiceStatus, RoleId, RoleVoiceSettings, VoiceInfo } from '../../../shared/types'
-import { ROLE_IDS } from '../../../shared/types'
+import type {
+  CloudProviderId,
+  CloudVoicesPayload,
+  PiperVoiceStatus,
+  RoleId,
+  RoleVoiceSettings,
+  VoiceInfo
+} from '../../../shared/types'
+import { CLOUD_PROVIDER_IDS, ROLE_IDS } from '../../../shared/types'
 import { getVoiceDisplayName } from '../../../shared/voiceDisplay'
 import { groupVoices } from '../../../shared/voiceGroups'
 import type { VoiceGroup } from '../../../shared/voiceGroups'
@@ -16,6 +23,8 @@ const props = defineProps<{
   offlineMode: boolean
   /** Piper 模型清单（含下载状态），配合 offlineMode 过滤展示 */
   offlineVoices: PiperVoiceStatus[]
+  /** 云服务商可用音色（未启用/未配置的服务商为 null；仅离线模式下不展示） */
+  cloudVoices: CloudVoicesPayload
 }>()
 const emit = defineEmits<{
   (e: 'save-config'): void
@@ -61,6 +70,17 @@ function offlineLabel(v: PiperVoiceStatus): string {
   const name = v.voiceName.charAt(0).toUpperCase() + v.voiceName.slice(1)
   return `${name} · ${v.langName}`
 }
+
+/** 云音色分组：仅列已启用且拿到音色清单的服务商（仅离线模式下隐藏，在线优先） */
+const cloudGroups = computed<
+  { id: CloudProviderId; voices: NonNullable<CloudVoicesPayload[CloudProviderId]> }[]
+>(() => {
+  if (props.offlineMode) return []
+  return CLOUD_PROVIDER_IDS.filter((p) => (props.cloudVoices[p]?.length ?? 0) > 0).map((p) => ({
+    id: p,
+    voices: props.cloudVoices[p] as NonNullable<CloudVoicesPayload[CloudProviderId]>
+  }))
+})
 </script>
 
 <template>
@@ -103,6 +123,21 @@ function offlineLabel(v: PiperVoiceStatus): string {
             </option>
           </template>
           <template v-else>
+            <!-- 已配置的云服务商音色置顶显示（用户主动配置即优先使用），Edge 音色在其后 -->
+            <optgroup
+              v-for="g in cloudGroups"
+              :key="g.id"
+              :label="t('cloud.groupLabel', { label: t(`cloud.${g.id}`), n: g.voices.length })"
+            >
+              <option
+                v-for="v in g.voices"
+                :key="v.id"
+                :value="`${g.id}:${v.id}`"
+                :title="`${g.id}:${v.id}`"
+              >
+                {{ v.voiceName }} · {{ v.langName }}
+              </option>
+            </optgroup>
             <optgroup
               v-for="g in voiceGroups"
               :key="g.lang"

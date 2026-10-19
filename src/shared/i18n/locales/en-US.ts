@@ -22,6 +22,13 @@ const enUS: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS Multi-Voice Audio Generator',
+      proxyMode: 'Network proxy',
+      proxyDirect: 'Direct Internet',
+      proxySystem: 'Use system proxy',
+      proxyCustom: 'Custom proxy server',
+      proxyProtocol: 'Protocol',
+      proxyHost: 'Host',
+      proxyPort: 'Port',
       copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -48,6 +55,7 @@ const enUS: LocalePack = {
       website: '&Website',
       about: '&About',
       settings: '&Settings',
+      cloudServices: '&Cloud Speech Services...',
       offlineEngine: '&Offline Engine...',
       diagnostics: '&Diagnostics'
     },
@@ -76,6 +84,8 @@ const enUS: LocalePack = {
       pauseMs: 'Time (ms):',
       insertBeep: '🔊 Insert Beep [R]',
       quickPause: 'Quick pause:',
+      tone: 'Tone:',
+      insertTone: 'Insert tone',
       secondsShort: '{n}s',
       openText: '📂 Open Text',
       saveText: '💾 Save Text',
@@ -174,6 +184,14 @@ const enUS: LocalePack = {
       dialogLater: 'Remind Me Later',
       dialogNever: "Don't Remind Me for This Version"
     },
+    tones: {
+      happy: 'Happy',
+      sad: 'Sad',
+      angry: 'Angry',
+      gentle: 'Gentle',
+      excited: 'Excited',
+      calm: 'Calm'
+    },
     subtitle: {
       label: 'Subtitles',
       none: 'None',
@@ -244,6 +262,40 @@ const enUS: LocalePack = {
       downloadInProgress: 'A download for this model is already in progress',
       filterPlaceholder: 'Filter languages or voices...',
       close: 'Close'
+    },
+
+    cloud: {
+      title: 'Cloud Speech Services',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'Show/hide plaintext',
+      helpTitle: 'How to get API keys',
+      openConsole: 'Open console',
+      helpGoogle:
+        '1. Open Google Cloud Console and create or select a project.\n2. Enable the Cloud Text-to-Speech API.\n3. Go to APIs & Services → Credentials → Create credentials → API key.\n4. Copy the key and paste it into the API Key field above.',
+      helpXfyun:
+        '1. Sign in to the iFlytek Open Platform (www.xfyun.cn) and complete verification.\n2. Create an app, then open Speech Synthesis → Streaming TTS and claim the free trial package.\n3. Copy APPID, APISecret and APIKey from that service page (all three must belong to the same app).\n4. Fill them into the fields above in console order.',
+      helpVolc:
+        '1. Sign in to the Volcengine console and activate Speech Technology.\n2. Copy the app App ID on the app management page.\n3. Create and copy an API Key on the API Key management page.\n4. Paste them into the App ID and API Key fields above.',
+      test: 'Test connection',
+      testing: 'Testing…',
+      testOk: 'Connection successful',
+      testFailed: 'Connection failed: {msg}',
+      keysNote:
+        'Credentials are stored locally only (in the config file of your user data directory) and are never uploaded. Obtain them from the provider console.',
+      close: 'Close',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'Before using a cloud provider voice, configure credentials and enable it in Settings → Cloud Speech Services',
+      googleFailed: 'Google speech synthesis failed: {msg}',
+      xfyunFailed: 'iFlytek speech synthesis failed: {msg}',
+      xfyunAuthHint:
+        '401 usually means the credentials are invalid: use the APIKey/APISecret of the Speech Synthesis (streaming) service (Console → Speech Synthesis → Streaming), not keys from other services such as Spark LLM',
+      volcFailed: 'Volcengine speech synthesis failed: {msg}'
     },
 
     dialog: {

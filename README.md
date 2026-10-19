@@ -13,7 +13,7 @@ English | [简体中文](./README_CN.md)
 
 You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, `[R]`), assign a different neural voice to each of the four roles, and the app synthesizes every segment, stitches it together with pauses and beeps, optionally mixes in intro / outro / background music, and exports a WAV / MP3 / OGG / FLAC file — optionally together with sample-aligned LRC / SRT subtitles.
 
-> The speech synthesis itself is provided by Microsoft Edge's online speech service. **An internet connection is required.**
+> Speech synthesis defaults to Microsoft Edge's online speech service; an optional offline engine (Piper) and three bring-your-own-credentials cloud providers (Google Cloud Text-to-Speech, iFlytek, Volcengine) are available under **Settings**.
 
 ## Screenshot
 
@@ -26,6 +26,8 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 - **Full Edge TTS voice catalog** — voices are fetched from the service, grouped by language, and shown with localized display names.
 - **Reliable long-form generation** — every segment is retried automatically on network interruption (up to 15 attempts) with an idle-connection watchdog and adaptive backoff; completed segments are cached on disk, so re-running a failed job resumes from the breakpoint. A triple integrity check (stream finalization signal, server-declared end vs. actual duration, and word-boundary text tail-aligned with the source text) guarantees truncated segments from early server finalization never reach the cache.
 - **Offline engine (v2.0.6)** — neural TTS via a bundled [Piper](https://github.com/rhasspy/piper) runtime: download one curated model per language from a 53-language catalog (**Settings → Offline Engine**) and synthesize fully offline. **Online first** (default) falls back to a downloaded model per segment when the network keeps failing, **Online only** disables the engine, and **Offline only** switches the voice lists to downloaded models and never touches the network.
+- **Cloud speech providers (v2.0.8)** — bring your own credentials for **Google Cloud Text-to-Speech**, **iFlytek** and **Volcengine** (**Settings → Cloud Speech Services**, with a one-click connection test). Enabled providers appear as an extra voice group per role; synthesis shares the same caching/subtitle pipeline, and in **Offline only** mode cloud voices are hidden so text never leaves the machine.
+- **Tone tags (v2.0.8)** — six tone markers (`[happy]`, `[sad]`, `[angry]`, `[gentle]`, `[excited]`, `[calm]`) with closing tags shift rate / volume / pitch around the enclosed text. They layer on top of the role settings and work with every engine; the editor wraps the selection or inserts an empty pair for you.
 - **Synchronized subtitles (v2.0.5)** — LRC / SRT subtitles are generated alongside the audio, timestamped sample-aligned to the exported file; LRC roles are prefixed with full-width 【A】 (SRT uses `[A]`), and intro/outro audio automatically shifts the times.
 - **Audio extras (v2.0.0)** — attach local audio files as **intro**, **outro** and **background music**, each with an independent 0–100 % volume control. Background music automatically loops for the duration of the narration.
 - **Instant preview** — preview the whole text or just the selection in a built-in player (extras included), before exporting.
@@ -42,11 +44,13 @@ You write a plain-text script with lightweight markers (`[A]`, `[B]`, `[1000]`, 
 | `[A]` `[B]` `[C]` `[D]` | Switch to role A / B / C / D from this point on           |
 | `[1000]`                | Insert a pause of `1000` milliseconds (any integer works) |
 | `[R]`                   | Insert a 500 ms / 1000 Hz beep                            |
+| `[happy]` … `[/happy]`  | Tone tag — shift rate / volume / pitch of the enclosed text; six tones: `happy`, `sad`, `angry`, `gentle`, `excited`, `calm` |
 
-Text before the first role marker is spoken by role A.
+Text before the first role marker is spoken by role A. An unclosed tone tag stays effective until the end of the text; a nested tone tag replaces the current one.
 
 ```
 [A]Hello, I am voice A. [B]And I am voice B. [1000][C]After a 1-second pause, voice C. [R]
+[A][sad]This part sounds sad... [/sad][excited]and this part sounds excited![/excited]
 ```
 
 ## Usage Guide
@@ -89,8 +93,9 @@ src/
 │   ├── index.ts          App lifecycle, maximized main window
 │   ├── ttsService.ts     Synthesis pipeline: progress, subtitle collection,
 │   │                     extras mixing, encoding
-│   ├── tts/              TTS submodules (provider/ abstraction, voiceCatalog,
-│   │                     segmentCache segment cache, segmentSynthesizer)
+│   ├── tts/              TTS submodules (provider/ abstraction, cloud/ cloud
+│   │                     providers, voiceCatalog, segmentCache segment cache,
+│   │                     segmentSynthesizer, piper/ offline engine)
 │   ├── subtitles.ts      Subtitle generation (LRC/SRT, sample-aligned)
 │   ├── audioProcessor.ts PCM math + ffmpeg decode/encode (24 kHz stereo f32)
 │   ├── ipc.ts            IPC handlers, file dialogs, config import/export
@@ -118,6 +123,7 @@ src/
 - [Electron](https://www.electronjs.org/) 39 + [electron-vite](https://electron-vite.org/) 5
 - [Vue](https://vuejs.org/) 3.5 (Composition API, `<script setup>`) + TypeScript 5.9
 - [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) — Edge TTS client
+- [ws](https://github.com/websockets/ws) (MIT) — WebSocket client for the iFlytek / Volcengine cloud providers
 - [ffmpeg-static](https://www.npmjs.com/package/ffmpeg-static) — bundled ffmpeg binary
 - [Piper](https://github.com/rhasspy/piper) (MIT) — bundled offline TTS engine runtime (phonemization via bundled [eSpeak NG](https://github.com/espeak-ng/espeak-ng), GPL-3.0)
 - [electron-builder](https://www.electron.build/) — packaging (NSIS / DMG / AppImage, snap, deb)
@@ -195,7 +201,7 @@ This project is licensed under the **GNU Affero General Public License v3.0 (AGP
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU AGPL for details.
 
-The application as a whole is released under the AGPL because it links [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) (AGPL-3.0). It also bundles a GPL build of [FFmpeg](https://ffmpeg.org/) through ffmpeg-static (GPL-3.0-or-later); the corresponding FFmpeg source is available at <https://ffmpeg.org/download.html#get-sources>. Other notable components: Electron, Vue.js, electron-store, @electron-toolkit/\*, Vite and electron-vite (MIT), and TypeScript (Apache-2.0). The complete attribution list is shown in the app under **Help → About**.
+The application as a whole is released under the AGPL because it links [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) (AGPL-3.0). It also bundles a GPL build of [FFmpeg](https://ffmpeg.org/) through ffmpeg-static (GPL-3.0-or-later); the corresponding FFmpeg source is available at <https://ffmpeg.org/download.html#get-sources>. Other notable components: Electron, Vue.js, ws, electron-store, @electron-toolkit/\*, Vite and electron-vite (MIT), and TypeScript (Apache-2.0). The complete attribution list is shown in the app under **Help → About**.
 
 ## Copyright
 

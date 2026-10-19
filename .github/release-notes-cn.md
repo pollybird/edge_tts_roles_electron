@@ -1,22 +1,21 @@
-# edge-tts-roles v2.0.7
+# edge-tts-roles v2.0.8
 
 ## 新功能
 
-- **诊断信息面板**：帮助菜单新增「诊断信息」，一键收集版本、平台、引擎路径、缓存占用与已下载模型列表，支持复制到剪贴板，大幅降低报障沟通成本。
-- **EDGE_TTS_DEBUG 统一开关**：新增 `EDGE_TTS_DEBUG=1` 环境变量，启用后输出每段合成来源（edge/piper）与样本数；向后兼容 `EDGE_TTS_DEBUG_CUES=1`（字幕对齐调试）。
+- **云语音服务商**：新增「设置 → 语音服务商」对话框，支持配置 **Google Cloud Text-to-Speech**、**科大讯飞**、**火山引擎（豆包语音）** 三家商用云 TTS（需用户自行申请并填入凭据，一键测试连接，每张卡片附「？」密钥申请说明）。火山采用 App ID + API Key 鉴权（v3 单向流式接口，API Key 为新版控制台签发、替代旧版 Access Token），讯飞走「语音合成（流式版）」WebSocket，Google 走 REST。启用后各服务商音色以独立分组进入发音人下拉，合成管线、磁盘缓存、字幕与附加音频混音与 Edge 音色完全一致；凭据仅存本机，仅离线模式下云音色隐藏。
+- **语气标签**：新增六种语气标记 `[happy]` `[sad]` `[angry]` `[gentle]` `[excited]` `[calm]`（对应闭合标签 `[/tone]`）。语气折算为语速/音量/音调偏移叠加到角色设置，对所有引擎（Edge/Piper/云服务商）通用；可嵌套、未闭合延续到文末。编辑器工具栏新增语气下拉与「插入语气」按钮：有选区两端包裹，无选区插入成对标签并将光标置于其间；语气标签独立配色高亮。
 
-## 改进
+## Bug 修复
 
-- **离线引擎多说话人支持**：Piper 多说话人模型自动追加 `--speaker 0` 参数，目录中 12 个多说话人模型（最多 125 人）可正确合成。
-- **离线引擎合成直通模式**：Piper 合成跳过 WAV 中间层编解码（`buildWav → writeFile → readFile → decodeAudioToPcm` 往返），直接返回原始 PCM 由调用方转换，减少 I/O 开销。
-- **Piper 目录自动化**：新增 `scripts/sync-piper-catalog.mjs` 脚本，从官方 `rhasspy/piper-voices` 仓库拉取 `voices.json` 自动生成 `catalog.ts`，支持 `--dry-run` 与 `--check` 模式，体积与说话人数量实时查询。
-- **Piper 模型下载加固**：支持断点续传（`.part` + Range 请求 + 失败回退）与完整性校验（MD5 优先、魔数回退），进度条实时显示续传状态；删除模型时清理 `.part` 残留。
-- **audioProcessor 模块拆分**：将 272 行单文件拆分为 `audioProcessor/` 目录（`index.ts` 统一导出 + `types.ts` 类型 + `pcmOps.ts` 纯 PCM 运算 + `ffmpegOps.ts` ffmpeg 编解码），对外导入路径不变。
-- **离线策略 E2E 与单元测试覆盖**：新增 3 个 E2E 用例（仅离线无模型提示、仅离线合成报错、仅在线列出 Edge 语音）与 10 个 vitest 集成用例（Piper maxAttempts=1、Edge 重试 15 次、缓存键引擎维度隔离），data-testid 选择器基础设施同步就位。
+- **修复 Edge TTS 全线合成失败**：微软已将合成服务端点迁移至 `api.msedgeservices.com`（旧端点握手返回 403），而依赖库 edge-tts-universal@1.4.0 尚未更新；本版本通过安装期补丁（patch-package）将合成端点切换到新地址，恢复正常合成。上游修复发布后将移除该补丁。
 
 ## 测试
 
-11 个测试文件、157 个用例全部通过（新增 pcmFromS16le 转换、Piper `--speaker` 参数、synthesizeRaw 直通模式、audioProcessor 边界用例）。
+新增 Google（7 例）/讯飞/火山（11 例）Provider 单元测试（协议帧、参数映射、错误传播、握手拒绝、停止检查），textParser 语气解析 9 例、applyTone 韵律映射 8 例，E2E 语气插入 2 例。
+
+## 打包
+
+- Windows 安装包（x64/arm64）现使用自签名证书做 Authenticode 签名（主程序/卸载器/安装器，SHA-256 + 可信时间戳，证书有效期至 2046 年），发布流程构建后自动校验签名。自签名无商业信任链，Windows 可能仍提示「未知发布者」；如需消除提示，可将随仓库分发的 `build/win-codesign.cer` 导入「受信任的根证书颁发机构」与「受信任的发布者」。
 
 ---
 

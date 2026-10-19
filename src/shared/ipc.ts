@@ -35,6 +35,10 @@ export const IpcChannels = {
   piperDownload: 'piper:download',
   piperRemove: 'piper:remove',
   piperDownloadProgress: 'piper:download-progress',
+  // 云服务商（Google/讯飞/火山引擎；音色清单 + 凭据连接测试）
+  cloudVoices: 'cloud:voices',
+  cloudTest: 'cloud:test',
+  openExternal: 'shell:openExternal',
   // send（主 → 渲染，事件推送）
   progress: 'tts:progress',
   finished: 'tts:finished',

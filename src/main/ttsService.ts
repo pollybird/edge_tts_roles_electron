@@ -5,6 +5,8 @@ import { IpcChannels } from '../shared/ipc'
 import { createT } from '../shared/i18n'
 import { parseText } from '../shared/textParser'
 import type { AudioExtras, GenerateRequest, PreviewRequest, VoiceInfo } from '../shared/types'
+import { applyTone } from '../shared/types'
+import { CLOUD_MAX_ATTEMPTS, createCloudSynth, parseCloudVoice } from './tts/cloud'
 import {
   applyGain,
   concatenate,
@@ -120,7 +122,11 @@ export class TtsService {
         segIndex++
 
         if (seg.type === 'text') {
-          const settings = req.roleSettings[seg.role] ?? req.roleSettings.A
+          // 语气标签折算韵律偏移并叠加到角色设置（缓存键含折算后参数，自动隔离）
+          const settings = applyTone(
+            req.roleSettings[seg.role] ?? req.roleSettings.A,
+            seg.tone ?? null
+          )
           if (!settings.voice) {
             this.sendError(win, kind, t('tts.roleNoVoice', { role: seg.role }))
             return
@@ -149,7 +155,7 @@ export class TtsService {
                   role: seg.role,
                   reason,
                   attempt,
-                  max: DEFAULT_MAX_ATTEMPTS
+                  max: maxAttempts
                 })
               )
             },
@@ -161,11 +167,28 @@ export class TtsService {
             }
           }
           // Piper 策略：fallback 在线优先（失败时单段离线兜底）；off 仅在线；
-          // prefer 仅离线——强制本地模型，失败不回退在线，避免违背用户预期把文本外发
+          // prefer 仅离线——强制本地模型，失败不回退在线，避免违背用户预期把文本外发。
+          // 云音色（google:/xfyun:/volc: 前缀）优先级最高：付费 API 重试 3 次即可，
+          // 缓存键带完整音色 id（provider 维度），与 Edge/Piper 天然隔离。
+          const cloudVoice = parseCloudVoice(settings.voice)
+          const maxAttempts = cloudVoice ? CLOUD_MAX_ATTEMPTS : DEFAULT_MAX_ATTEMPTS
           const strategy = getSetting('piperFallback')
           let pcm: StereoPcm | null
           let pcmSource = 'edge'
-          if (strategy === 'prefer') {
+          if (cloudVoice) {
+            const provider = createCloudSynth(cloudVoice.provider, cloudVoice.bareId)
+            if (!provider) {
+              throw new Error(t('cloud.notConfigured'))
+            }
+            pcm = await new SegmentSynthesizer(
+              this.cache,
+              this.state,
+              provider,
+              CLOUD_MAX_ATTEMPTS,
+              settings.voice
+            ).synthesize(seg.text, settings, synthHooks)
+            pcmSource = cloudVoice.provider
+          } else if (strategy === 'prefer') {
             const piper = this.tryCreatePiperSynth(settings.voice)
             if (!piper) {
               throw new Error(t('tts.piperUnavailable', { role: seg.role }))

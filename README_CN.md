@@ -13,7 +13,7 @@
 
 只需在纯文本脚本中使用轻量标记（`[A]`、`[B]`、`[1000]`、`[R]`），为四个角色分别指定不同的神经网络发音人，应用即可逐段合成语音，拼接停顿与蜂鸣声，并可选择性混入前奏 / 尾声 / 背景音乐，最终导出 WAV / MP3 / OGG / FLAC 音频文件，并可同步导出与音频样本级对齐的 LRC / SRT 字幕。
 
-> 语音合成本身由微软 Edge 在线语音服务提供，**使用时需要联网**。
+> 语音合成默认使用微软 Edge 在线语音服务；另可在「设置」中启用可选的离线引擎（Piper）与三家自带凭据的云服务商（Google Cloud Text-to-Speech、科大讯飞、火山引擎）。
 
 ## 产品截图
 
@@ -26,6 +26,8 @@
 - **完整 Edge TTS 音色库**——音色列表从服务端获取，按语言分组并显示本地化名称。
 - **长文本可靠生成**——网络中断时每个片段自动重试（最多 15 次），内置连接空闲看门狗与自适应退避；已完成片段写入磁盘缓存，失败后重新生成可从断点续跑。合成完整性三重校验（流收尾信号、宣告终点与实际时长交叉验证、逐词文本与源文本尾部对齐）确保服务端提前收尾的截断片段不会被落盘缓存。
 - **离线引擎（v2.0.6）**——通过内置的 [Piper](https://github.com/rhasspy/piper) 运行时进行神经网络语音合成：从 53 种语言的精选模型目录（**设置 → 离线引擎设置**）按需下载模型即可完全离线合成。**在线优先**（默认）在网络持续失败时逐段回退到已下载的本地模型，**仅在线**彻底停用离线引擎，**仅离线**则发音人列表切换为已下载模型且全程不访问网络。
+- **云语音服务商（v2.0.8）**——自带凭据接入 **Google Cloud Text-to-Speech**、**科大讯飞**与**火山引擎**（**设置 → 语音服务商**，支持一键连接测试）。启用的服务商音色以独立分组进入发音人下拉；合成共享同一缓存/字幕管线，**仅离线**模式下云音色隐藏，文本不出本机。
+- **语气标签（v2.0.8）**——六种语气标记（`[happy]`、`[sad]`、`[angry]`、`[gentle]`、`[excited]`、`[calm]`）配合闭合标签，对所围文本叠加语速/音量/音调偏移；偏移叠加在角色设置之上，对所有引擎通用；编辑器可对选中文本两端包裹或直接插入成对标签。
 - **字幕同步生成（v2.0.5）**——导出音频的同时生成 LRC / SRT 字幕，时间戳与输出音频样本级对齐；LRC 角色以全角【A】前缀标注（SRT 为 `[A]` 前缀），前奏 / 尾声自动偏移。
 - **附加音频（v2.0.0）**——可选择本地音频文件作为**前奏**、**尾声**和**背景音乐**，每路支持独立的 0–100% 音量调节；背景音乐自动循环铺满整段语音。
 - **即时试听**——导出前可在内置播放器中试听全部文本或仅试听选中文本（试听同样包含附加音频混音）。
@@ -42,11 +44,13 @@
 | `[A]` `[B]` `[C]` `[D]` | 从此处起切换为角色 A / B / C / D       |
 | `[1000]`                | 插入 `1000` 毫秒的停顿（任意整数均可） |
 | `[R]`                   | 插入一段 500ms / 1000Hz 的蜂鸣声       |
+| `[happy]` … `[/happy]`  | 语气标签——对所围文本叠加语速/音量/音调偏移；六种语气：`happy`、`sad`、`angry`、`gentle`、`excited`、`calm` |
 
-首个角色标记之前的文本默认由角色 A 朗读。
+首个角色标记之前的文本默认由角色 A 朗读。未闭合的语气标签持续生效到文末；嵌套的语气标签直接切换为内层语气。
 
 ```
 [A]你好，我是角色 A。[B]我是角色 B。[1000][C]停顿 1 秒后，角色 C 出场。[R]
+[A][sad]这一段读起来很悲伤……[/sad][excited]这一段充满兴奋！[/excited]
 ```
 
 ## 使用指南
@@ -88,8 +92,9 @@ src/
 ├── main/                 Electron 主进程
 │   ├── index.ts          应用生命周期、默认最大化主窗口
 │   ├── ttsService.ts     合成管线：进度、字幕采集、附加音频混音、编码
-│   ├── tts/              TTS 职责子模块（provider/ 抽象层、voiceCatalog、
-│   │                     segmentCache 片段缓存、segmentSynthesizer 流式合成）
+│   ├── tts/              TTS 职责子模块（provider/ 抽象层、cloud/ 云服务商、
+│   │                     piper/ 离线引擎、voiceCatalog、segmentCache 片段缓存、
+│   │                     segmentSynthesizer 流式合成）
 │   ├── subtitles.ts      字幕生成（LRC/SRT，样本级对齐）
 │   ├── audioProcessor.ts PCM 运算 + ffmpeg 编解码（24kHz 双声道 f32）
 │   ├── ipc.ts            IPC 处理、文件对话框、配置导入导出
@@ -117,6 +122,7 @@ src/
 - [Electron](https://www.electronjs.org/) 39 + [electron-vite](https://electron-vite.org/) 5
 - [Vue](https://vuejs.org/) 3.5（组合式 API，`<script setup>`）+ TypeScript 5.9
 - [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal)——Edge TTS 客户端
+- [ws](https://github.com/websockets/ws)（MIT）——讯飞/火山云服务商的 WebSocket 客户端
 - [ffmpeg-static](https://www.npmjs.com/package/ffmpeg-static)——内置 ffmpeg 二进制
 - [Piper](https://github.com/rhasspy/piper)（MIT）——内置离线 TTS 引擎运行时（经内置的 [eSpeak NG](https://github.com/espeak-ng/espeak-ng) 完成音素化，GPL-3.0）
 - [electron-builder](https://www.electron.build/)——打包（NSIS / DMG / AppImage、snap、deb）
@@ -194,7 +200,7 @@ npm run build:all        # 依次执行 linux + win + mac:zip（CI 发版使用�
 
 本程序按"现状"分发，不提供任何明示或暗示的担保（包括但不限于适销性、特定用途适用性的默示担保），详见 GNU AGPL 协议条款。
 
-由于本应用链接了使用 AGPL-3.0 协议的 [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal)，应用整体按 AGPL 发布；同时通过 ffmpeg-static 内置了 GPL 构建版 [FFmpeg](https://ffmpeg.org/)（GPL-3.0-or-later），其对应源码可在 <https://ffmpeg.org/download.html#get-sources> 获取。其他主要组件：Electron、Vue.js、electron-store、@electron-toolkit/\*、Vite、electron-vite（均为 MIT）以及 TypeScript（Apache-2.0）。完整署名清单可在应用内「帮助 → 关于」中查看。
+由于本应用链接了使用 AGPL-3.0 协议的 [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal)，应用整体按 AGPL 发布；同时通过 ffmpeg-static 内置了 GPL 构建版 [FFmpeg](https://ffmpeg.org/)（GPL-3.0-or-later），其对应源码可在 <https://ffmpeg.org/download.html#get-sources> 获取。其他主要组件：Electron、Vue.js、ws、electron-store、@electron-toolkit/\*、Vite、electron-vite（均为 MIT）以及 TypeScript（Apache-2.0）。完整署名清单可在应用内「帮助 → 关于」中查看。
 
 ## 版权信息
 

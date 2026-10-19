@@ -41,18 +41,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Windows NSIS 打包在 Linux runner 上需要 wine（rcedit / NSIS 辅助工具为 Windows 可执行文件）
+      # Windows NSIS 打包在 Linux runner 上需要 wine（rcedit / NSIS 辅助工具为 Windows 可执行文件）；
+      # osslsigncode 供 Authenticode 签名（USE_SYSTEM_SIGNCODE=true，见下方 Build 步骤与 electron-builder.yml）
       - name: Install wine
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wine wine32 wine64
+          sudo apt-get install -y --no-install-recommends wine wine32 wine64 osslsigncode
 
       # 单台 Linux runner 完成三平台双架构打包（与本地发版流程一致）：
       # Linux AppImage/deb/rpm(x64+arm64)、Windows NSIS(x64+arm64, wine)、macOS zip(x64+arm64)
       # prepare:ffmpeg 由各 build:* 的 pre 钩子自动执行
       - name: Build all platforms
         run: npm run build:all
+        env:
+          # electron-builder 内置 osslsigncode 依赖 libssl1.1（ubuntu 24.04 已移除），改用系统 apt 版本签名
+          USE_SYSTEM_SIGNCODE: 'true'
+
+      # 校验 Windows 安装包已带自签名（签名配置被意外跳过时让发布失败，而非静默发出未签名产物）
+      - name: Verify Windows code signatures
+        run: |
+          for f in dist/*-setup.exe; do
+            osslsigncode verify -CAfile build/win-codesign.cer "$f" > /dev/null 2>&1 \
+              || { echo "::error::$f signature verification failed"; exit 1; }
+            echo "signature OK: $f"
+          done
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

@@ -25,6 +25,13 @@ const jaJP: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS 複数ボイス音声ジェネレーター',
+      proxyMode: 'ネットワークプロキシ',
+      proxyDirect: 'インターネットに直接接続',
+      proxySystem: 'システムプロキシを使用',
+      proxyCustom: 'カスタムプロキシサーバー',
+      proxyProtocol: 'プロトコル',
+      proxyHost: 'ホスト',
+      proxyPort: 'ポート',
       copyright: '© 2026 泰州姜堰鍾毓信息技術有限公司'
     },
 
@@ -51,6 +58,7 @@ const jaJP: LocalePack = {
       website: '公式サイト(&W)',
       about: 'バージョン情報(&A)',
       settings: '設定(&S)',
+      cloudServices: '音声サービス(&V)',
       offlineEngine: 'オフラインエンジン設定(&O)',
       diagnostics: '診断情報(&D)'
     },
@@ -78,6 +86,8 @@ const jaJP: LocalePack = {
       pauseMs: '時間(ms):',
       insertBeep: '🔊 ビープ音[R]を挿入',
       quickPause: 'クイック一時停止:',
+      tone: 'トーン:',
+      insertTone: 'トーンを挿入',
       secondsShort: '{n}秒',
       openText: '📂 テキストを開く',
       saveText: '💾 テキストを保存',
@@ -179,6 +189,14 @@ const jaJP: LocalePack = {
       dialogLater: '後で通知',
       dialogNever: 'このバージョンは今後表示しない'
     },
+    tones: {
+      happy: 'うれしい',
+      sad: '悲しい',
+      angry: '怒り',
+      gentle: 'やさしい',
+      excited: 'ワクワク',
+      calm: '落ち着き'
+    },
     subtitle: {
       label: '字幕',
       none: '生成しない',
@@ -252,6 +270,40 @@ const jaJP: LocalePack = {
       downloadInProgress: 'このモデルはダウンロード中です',
       filterPlaceholder: '言語やモデルを絞り込み…',
       close: '閉じる'
+    },
+
+    cloud: {
+      title: '音声サービス',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: '科大訊飛',
+      volc: '火山エンジン',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: '表示/非表示を切り替え',
+      helpTitle: 'API キーの取得方法',
+      openConsole: 'コンソールを開く',
+      helpGoogle:
+        '1. Google Cloud Console を開き、プロジェクトを作成または選択します。\n2. Cloud Text-to-Speech API を有効にします。\n3. [API とサービス] → [認証情報] → [認証情報を作成] → [API キー] に進みます。\n4. キーをコピーして上の API Key 欄に貼り付けます。',
+      helpXfyun:
+        '1. iFLYTEK オープンプラットフォーム（www.xfyun.cn）にサインインし、本人確認を完了します。\n2. アプリを作成し、「音声合成（ストリーミング版）」で無料トライアルを受け取ります。\n3. サービスページから APPID・APISecret・APIKey をコピーします（3 つとも同じアプリのものが必要です）。\n4. 上の入力欄にコンソールの順序どおりに入力します。',
+      helpVolc:
+        '1. Volcengine コンソールにサインインし、音声テクノロジーを有効化します。\n2. アプリ管理ページでアプリの APP ID をコピーします。\n3. 「API Key 管理」で API Key を作成してコピーします。\n4. 上の APP ID と API Key 欄にそれぞれ貼り付けます。',
+      test: '接続テスト',
+      testing: 'テスト中…',
+      testOk: '接続に成功しました',
+      testFailed: '接続に失敗しました：{msg}',
+      keysNote:
+        '認証情報はローカル（ユーザーデータディレクトリの設定ファイル）にのみ保存され、アップロードされません。各プロバイダーのコンソールから取得してください。',
+      close: '閉じる',
+      groupLabel: '--- {label}（{n}） ---',
+      notConfigured:
+        'クラウド音声サービスの音色を使うには、まず「設定 → 音声サービス」で認証情報を設定して有効にしてください',
+      googleFailed: 'Google 音声合成に失敗しました：{msg}',
+      xfyunFailed: '訊飛（iFlytek）音声合成に失敗しました：{msg}',
+      xfyunAuthHint:
+        '401 は通常、資格情報が無効であることを意味します：「音声合成（ストリーミング版）」サービスの APIKey/APISecret を使用してください（コンソール → 音声合成 → ストリーミング版）。Spark LLM など他のサービスのキーは使えません',
+      volcFailed: '火山エンジン音声合成に失敗しました：{msg}'
     },
 
     dialog: {

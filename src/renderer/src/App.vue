@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import TextEditor from './components/TextEditor.vue'
 import RoleSettings from './components/RoleSettings.vue'
 import AudioExtrasPanel from './components/AudioExtrasPanel.vue'
+import CloudProvidersDialog from './components/CloudProvidersDialog.vue'
 import OfflineEngineDialog from './components/OfflineEngineDialog.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import PreviewDialog from './components/PreviewDialog.vue'
@@ -11,6 +12,7 @@ import UpdateDialog from './components/UpdateDialog.vue'
 import type {
   AudioExtras,
   AudioFormat,
+  CloudVoicesPayload,
   PiperFallback,
   PiperVoiceStatus,
   RoleId,
@@ -70,6 +72,27 @@ async function refreshOfflineState(): Promise<void> {
 function handleOfflineDialogClose(): void {
   offlineEngineVisible.value = false
   void refreshOfflineState()
+}
+
+/** 云服务商设置对话框：主菜单「设置→语音服务商」触发（false = 隐藏） */
+const cloudDialogVisible = ref(false)
+
+/** 各云服务商可用音色（未启用/未配置的服务商为 null，下拉不显示该分组） */
+const cloudVoices = ref<CloudVoicesPayload>({ google: null, xfyun: null, volc: null })
+
+/** 拉取云音色清单（启动与云服务商对话框关闭后调用；失败静默为全 null） */
+async function refreshCloudVoices(): Promise<void> {
+  try {
+    cloudVoices.value = await window.api.cloudVoices()
+  } catch {
+    cloudVoices.value = { google: null, xfyun: null, volc: null }
+  }
+}
+
+/** 云服务商对话框关闭：凭据/启用状态可能已变更，刷新云音色分组 */
+function handleCloudDialogClose(): void {
+  cloudDialogVisible.value = false
+  void refreshCloudVoices()
 }
 
 async function handleAcceptAgreement(doNotShowAgain: boolean): Promise<void> {
@@ -364,6 +387,9 @@ onMounted(() => {
       case 'replace':
         void editorRef.value?.openFindBar(true)
         break
+      case 'cloud-services':
+        cloudDialogVisible.value = true
+        break
       case 'offline-engine-settings':
         offlineEngineVisible.value = true
         break
@@ -391,6 +417,9 @@ onMounted(() => {
 
     // 离线引擎状态：决定发音人下拉在仅离线模式下的选项来源
     await refreshOfflineState()
+
+    // 云服务商音色清单：决定发音人下拉的云音色分组
+    await refreshCloudVoices()
   })()
 })
 </script>
@@ -411,6 +440,7 @@ onMounted(() => {
           :voices="voices"
           :offline-mode="piperStrategy === 'prefer'"
           :offline-voices="piperVoices"
+          :cloud-voices="cloudVoices"
           @save-config="handleSaveConfig"
           @load-config="handleLoadConfig"
           @update-role="handleUpdateRole"
@@ -445,6 +475,8 @@ onMounted(() => {
       @later="handleUpdateLater"
       @never="handleUpdateNever"
     />
+    <!-- 语音服务商设置：主菜单「设置→语音服务商」触发；关闭时刷新云音色分组 -->
+    <CloudProvidersDialog v-if="cloudDialogVisible" @close="handleCloudDialogClose" />
     <!-- 离线引擎设置：主菜单「设置→离线引擎设置」触发；关闭时刷新策略与模型清单 -->
     <OfflineEngineDialog v-if="offlineEngineVisible" @close="handleOfflineDialogClose" />
   </div>

@@ -215,6 +215,10 @@ mark.hl-beep {
   color: #008000;
 }
 
+mark.hl-tone {
+  color: #9c27b0;
+}
+
 /* ===== 工具栏 ===== */
 .toolbar {
   border-top: 1px solid var(--border-color);
@@ -252,6 +256,13 @@ mark.hl-beep {
 
 .pause-input input {
   width: 80px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.tone-select {
   padding: 3px 6px;
   border: 1px solid var(--border-color);
   border-radius: 4px;

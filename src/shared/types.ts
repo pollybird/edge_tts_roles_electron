@@ -17,9 +17,49 @@ export interface VoiceSettings {
 
 export type RoleVoiceSettings = Record<RoleId, VoiceSettings>
 
+/** 语气标签集合（语法 [tone]...[/tone]，作用范围到闭合标签或文末） */
+export type ToneId = 'happy' | 'sad' | 'angry' | 'gentle' | 'excited' | 'calm'
+
+export const TONE_IDS: readonly ToneId[] = ['happy', 'sad', 'angry', 'gentle', 'excited', 'calm']
+
+/** 语气 → 韵律偏移（叠加到角色设置上，全引擎通用映射；缓存键含折算后参数，天然隔离） */
+export interface ProsodyOffset {
+  rate: number
+  volume: number
+  pitch: number
+}
+
+export const TONE_PROSODY: Record<ToneId, ProsodyOffset> = {
+  happy: { rate: 10, volume: 6, pitch: 20 },
+  sad: { rate: -15, volume: -6, pitch: -20 },
+  angry: { rate: 15, volume: 12, pitch: 8 },
+  gentle: { rate: -10, volume: -4, pitch: 6 },
+  excited: { rate: 25, volume: 10, pitch: 15 },
+  calm: { rate: -20, volume: -2, pitch: -5 }
+}
+
+/** clamp 范围与界面滑块一致（rate/volume/pitch 均为 -100 ~ +100） */
+const PROSODY_LIMIT = 100
+
+/**
+ * 把语气偏移叠加到角色设置上，返回新对象（不修改入参）；
+ * tone 为 null 时原样返回。偏移结果 clamp 到滑块允许范围。
+ */
+export function applyTone(base: VoiceSettings, tone: ToneId | null): VoiceSettings {
+  if (!tone) return base
+  const offset = TONE_PROSODY[tone]
+  const clamp = (v: number): number => Math.max(-PROSODY_LIMIT, Math.min(PROSODY_LIMIT, v))
+  return {
+    ...base,
+    rate: clamp(base.rate + offset.rate),
+    volume: clamp(base.volume + offset.volume),
+    pitch: clamp(base.pitch + offset.pitch)
+  }
+}
+
 /** 文本片段：parseText 的解析结果 */
 export type Segment =
-  | { type: 'text'; text: string; role: RoleId }
+  | { type: 'text'; text: string; role: RoleId; tone?: ToneId }
   | { type: 'pause'; durationMs: number }
   | { type: 'beep' }
 
@@ -153,10 +193,109 @@ export interface RendererApi {
   piperRemove(id: string): Promise<void>
   /** 订阅 Piper 模型下载进度，返回取消订阅函数 */
   onPiperDownloadProgress(cb: (p: PiperDownloadProgress) => void): () => void
+  /** 云服务商可用音色清单（未启用/未配置的服务商为 null）；保存凭据后重新调用刷新 */
+  cloudVoices(): Promise<CloudVoicesPayload>
+  /** 打开外部链接（主进程白名单校验后经 shell.openExternal） */
+  openExternal(url: string): Promise<void>
+  /** 云服务商连接测试：以首个目录音色做一次微型合成，丢弃音频，返回成功/失败原因 */
+  cloudTest(provider: CloudProviderId): Promise<CloudTestResult>
 }
 
 /** Piper 策略：fallback 在线优先（默认，失败时离线兜底）/ off 仅在线 / prefer 仅离线（发音人限已下载的离线模型） */
 export type PiperFallback = 'off' | 'fallback' | 'prefer'
+
+/** 云服务商标识（音色 id 前缀：google:<name> / xfyun:<vcn> / volc:<voiceType>） */
+export type CloudProviderId = 'google' | 'xfyun' | 'volc'
+
+export const CLOUD_PROVIDER_IDS: readonly CloudProviderId[] = ['google', 'xfyun', 'volc']
+
+/** 云音色条目（发音人下拉展示用）；voiceName/langName 为原生名（endonym），不随界面语言变化 */
+export interface CloudVoiceInfo {
+  /** 服务商前缀后的裸音色 id（google name / 讯飞 vcn / 火山 voice_type） */
+  id: string
+  /** 音色显示名（原生名） */
+  voiceName: string
+  /** 语言/区域显示名（原生名或 locale 码） */
+  langName: string
+  gender?: 'female' | 'male'
+}
+
+/** Google Cloud Text-to-Speech 凭据 */
+export interface GoogleProviderSettings {
+  enabled: boolean
+  apiKey: string
+}
+
+/** 科大讯飞在线语音合成凭据（appId + apiKey + apiSecret 三元组） */
+export interface XfyunProviderSettings {
+  enabled: boolean
+  appId: string
+  apiKey: string
+  apiSecret: string
+}
+
+/** 火山引擎 TTS 凭据（App ID 标识应用；API Key 为新版控制台签发，替代旧版 Access Token） */
+export interface VolcProviderSettings {
+  enabled: boolean
+  appId: string
+  apiKey: string
+}
+
+/** 三个云服务商的凭据配置（设置→语音服务 对话框维护；明文存于 userData/config.json） */
+export interface CloudProvidersSettings {
+  google: GoogleProviderSettings
+  xfyun: XfyunProviderSettings
+  volc: VolcProviderSettings
+}
+
+/** 云服务商网络代理模式：直连 / 跟随系统代理 / 自定义代理服务器 */
+export type CloudProxyMode = 'direct' | 'system' | 'custom'
+
+/** 自定义代理协议：SOCKS5 或 HTTP */
+export type CloudProxyProtocol = 'socks5' | 'http'
+
+/** 云服务商网络代理设置（影响 Google/讯飞/火山三家的合成与音色清单请求） */
+export interface CloudProxySettings {
+  mode: CloudProxyMode
+  /** mode='custom' 时的代理协议 */
+  protocol: CloudProxyProtocol
+  /** mode='custom' 时的代理主机（IP 或域名） */
+  host: string
+  /** mode='custom' 时的代理端口 */
+  port: number
+}
+
+export const DEFAULT_CLOUD_PROXY: CloudProxySettings = {
+  mode: 'direct',
+  protocol: 'socks5',
+  host: '',
+  port: 1080
+}
+
+export function createDefaultCloudProviders(): CloudProvidersSettings {
+  return {
+    google: { enabled: false, apiKey: '' },
+    xfyun: { enabled: false, appId: '', apiKey: '', apiSecret: '' },
+    volc: { enabled: false, appId: '', apiKey: '' }
+  }
+}
+
+/** cloudVoices IPC 返回：某服务商未启用/未配置时为 null（下拉不显示该分组） */
+export interface CloudVoicesPayload {
+  google: CloudVoiceInfo[] | null
+  xfyun: CloudVoiceInfo[] | null
+  volc: CloudVoiceInfo[] | null
+}
+
+/** cloudTest IPC 返回：真实微型合成验证凭据可用性 */
+export interface CloudTestResult {
+  ok: boolean
+  /** 失败时的错误描述（已本地化） */
+  error?: string
+}
+
+/** cloudTest IPC 请求参数 */
+export type CloudTestRequest = { provider: CloudProviderId }
 
 /** Piper 离线引擎模型清单条目（「设置→离线引擎」对话框展示用） */
 export interface PiperVoiceStatus {

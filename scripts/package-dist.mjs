@@ -21,7 +21,7 @@
 
 import { spawnSync } from 'child_process'
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { join, isAbsolute } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
 import yaml from 'js-yaml'
@@ -143,6 +143,13 @@ try {
     } else if (!process.env.CI) {
       // 本地（大陆网络）下载 electron dist 走镜像；CI 直连下载（v2.0.5 已验证）
       process.env.ELECTRON_MIRROR ??= 'https://npmmirror.com/mirrors/electron/'
+    }
+    // signtoolOptions.certificateFile 统一按项目根解析为绝对路径：
+    // electron-builder 原样透传该路径给 osslsigncode/证书读取，不基于配置目录解析，
+    // 归一后消除对进程 CWD 的隐式依赖（临时配置目录并非项目根）
+    const certFile = config.win?.signtoolOptions?.certificateFile
+    if (typeof certFile === 'string' && certFile.length > 0 && !isAbsolute(certFile)) {
+      config.win.signtoolOptions.certificateFile = join(ROOT, certFile)
     }
     const configPath = join(tmpDir, `electron-builder-${platform}-${arch}-${Date.now()}.json`)
     writeFileSync(configPath, JSON.stringify(config))

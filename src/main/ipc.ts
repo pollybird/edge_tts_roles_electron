@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron'
+import { app, dialog, ipcMain, shell } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
@@ -7,6 +7,9 @@ import { createT } from '../shared/i18n'
 import { ROLE_IDS } from '../shared/types'
 import type {
   AudioFormat,
+  CloudProviderId,
+  CloudTestResult,
+  CloudVoicesPayload,
   GenerateRequest,
   PiperDownloadProgress,
   PiperListPayload,
@@ -14,9 +17,11 @@ import type {
   RoleId,
   RoleVoiceSettings
 } from '../shared/types'
+import { CLOUD_PROVIDER_IDS } from '../shared/types'
 import { getSetting, setSetting } from './settings'
 import type { SettingsSchema } from './settings'
 import { ttsService } from './ttsService'
+import { getCloudVoices, testCloudProvider } from './tts/cloud'
 import { PIPER_VOICES } from './tts/piper/models'
 import { locatePiperBinary } from './tts/piper/locate'
 
@@ -149,6 +154,42 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
       throw new Error(t('dialog.invalidJson'))
     }
     return normalizeRoleSettings(parsed)
+  })
+
+  // ── 云服务商：音色清单 / 凭据连接测试 ────────────────────────────────────
+  ipcMain.handle(IpcChannels.cloudVoices, async (): Promise<CloudVoicesPayload> => {
+    return getCloudVoices()
+  })
+
+  ipcMain.handle(
+    IpcChannels.cloudTest,
+    async (_e, req: { provider: CloudProviderId }): Promise<CloudTestResult> => {
+      const provider = req?.provider
+      if (!CLOUD_PROVIDER_IDS.includes(provider)) {
+        throw new Error(`unknown cloud provider: ${String(provider)}`)
+      }
+      return testCloudProvider(provider)
+    }
+  )
+
+  // 打开外部链接：仅允许白名单内 https 控制台地址（防任意 URL 注入 shell.openExternal）
+  const EXTERNAL_URL_ALLOWLIST = new Set([
+    'console.cloud.google.com',
+    'console.xfyun.cn',
+    'www.xfyun.cn',
+    'console.volcengine.com'
+  ])
+  ipcMain.handle(IpcChannels.openExternal, (_e, rawUrl: string): Promise<void> => {
+    let url: URL
+    try {
+      url = new URL(rawUrl)
+    } catch {
+      throw new Error(`invalid url: ${String(rawUrl)}`)
+    }
+    if (url.protocol !== 'https:' || !EXTERNAL_URL_ALLOWLIST.has(url.hostname)) {
+      throw new Error(`url not allowed: ${rawUrl}`)
+    }
+    return shell.openExternal(url.toString())
   })
 
   // ── Piper 离线引擎：模型清单 / 下载 / 删除 ──────────────────────────────

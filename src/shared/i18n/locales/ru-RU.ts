@@ -25,6 +25,13 @@ const ruRU: LocalePack = {
   messages: {
     app: {
       title: 'Генератор многоголосого аудио Edge-TTS',
+      proxyMode: 'Сетевой прокси',
+      proxyDirect: 'Прямое подключение к Интернету',
+      proxySystem: 'Использовать системный прокси',
+      proxyCustom: 'Свой прокси-сервер',
+      proxyProtocol: 'Протокол',
+      proxyHost: 'Хост',
+      proxyPort: 'Порт',
       copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -51,6 +58,7 @@ const ruRU: LocalePack = {
       website: '&Веб-сайт',
       about: 'О &программе',
       settings: '&Настройки',
+      cloudServices: '&Облачные речевые службы...',
       offlineEngine: 'Офлайн-движок...',
       diagnostics: '&Диагностика'
     },
@@ -79,6 +87,8 @@ const ruRU: LocalePack = {
       pauseMs: 'Время (мс):',
       insertBeep: '🔊 Вставить сигнал [R]',
       quickPause: 'Быстрые паузы:',
+      tone: 'Тон:',
+      insertTone: 'Вставить тон',
       secondsShort: '{n} с',
       openText: '📂 Открыть текст',
       saveText: '💾 Сохранить текст',
@@ -177,6 +187,14 @@ const ruRU: LocalePack = {
       dialogLater: 'Напомнить позже',
       dialogNever: 'Больше не напоминать об этой версии'
     },
+    tones: {
+      happy: 'Радостный',
+      sad: 'Грустный',
+      angry: 'Сердитый',
+      gentle: 'Мягкий',
+      excited: 'Взволнованный',
+      calm: 'Спокойный'
+    },
     subtitle: {
       label: 'Субтитры',
       none: 'Нет',
@@ -246,6 +264,40 @@ const ruRU: LocalePack = {
       downloadInProgress: 'Эта модель уже загружается',
       filterPlaceholder: 'Фильтр по языкам и голосам...',
       close: 'Закрыть'
+    },
+
+    cloud: {
+      title: 'Облачные речевые службы',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'Показать/скрыть текст',
+      helpTitle: 'Как получить API-ключи',
+      openConsole: 'Открыть консоль',
+      helpGoogle:
+        '1. Откройте Google Cloud Console и создайте или выберите проект.\n2. Включите Cloud Text-to-Speech API.\n3. Перейдите в «API и сервисы» → «Учётные данные» → «Создать учётные данные» → «Ключ API».\n4. Скопируйте ключ и вставьте его в поле API Key выше.',
+      helpXfyun:
+        '1. Войдите на открытую платформу iFlytek (www.xfyun.cn) и пройдите проверку.\n2. Создайте приложение, затем откройте «Синтез речи → Потоковая версия» и получите бесплатный пробный пакет.\n3. Скопируйте APPID, APISecret и APIKey со страницы сервиса (все три должны относиться к одному приложению).\n4. Введите их в поля выше в порядке консоли.',
+      helpVolc:
+        '1. Войдите в консоль Volcengine и подключите сервис речевых технологий.\n2. Скопируйте App ID приложения на странице управления приложениями.\n3. Создайте и скопируйте API-ключ на странице управления API-ключами.\n4. Вставьте их в поля App ID и API Key выше.',
+      test: 'Проверить соединение',
+      testing: 'Проверка…',
+      testOk: 'Соединение установлено',
+      testFailed: 'Ошибка соединения: {msg}',
+      keysNote:
+        'Учётные данные хранятся только локально (в файле конфигурации каталога пользовательских данных) и никогда не отправляются в сеть. Получите их в консоли соответствующего провайдера.',
+      close: 'Закрыть',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'Прежде чем использовать голос облачного провайдера, настройте учётные данные в Настройки → Облачные речевые службы и включите его',
+      googleFailed: 'Ошибка синтеза речи Google: {msg}',
+      xfyunFailed: 'Ошибка синтеза речи iFlytek: {msg}',
+      xfyunAuthHint:
+        '401 обычно означает, что учётные данные недействительны: используйте APIKey/APISecret службы синтеза речи (потоковой версии) (Консоль → Синтез речи → Потоковая версия), а не ключи других служб, например Spark LLM',
+      volcFailed: 'Ошибка синтеза речи Volcengine: {msg}'
     },
 
     dialog: {

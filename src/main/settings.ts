@@ -1,6 +1,12 @@
 import Store from 'electron-store'
-import type { AudioFormat, PiperFallback, RoleVoiceSettings } from '../shared/types'
-import { ROLE_IDS } from '../shared/types'
+import type {
+  AudioFormat,
+  CloudProvidersSettings,
+  CloudProxySettings,
+  PiperFallback,
+  RoleVoiceSettings
+} from '../shared/types'
+import { ROLE_IDS, createDefaultCloudProviders, DEFAULT_CLOUD_PROXY } from '../shared/types'
 
 export type { PiperFallback }
 
@@ -16,6 +22,9 @@ export interface SettingsSchema {
   updateSkippedVersion: string
   /** Piper 离线兜底策略（默认 fallback：单段在线重试耗尽后自动离线合成） */
   piperFallback: PiperFallback
+  /** 云服务商凭据（Google/讯飞/火山引擎；用户自行配置，明文存储于 userData/config.json） */
+  cloudProviders: CloudProvidersSettings
+  cloudProxy: CloudProxySettings
 }
 
 const defaultRoleSettings = (): RoleVoiceSettings =>
@@ -32,7 +41,9 @@ const store = new Store<SettingsSchema>({
     locale: '',
     agreementAccepted: false,
     updateSkippedVersion: '',
-    piperFallback: 'fallback'
+    piperFallback: 'fallback',
+    cloudProviders: createDefaultCloudProviders(),
+    cloudProxy: DEFAULT_CLOUD_PROXY
   }
 })
 

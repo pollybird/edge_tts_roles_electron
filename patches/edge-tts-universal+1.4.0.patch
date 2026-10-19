@@ -1,0 +1,104 @@
+diff --git a/node_modules/edge-tts-universal/dist/browser.cjs b/node_modules/edge-tts-universal/dist/browser.cjs
+index 5cd7b02..f5a654f 100644
+--- a/node_modules/edge-tts-universal/dist/browser.cjs
++++ b/node_modules/edge-tts-universal/dist/browser.cjs
+@@ -3,7 +3,7 @@
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/browser.js b/node_modules/edge-tts-universal/dist/browser.js
+index 836442a..eee7f87 100644
+--- a/node_modules/edge-tts-universal/dist/browser.js
++++ b/node_modules/edge-tts-universal/dist/browser.js
+@@ -1,7 +1,7 @@
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/index.cjs b/node_modules/edge-tts-universal/dist/index.cjs
+index 2b01b22..7fb2116 100644
+--- a/node_modules/edge-tts-universal/dist/index.cjs
++++ b/node_modules/edge-tts-universal/dist/index.cjs
+@@ -227,7 +227,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/index.js b/node_modules/edge-tts-universal/dist/index.js
+index 57650af..2f81aaa 100644
+--- a/node_modules/edge-tts-universal/dist/index.js
++++ b/node_modules/edge-tts-universal/dist/index.js
+@@ -219,7 +219,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/isomorphic.cjs b/node_modules/edge-tts-universal/dist/isomorphic.cjs
+index 770dae3..123b95d 100644
+--- a/node_modules/edge-tts-universal/dist/isomorphic.cjs
++++ b/node_modules/edge-tts-universal/dist/isomorphic.cjs
+@@ -173,7 +173,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/isomorphic.js b/node_modules/edge-tts-universal/dist/isomorphic.js
+index 2821590..d1fdc8f 100644
+--- a/node_modules/edge-tts-universal/dist/isomorphic.js
++++ b/node_modules/edge-tts-universal/dist/isomorphic.js
+@@ -171,7 +171,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/webworker.cjs b/node_modules/edge-tts-universal/dist/webworker.cjs
+index 35aa489..8425de7 100644
+--- a/node_modules/edge-tts-universal/dist/webworker.cjs
++++ b/node_modules/edge-tts-universal/dist/webworker.cjs
+@@ -173,7 +173,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";
+diff --git a/node_modules/edge-tts-universal/dist/webworker.js b/node_modules/edge-tts-universal/dist/webworker.js
+index 339b07d..d214c1c 100644
+--- a/node_modules/edge-tts-universal/dist/webworker.js
++++ b/node_modules/edge-tts-universal/dist/webworker.js
+@@ -171,7 +171,7 @@ var TTSConfig = class _TTSConfig {
+ // src/constants.ts
+ var BASE_URL = "speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+ var TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+-var WSS_URL = `wss://${BASE_URL}/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}`;
++var WSS_URL = "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=" + TRUSTED_CLIENT_TOKEN;
+ var VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoken=${TRUSTED_CLIENT_TOKEN}`;
+ var DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
+ var CHROMIUM_FULL_VERSION = "143.0.3650.75";

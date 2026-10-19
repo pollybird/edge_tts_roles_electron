@@ -229,7 +229,7 @@ export class SegmentSynthesizer {
         await unlink(mp3Path).catch(() => {})
       }
 
-      // 本次尝试失败
+      // 本次尝试失败：还有剩余次数且未被停止时上报重试并退避
       if (attempt < this.maxAttempts && !this.state.stopped) {
         hooks.onRetry?.(attempt + 1, failReason)
         await this.retryBackoff(attempt)

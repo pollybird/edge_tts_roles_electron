@@ -25,6 +25,13 @@ const frFR: LocalePack = {
   messages: {
     app: {
       title: 'Générateur audio multi-voix Edge-TTS',
+      proxyMode: 'Proxy réseau',
+      proxyDirect: 'Connexion Internet directe',
+      proxySystem: 'Utiliser le proxy système',
+      proxyCustom: 'Serveur proxy personnalisé',
+      proxyProtocol: 'Protocole',
+      proxyHost: 'Hôte',
+      proxyPort: 'Port',
       copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -51,6 +58,7 @@ const frFR: LocalePack = {
       website: '&Site web',
       about: 'À &propos',
       settings: '&Paramètres',
+      cloudServices: 'Services &vocaux...',
       offlineEngine: 'Moteur &hors ligne...',
       diagnostics: '&Diagnostics'
     },
@@ -79,6 +87,8 @@ const frFR: LocalePack = {
       pauseMs: 'Durée (ms) :',
       insertBeep: '🔊 Insérer un bip [R]',
       quickPause: 'Pauses rapides :',
+      tone: 'Ton :',
+      insertTone: 'Insérer un ton',
       secondsShort: '{n} s',
       openText: '📂 Ouvrir le texte',
       saveText: '💾 Enregistrer le texte',
@@ -180,6 +190,14 @@ const frFR: LocalePack = {
       dialogLater: 'Me le rappeler plus tard',
       dialogNever: 'Ne plus me le rappeler pour cette version'
     },
+    tones: {
+      happy: 'Joyeux',
+      sad: 'Triste',
+      angry: 'En colère',
+      gentle: 'Doux',
+      excited: 'Enthousiaste',
+      calm: 'Calme'
+    },
     subtitle: {
       label: 'Sous-titres',
       none: 'Aucun',
@@ -253,6 +271,40 @@ const frFR: LocalePack = {
       downloadInProgress: 'Ce modèle est déjà en cours de téléchargement',
       filterPlaceholder: 'Filtrer les langues ou les voix...',
       close: 'Fermer'
+    },
+
+    cloud: {
+      title: 'Services vocaux cloud',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'Afficher/masquer en clair',
+      helpTitle: 'Comment obtenir les clés API',
+      openConsole: 'Ouvrir la console',
+      helpGoogle:
+        "1. Ouvrez Google Cloud Console et créez ou sélectionnez un projet.\n2. Activez l'API Cloud Text-to-Speech.\n3. Accédez à API et services → Identifiants → Créer des identifiants → Clé API.\n4. Copiez la clé et collez-la dans le champ API Key ci-dessus.",
+      helpXfyun:
+        "1. Connectez-vous à la plateforme ouverte iFlytek (www.xfyun.cn) et terminez la vérification.\n2. Créez une application, puis ouvrez Synthèse vocale → Version en flux et réclamez le forfait d'essai gratuit.\n3. Copiez APPID, APISecret et APIKey depuis la page du service (les trois doivent appartenir à la même application).\n4. Saisissez-les dans les champs ci-dessus dans l'ordre de la console.",
+      helpVolc:
+        "1. Connectez-vous à la console Volcengine et activez le service Speech Technology.\n2. Copiez l'App ID de l'application sur la page de gestion des applications.\n3. Créez et copiez une clé API sur la page de gestion des clés API.\n4. Collez-les dans les champs App ID et API Key ci-dessus.",
+      test: 'Tester la connexion',
+      testing: 'Test en cours…',
+      testOk: 'Connexion réussie',
+      testFailed: 'Échec de la connexion : {msg}',
+      keysNote:
+        'Les identifiants sont stockés uniquement en local (dans le fichier de configuration de votre répertoire de données utilisateur) et ne sont jamais envoyés. Obtenez-les depuis la console du fournisseur.',
+      close: 'Fermer',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'Avant d’utiliser une voix d’un service cloud, configurez les identifiants dans Paramètres → Services vocaux cloud',
+      googleFailed: 'Échec de la synthèse vocale Google : {msg}',
+      xfyunFailed: 'Échec de la synthèse vocale iFlytek : {msg}',
+      xfyunAuthHint:
+        '401 signifie généralement que les identifiants sont invalides : utilisez l’APIKey/APISecret du service Synthèse vocale (streaming) (Console → Synthèse vocale → Streaming), et non des clés d’autres services comme Spark LLM',
+      volcFailed: 'Échec de la synthèse vocale Volcengine : {msg}'
     },
 
     dialog: {

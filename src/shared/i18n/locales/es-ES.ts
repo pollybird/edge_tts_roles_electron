@@ -25,6 +25,13 @@ const esES: LocalePack = {
   messages: {
     app: {
       title: 'Generador de audio multi-voz Edge-TTS',
+      proxyMode: 'Proxy de red',
+      proxyDirect: 'Conexión directa a Internet',
+      proxySystem: 'Usar proxy del sistema',
+      proxyCustom: 'Servidor proxy personalizado',
+      proxyProtocol: 'Protocolo',
+      proxyHost: 'Host',
+      proxyPort: 'Puerto',
       copyright: '© 2026 Taizhou Jiangyan Zhongyu Information Technology Co., Ltd.'
     },
 
@@ -51,6 +58,7 @@ const esES: LocalePack = {
       website: '&Sitio web',
       about: 'Acerca &de',
       settings: '&Configuración',
+      cloudServices: 'Servicios de &voz...',
       offlineEngine: 'Motor &sin conexión...',
       diagnostics: '&Diagnóstico'
     },
@@ -79,6 +87,8 @@ const esES: LocalePack = {
       pauseMs: 'Tiempo (ms):',
       insertBeep: '🔊 Insertar pitido [R]',
       quickPause: 'Pausas rápidas:',
+      tone: 'Tono:',
+      insertTone: 'Insertar tono',
       secondsShort: '{n} s',
       openText: '📂 Abrir texto',
       saveText: '💾 Guardar texto',
@@ -178,6 +188,14 @@ const esES: LocalePack = {
       dialogLater: 'Recordármelo más tarde',
       dialogNever: 'No recordármelo para esta versión'
     },
+    tones: {
+      happy: 'Alegre',
+      sad: 'Triste',
+      angry: 'Enfadado',
+      gentle: 'Suave',
+      excited: 'Entusiasmado',
+      calm: 'Tranquilo'
+    },
     subtitle: {
       label: 'Subtítulos',
       none: 'Ninguno',
@@ -250,6 +268,40 @@ const esES: LocalePack = {
       downloadInProgress: 'Este modelo ya se está descargando',
       filterPlaceholder: 'Filtrar idiomas o voces...',
       close: 'Cerrar'
+    },
+
+    cloud: {
+      title: 'Servicios de voz en la nube',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: 'iFlytek',
+      volc: 'Volcengine',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: 'Mostrar/ocultar texto',
+      helpTitle: 'Cómo obtener las claves de API',
+      openConsole: 'Abrir consola',
+      helpGoogle:
+        '1. Abra Google Cloud Console y cree o seleccione un proyecto.\n2. Active la API de Cloud Text-to-Speech.\n3. Vaya a API y servicios → Credenciales → Crear credenciales → Clave de API.\n4. Copie la clave y péguela en el campo API Key de arriba.',
+      helpXfyun:
+        '1. Inicie sesión en la plataforma abierta de iFlytek (www.xfyun.cn) y complete la verificación.\n2. Cree una aplicación y abra Síntesis de voz → versión en streaming para obtener el paquete de prueba gratuito.\n3. Copie APPID, APISecret y APIKey desde la página del servicio (los tres deben pertenecer a la misma aplicación).\n4. Rellene los campos de arriba en el orden de la consola.',
+      helpVolc:
+        '1. Inicie sesión en la consola de Volcengine y active el servicio de tecnología de voz.\n2. Copie el App ID de la aplicación en la página de gestión de aplicaciones.\n3. Cree y copie una clave de API en la página de gestión de claves de API.\n4. Péguelos en los campos App ID y API Key de arriba.',
+      test: 'Probar conexión',
+      testing: 'Probando…',
+      testOk: 'Conexión correcta',
+      testFailed: 'Error de conexión: {msg}',
+      keysNote:
+        'Las credenciales se guardan solo localmente (en el archivo de configuración del directorio de datos de usuario) y nunca se suben. Consígalas en la consola del proveedor.',
+      close: 'Cerrar',
+      groupLabel: '--- {label} ({n}) ---',
+      notConfigured:
+        'Antes de usar una voz de un proveedor en la nube, configure las credenciales en Configuración → Servicios de voz en la nube y actívelo',
+      googleFailed: 'Error de síntesis de voz de Google: {msg}',
+      xfyunFailed: 'Error de síntesis de voz de iFlytek: {msg}',
+      xfyunAuthHint:
+        '401 normalmente significa que las credenciales no son válidas: use el APIKey/APISecret del servicio Síntesis de voz (streaming) (Consola → Síntesis de voz → Streaming), no claves de otros servicios como Spark LLM',
+      volcFailed: 'Error de síntesis de voz de Volcengine: {msg}'
     },
 
     dialog: {

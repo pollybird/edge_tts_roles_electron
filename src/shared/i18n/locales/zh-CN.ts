@@ -185,6 +185,13 @@ const zhCN: LocalePack = {
   messages: {
     app: {
       title: 'Edge-TTS 多角色音频生成器',
+      proxyMode: '网络代理',
+      proxyDirect: '直连 Internet',
+      proxySystem: '使用系统代理',
+      proxyCustom: '自定义代理服务器',
+      proxyProtocol: '协议',
+      proxyHost: '主机',
+      proxyPort: '端口',
       copyright: '© 2026 泰州姜堰钟毓信息技术有限公司'
     },
 
@@ -211,6 +218,7 @@ const zhCN: LocalePack = {
       website: '官方网站(&W)',
       about: '关于(&A)',
       settings: '设置(S)(&S)',
+      cloudServices: '语音服务商(&V)',
       offlineEngine: '离线引擎设置(&O)',
       diagnostics: '诊断信息(&D)'
     },
@@ -238,6 +246,8 @@ const zhCN: LocalePack = {
       pauseMs: '时间(ms):',
       insertBeep: '🔊 插入蜂鸣[R]',
       quickPause: '快速停顿:',
+      tone: '语气:',
+      insertTone: '插入语气',
       secondsShort: '{n}秒',
       openText: '📂 打开文本',
       saveText: '💾 保存文本',
@@ -336,6 +346,14 @@ const zhCN: LocalePack = {
       dialogLater: '稍后提示',
       dialogNever: '不再提示'
     },
+    tones: {
+      happy: '开心',
+      sad: '难过',
+      angry: '愤怒',
+      gentle: '温柔',
+      excited: '兴奋',
+      calm: '平静'
+    },
     subtitle: {
       label: '字幕',
       none: '不生成',
@@ -402,6 +420,38 @@ const zhCN: LocalePack = {
       downloadInProgress: '该模型正在下载中',
       filterPlaceholder: '筛选语言或模型…',
       close: '关闭'
+    },
+
+    cloud: {
+      title: '语音服务商',
+      google: 'Google Cloud Text-to-Speech',
+      xfyun: '科大讯飞',
+      volc: '火山引擎',
+      apiKey: 'API Key',
+      appId: 'App ID',
+      apiSecret: 'API Secret',
+      toggleSecret: '显示/隐藏明文',
+      helpTitle: '如何申请密钥',
+      openConsole: '打开控制台',
+      helpGoogle:
+        '1. 打开 Google Cloud Console 并创建或选择项目。\n2. 启用「Cloud Text-to-Speech API」。\n3. 进入「API 和服务 → 凭据」→「创建凭据 → API 密钥」。\n4. 复制密钥并填入上方 API Key 输入框。',
+      helpXfyun:
+        '1. 登录讯飞开放平台（www.xfyun.cn）并完成实名认证。\n2. 创建应用，进入「语音合成 → 语音合成（流式版）」领取免费试用包。\n3. 在该服务页复制 APPID、APISecret、APIKey（三者须同属一个应用）。\n4. 按控制台顺序填入上方输入框。',
+      helpVolc:
+        '1. 登录火山引擎控制台并开通「语音技术」服务。\n2. 在「应用管理」页复制应用的 App ID。\n3. 在「API Key 管理」创建并复制 API Key。\n4. 分别填入上方 App ID 与 API Key 输入框。',
+      test: '测试连接',
+      testing: '测试中…',
+      testOk: '连接成功',
+      testFailed: '连接失败：{msg}',
+      keysNote: '凭据仅保存在本机（用户数据目录的配置文件），不会上传；请从对应服务商控制台获取。',
+      close: '关闭',
+      groupLabel: '--- {label}（{n}） ---',
+      notConfigured: '使用云服务商音色前，请先在「设置 → 语音服务商」中配置凭据并启用',
+      googleFailed: 'Google 语音合成失败：{msg}',
+      xfyunFailed: '讯飞语音合成失败：{msg}',
+      xfyunAuthHint:
+        '401 通常表示凭据无效：请使用「语音合成（流式版）」服务的 APIKey/APISecret（控制台 → 语音合成 → 流式版），而非星火大模型等其他服务的密钥',
+      volcFailed: '火山引擎语音合成失败：{msg}'
     },
 
     dialog: {

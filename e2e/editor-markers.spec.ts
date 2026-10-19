@@ -44,4 +44,26 @@ test.describe('脚本标记插入', () => {
     await editor.type('hello')
     await expect(editor).toHaveValue('[B]hello')
   })
+
+  test('语气插入：未选中时插入成对标签，光标落在两标签之间', async () => {
+    const editor = ctx.page.getByTestId('script-editor')
+    // 默认语气为 happy；未选中文本 → 插入 [happy][/happy]
+    await ctx.page.getByTestId('tone-select').selectOption('sad')
+    await ctx.page.getByTestId('insert-tone').click()
+    await expect(editor).toHaveValue('[sad][/sad]')
+    // 焦点回到编辑器且选区在两标签之间，直接输入即落入标签内
+    await editor.type('唉')
+    await expect(editor).toHaveValue('[sad]唉[/sad]')
+  })
+
+  test('语气插入：选中文本时两端包裹', async () => {
+    const editor = ctx.page.getByTestId('script-editor')
+    await editor.click()
+    await editor.type('平静的话')
+    // 全选后选择 calm 语气插入 → 两端包裹
+    await editor.press('ControlOrMeta+a')
+    await ctx.page.getByTestId('tone-select').selectOption('calm')
+    await ctx.page.getByTestId('insert-tone').click()
+    await expect(editor).toHaveValue('[calm]平静的话[/calm]')
+  })
 })
