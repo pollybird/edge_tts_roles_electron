@@ -56,7 +56,9 @@ function run(builderBin, configPath, arch) {
   const res = spawnSync(builderBin, args, {
     cwd: ROOT,
     stdio: 'inherit',
-    env: process.env
+    env: process.env,
+    // Windows 上 .cmd 批处理需经 cmd.exe 解释，否则 spawnSync 无法启动（exit null）
+    shell: process.platform === 'win32'
   })
   if (res.status !== 0) {
     throw new Error(`electron-builder 失败（${platform} ${arch}，exit ${res.status}）`)
