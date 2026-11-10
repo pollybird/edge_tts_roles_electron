@@ -16,8 +16,8 @@ permissions:
   contents: write
 
 jobs:
-  # Linux + Windows 在 Ubuntu runner 上构建（Windows 借助 wine，签名用 osslsigncode）
-  build-linux-win:
+  # Linux 产物在 Ubuntu runner 上原生构建
+  build-linux:
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
@@ -40,31 +40,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Windows NSIS 打包在 Linux runner 上需要 wine（rcedit / NSIS 辅助工具为 Windows 可执行文件）；
-      # osslsigncode 供 Authenticode 签名（USE_SYSTEM_SIGNCODE=true，见下方 Build 步骤与 electron-builder.yml）
-      - name: Install wine
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wine wine32 wine64 osslsigncode
+      - name: Build Linux
+        run: npm run build:linux
 
-      - name: Build Linux + Windows
-        run: npm run build:linux && npm run build:win
-        env:
-          # electron-builder 内置 osslsigncode 依赖 libssl1.1（ubuntu 24.04 已移除），改用系统 apt 版本签名
-          USE_SYSTEM_SIGNCODE: 'true'
-
-      # 校验 Windows 安装包已带自签名（签名配置被意外跳过时让发布失败，而非静默发出未签名产物）
-      - name: Verify Windows code signatures
-        run: |
-          for f in dist/*-setup.exe; do
-            osslsigncode verify -CAfile build/win-codesign.cer "$f" > /dev/null 2>&1 \
-              || { echo "::error::$f signature verification failed"; exit 1; }
-            echo "signature OK: $f"
-          done
-
-      # 先发布 Linux + Windows 附件（同时创建 GitHub Release），供后续 mac 作业拉取合并后同步到 GitCode
-      - name: Publish Linux + Windows artifacts to GitHub Release
+      # 发布 Linux 附件（同时创建 GitHub Release），供后续 mac 作业拉取合并后同步到 GitCode
+      - name: Publish Linux artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
@@ -73,16 +53,65 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.rpm
+            dist/latest-linux.yml
+
+  # Windows 产物在 Windows runner 上原生构建（signtool.exe 自签名，无需 wine/osslsigncode）
+  build-windows:
+    runs-on: windows-latest
+    needs: build-linux
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and checkout requested tag (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git fetch --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git checkout "${RELEASE_TAG}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows
+        run: npm run build:win
+
+      # 校验 Windows 安装包已带自签名（签名配置被意外跳过时让发布失败，而非静默发出未签名产物）
+      - name: Verify Windows code signatures
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem dist\*-setup.exe
+          foreach ($f in $files) {
+            $sig = Get-AuthenticodeSignature $f.FullName
+            if ($sig.Status -eq 'NotSigned' -or $sig.Status -eq 'HashMismatch') {
+              Write-Error "签名校验失败：$($f.Name) status=$($sig.Status)"
+              exit 1
+            }
+            Write-Output "signature OK ($($sig.Status)): $($f.Name)"
+          }
+
+      - name: Publish Windows artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          fail_on_unmatched_files: true
+          files: |
             dist/*.exe
             dist/*.blockmap
             dist/*.zip
             dist/latest.yml
-            dist/latest-linux.yml
 
   # macOS DMG 必须在 macOS runner 上构建（依赖 hdiutil/sips/PyObjC，Linux 无可用替代）
   build-mac:
     runs-on: macos-latest
-    needs: build-linux-win
+    needs: [build-linux, build-windows]
     env:
       RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
       # 配置 GitCode 仓库 Secrets.GITCODE_TOKEN 后会自动镜像（推送 tag + 上传附件）

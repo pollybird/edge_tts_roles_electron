@@ -36,8 +36,7 @@ win:
   executableName: edge-tts-roles
   # 自签名代码签名证书（build/win-codesign.pfx，公钥 build/win-codesign.cer 随仓库分发；
   # 自签名无商业信任链，私钥与密码随仓库公开仅保证「发布者标识一致 + 防渠道篡改可校验」）。
-  # Linux 宿主上 electron-builder 内置 osslsigncode 依赖 libssl1.1（ubuntu 24.04 已移除），
-  # 需 USE_SYSTEM_SIGNCODE=true 使用 apt 安装的系统 osslsigncode（见 release.yml 与 build:win 脚本）。
+  # Windows 产物在 windows-latest runner 上原生构建，electron-builder 使用 signtool.exe 完成签名。
   signtoolOptions:
     certificateFile: build/win-codesign.pfx
     certificatePassword: edge-tts-roles-win-sign

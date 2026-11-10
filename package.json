@@ -24,7 +24,7 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "prebuild:unpack": "npm run prepare:ffmpeg",
     "prebuild:win": "npm run prepare:ffmpeg && npm run prepare:piper",
-    "build:win": "export USE_SYSTEM_SIGNCODE=true && npm run build && node scripts/package-dist.mjs win nsis --x64 --arm64",
+    "build:win": "npm run build && node scripts/package-dist.mjs win nsis --x64 --arm64",
     "prebuild:mac": "npm run prepare:ffmpeg && npm run prepare:piper",
     "build:mac": "npm run build && node scripts/package-dist.mjs mac dmg --x64 --arm64",
     "prebuild:linux": "npm run prepare:ffmpeg && npm run prepare:piper",
