@@ -141,19 +141,12 @@ jobs:
 
       # 从已发布的 GitHub Release 拉取 Linux + Windows 附件，与 mac 产物合并后统一同步到 GitCode
       - name: Download Linux + Windows assets from GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p dist
-          assets=$(curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" \
-            | python3 -c "import sys,json; [print(a['id'],a['name']) for a in json.load(sys.stdin)['assets']]")
-          while read id name; do
-            [ -z "$name" ] && continue
-            curl -sL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              -H "Accept: application/octet-stream" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/assets/${id}" \
-              -o "dist/${name}"
-            echo "fetched ${name}"
-          done <<< "$assets"
+          gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" --dir dist --skip-existing
+          ls -la dist/
 
       - name: Publish macOS artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
