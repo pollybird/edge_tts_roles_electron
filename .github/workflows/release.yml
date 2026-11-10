@@ -16,12 +16,11 @@ permissions:
   contents: write
 
 jobs:
-  build-release:
+  # Linux + Windows 在 Ubuntu runner 上构建（Windows 借助 wine，签名用 osslsigncode）
+  build-linux-win:
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
-      # 配置 GitCode 仓库 Secrets.GITCODE_TOKEN 后会自动镜像（推送 tag + 上传附件）
-      GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,11 +48,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends wine wine32 wine64 osslsigncode
 
-      # 单台 Linux runner 完成三平台双架构打包（与本地发版流程一致）：
-      # Linux AppImage/deb/rpm(x64+arm64)、Windows NSIS(x64+arm64, wine)、macOS zip(x64+arm64)
-      # prepare:ffmpeg 由各 build:* 的 pre 钩子自动执行
-      - name: Build all platforms
-        run: npm run build:all
+      - name: Build Linux + Windows
+        run: npm run build:linux && npm run build:win
         env:
           # electron-builder 内置 osslsigncode 依赖 libssl1.1（ubuntu 24.04 已移除），改用系统 apt 版本签名
           USE_SYSTEM_SIGNCODE: 'true'
@@ -67,7 +63,8 @@ jobs:
             echo "signature OK: $f"
           done
 
-      - name: Publish GitHub Release
+      # 先发布 Linux + Windows 附件（同时创建 GitHub Release），供后续 mac 作业拉取合并后同步到 GitCode
+      - name: Publish Linux + Windows artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
@@ -80,8 +77,62 @@ jobs:
             dist/*.blockmap
             dist/*.zip
             dist/latest.yml
-            dist/latest-mac.yml
             dist/latest-linux.yml
+
+  # macOS DMG 必须在 macOS runner 上构建（依赖 hdiutil/sips/PyObjC，Linux 无可用替代）
+  build-mac:
+    runs-on: macos-latest
+    needs: build-linux-win
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      # 配置 GitCode 仓库 Secrets.GITCODE_TOKEN 后会自动镜像（推送 tag + 上传附件）
+      GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and checkout requested tag (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git fetch --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git checkout "${RELEASE_TAG}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS DMG
+        run: npm run build:mac
+
+      # 从已发布的 GitHub Release 拉取 Linux + Windows 附件，与 mac 产物合并后统一同步到 GitCode
+      - name: Download Linux + Windows assets from GitHub Release
+        run: |
+          mkdir -p dist
+          assets=$(curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" \
+            | python3 -c "import sys,json; [print(a['id'],a['name']) for a in json.load(sys.stdin)['assets']]")
+          while read id name; do
+            [ -z "$name" ] && continue
+            curl -sL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/octet-stream" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/assets/${id}" \
+              -o "dist/${name}"
+            echo "fetched ${name}"
+          done <<< "$assets"
+
+      - name: Publish macOS artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.dmg
+            dist/latest-mac.yml
 
       # ---- 可选：镜像到 GitCode（Secrets 中配置 GITCODE_TOKEN 即启用）----
       - name: Push tag to GitCode
@@ -90,7 +141,7 @@ jobs:
           git remote add gitcode "https://pollybird:${GITCODE_TOKEN}@gitcode.com/pollybird/edge_tts_roles_electron.git"
           git push gitcode "HEAD:refs/tags/${RELEASE_TAG}"
 
-      - name: Upload assets to GitCode Release
+      - name: Upload all assets to GitCode Release
         if: env.GITCODE_TOKEN != ''
         run: node scripts/publish-gitcode.mjs
         env:

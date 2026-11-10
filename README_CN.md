@@ -158,9 +158,8 @@ npm run build            # 类型检查 + electron-vite 构建（产物输出到
 npm run build:unpack     # 输出解包版应用到 dist/（便于本地快速验证）
 npm run build:linux      # Linux x64 + arm64：AppImage、deb、rpm
 npm run build:win        # Windows x64 + arm64：NSIS 安装包
-npm run build:mac        # macOS x64 + arm64：DMG + ZIP（需在 macOS 上运行）
-npm run build:mac:zip    # 仅 macOS x64 + arm64 ZIP（可在 Linux/Windows 上交叉产出）
-npm run build:all        # 依次执行 linux + win + mac:zip（CI 发版使用）
+npm run build:mac        # macOS x64 + arm64：DMG（需在 macOS 上运行，DMG 依赖 macOS 工具链）
+npm run build:all        # 依次执行 linux + win + mac:dmg（mac 部分需在 macOS 上运行）
 ```
 
 各平台脚本会自动先执行 `prepare:ffmpeg`，下载**全部**目标平台的 FFmpeg 二进制（Linux x64/arm64、Windows x64、macOS x64/arm64，合计约 320MB）到 `resources/ffmpeg/`（已被 git 忽略）。二进制与 ffmpeg-static 同源同版本（release `b6.1.1`，GPL 构建），打包时由 electron-builder 放入 `resources/ffmpeg/<platform>-<arch>/`，应用运行时按当前平台选择对应文件。GitHub 较慢时可用环境变量 `FFMPEG_BINARIES_URL` 指定镜像（脚本也会自动回退到 npmmirror 二进制镜像）。
@@ -174,18 +173,18 @@ npm run build:all        # 依次执行 linux + win + mac:zip（CI 发版使用�
 
 #### 自动发版（GitHub Actions，推荐）
 
-1. 推送 `v*` 标签触发 [release 工作流](./.github/workflows/release.yml)：单台 Linux Runner 执行 `npm run build:all` 完成三平台双架构打包，并把全部安装包、blockmap 与三个 `latest*.yml`（共 17 个附件）发布到 GitHub Release。
-2. 在仓库 **Settings → Secrets and variables → Actions** 配置 `GITCODE_TOKEN` 后，工作流会自动把该标签推送到 GitCode 并运行 `scripts/publish-gitcode.mjs` 镜像全部附件（已存在的同名附件会跳过——GitCode 不支持 API 删除/覆盖）。
+1. 推送 `v*` 标签触发 [release 工作流](./.github/workflows/release.yml)：`build-linux-win` 在 `ubuntu-latest` 运行（Linux 安装包 + Windows NSIS via Wine + 签名校验），随后 `build-mac` 在 `macos-latest` 运行（DMG；DMG 创建依赖 macOS 工具链）并依赖前者。全部安装包、blockmap 与三个 `latest*.yml`（共 17 个附件）发布到 GitHub Release。
+2. 在仓库 **Settings → Secrets and variables → Actions** 配置 `GITCODE_TOKEN` 后，`build-mac` 作业会从已发布的 GitHub Release 拉取 Linux/Windows 附件，合并后通过 `scripts/publish-gitcode.mjs` 镜像全部附件到 GitCode，并推送标签到 GitCode（已存在的同名附件会跳过——GitCode 不支持 API 删除/覆盖）。
 3. Gitee 受单附件 100MB 限制，仍需手动创建仅含源码包的 Release，并在说明中引导到 GitHub/GitCode 下载。
 4. Release 的中英发布说明需在发布后在各平台网页补充（Gitee 仅中文）。推送到 main 的每次提交与 PR 会由 [ci 工作流](./.github/workflows/ci.yml) 自动执行 typecheck / lint / 单元测试。
 
-也可在 Actions 页面对**已有标签**手动重跑 release 工作流以补传缺失附件。本地手动发版（无 CI 时）仍可依次执行 `build:linux`、`build:win`、`build:mac:zip`，再以 `GITCODE_TOKEN=xxx npm run release:gitcode` 镜像到 GitCode。
+也可在 Actions 页面对**已有标签**手动重跑 release 工作流以补传缺失附件。本地手动发版（无 CI 时）需在 Linux 上依次执行 `build:linux`、`build:win`，在 macOS 上执行 `build:mac`，再以 `GITCODE_TOKEN=xxx npm run release:gitcode` 镜像到 GitCode。
 
 `electron-builder.yml` 已配置 `publish.provider: github`；执行 `electron-builder --publish always`（需 `GH_TOKEN`）亦可直接上传产物到 GitHub Releases（本仓库打包脚本统一使用 `--publish never`，以避免 CI 环境误触发）。
 
 平台说明：
 
-- 原生安装包原则上需在对应系统上构建。Linux 主机可以构建 Linux 安装包、Windows NSIS 安装包（electron-builder 会自动使用 Wine）以及 macOS ZIP 压缩包，但**生成 DMG 必须在 macOS 上**；需要 macOS 公证或 Windows 代码签名时，请在对应系统执行。
+- 原生安装包原则上需在对应系统上构建。Linux 主机可以构建 Linux 安装包与 Windows NSIS 安装包（electron-builder 会自动使用 Wine），但 **macOS DMG 必须在 macOS 上构建**（依赖 `hdiutil`/`sips`/PyObjC）；需要 macOS 公证或 Windows 代码签名时，请在对应系统执行。
 - Windows NSIS 为辅助式（非一键）安装器，安装向导会展示完整的 **GNU AGPL v3 许可协议页**，并允许用户选择安装目录。
 - Windows on ARM 没有官方原生 FFmpeg 构建：arm64 安装包内附带的是 x64 版 `ffmpeg.exe`，借助 Windows 11 on ARM 内置的 x64 模拟运行；若缺失则回退使用系统 PATH 中的 ffmpeg。
 - `npm run build` 会在打包前对两个 TypeScript 工程执行开启了 `noUnusedLocals` / strict 的严格检查，是最权威的校验命令。开发环境无需自行安装 ffmpeg——执行 `npm install` 时 ffmpeg-static 会自动下载当前平台的二进制。

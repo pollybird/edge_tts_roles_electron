@@ -1,6 +1,6 @@
 {
   "name": "edge-tts-roles",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "Edge-TTS 多角色音频生成器",
   "license": "AGPL-3.0-only",
   "main": "./out/main/index.js",
@@ -26,18 +26,15 @@
     "prebuild:win": "npm run prepare:ffmpeg && npm run prepare:piper",
     "build:win": "export USE_SYSTEM_SIGNCODE=true && npm run build && node scripts/package-dist.mjs win nsis --x64 --arm64",
     "prebuild:mac": "npm run prepare:ffmpeg && npm run prepare:piper",
-    "build:mac": "npm run build && node scripts/package-dist.mjs mac dmg zip --x64 --arm64",
-    "prebuild:mac:zip": "npm run prepare:ffmpeg && npm run prepare:piper",
-    "build:mac:zip": "npm run build && node scripts/package-dist.mjs mac zip --x64 --arm64",
+    "build:mac": "npm run build && node scripts/package-dist.mjs mac dmg --x64 --arm64",
     "prebuild:linux": "npm run prepare:ffmpeg && npm run prepare:piper",
     "build:linux": "npm run build && node scripts/package-dist.mjs linux AppImage deb rpm --x64 --arm64",
-    "build:all": "npm run build:linux && npm run build:win && npm run build:mac:zip",
+    "build:all": "npm run build:linux && npm run build:win && npm run build:mac",
     "release:gitcode": "node scripts/publish-gitcode.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
-    "build": "^0.1.4",
     "edge-tts-universal": "^1.4.0",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.8.9",

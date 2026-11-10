@@ -241,7 +241,7 @@ export interface VolcProviderSettings {
   apiKey: string
 }
 
-/** 三个云服务商的凭据配置（设置→语音服务 对话框维护；明文存于 userData/config.json） */
+/** 三个云服务商的凭据配置（设置→语音服务 对话框维护；敏感字段经 safeStorage 加密后落盘） */
 export interface CloudProvidersSettings {
   google: GoogleProviderSettings
   xfyun: XfyunProviderSettings

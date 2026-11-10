@@ -67,10 +67,6 @@ mac:
       arch:
         - x64
         - arm64
-    - target: zip
-      arch:
-        - x64
-        - arm64
   artifactName: ${name}-${version}-${arch}.${ext}
   extendInfo:
     - NSCameraUsageDescription: Application requests access to device's camera.
@@ -78,6 +74,9 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+dmg:
+  # Linux/CI 上无 sips（macOS 图标工具），用纯色背景代替默认背景图以保证跨平台构建 dmg
+  backgroundColor: '#ffffff'
 linux:
   icon: build/icon.png
   maintainer: '泰州姜堰钟毓信息技术有限公司 <44961355+pollybird@users.noreply.github.com>'

@@ -1,5 +1,16 @@
 # Upgrade Log
 
+## v2.0.9
+
+### Security
+
+- **Cloud provider credentials encrypted at rest** — the three cloud providers' credentials (Google API key, iFlytek App ID/API key/API secret, Volcengine App ID/API key) are now encrypted with Electron's `safeStorage` (OS keychain) before being written to the electron-store config file, instead of plaintext. The encryption is transparent at the settings layer (`getSetting`/`setSetting` for `cloudProviders`), so the UI dialog and cloud providers see plaintext in memory; `enabled` flags stay as plaintext booleans. When `safeStorage` is unavailable (no system keyring, app not ready, or test environment) it transparently falls back to plaintext; decryption failures are treated as legacy plaintext data for seamless migration. Empty strings are not encrypted.
+
+### Engineering
+
+- **Removed stray `build` dependency** — the unused `build@^0.1.4` npm package ("An ant-like build program for node") was lingering in `dependencies` and was easily confused with the `build/` directory (code-signing certificates). It is not imported anywhere in the source, so it has been removed from `package.json` and `package-lock.json`.
+- **macOS artifacts switched from zip to dmg** — the macOS build target now produces `.dmg` disk images (with `/Applications` drag-and-drop) instead of portable `.zip`. Since DMG creation requires macOS-only tooling (`hdiutil`/`sips`/PyObjC), the release workflow has been split: `build-linux-win` runs on `ubuntu-latest` (Linux + Windows via wine, signature verification), and `build-mac` runs on `macos-latest` and depends on the Linux job — it downloads the already-published Linux/Windows assets from the GitHub Release, uploads the macOS dmg to the same release, then mirrors all assets to GitCode and prints the Gitee reminder. `electron-builder.yml` sets `dmg.backgroundColor` to avoid the default background image (which would invoke `sips`). The `build:mac` npm script now builds `mac dmg` only; `build:mac:zip` has been removed and `build:all` routes through `build:mac`. `scripts/publish-gitcode.mjs` includes `.dmg` in the upload set.
+
 ## v2.0.8
 
 ### New Features

@@ -1,5 +1,16 @@
 # 更新日志
 
+## v2.0.9
+
+### 安全
+
+- **云服务商凭据落盘加密**：三家云服务商的敏感凭据（Google API Key、讯飞 App ID/API Key/API Secret、火山 App ID/API Key）现通过 Electron `safeStorage`（系统钥匙串）加密后再写入 electron-store 配置文件，不再明文落盘。加解密在设置层（`cloudProviders` 的 `getSetting`/`setSetting`）透明完成，UI 对话框与 Provider 内存中仍是明文；`enabled` 启用标志保持明文布尔。`safeStorage` 不可用时（无系统钥匙串、app 未就绪、测试环境）自动回退明文；解密失败视为历史明文数据，实现无感知迁移。空串不加密。
+
+### 工程
+
+- **移除误装的 build 依赖**：`dependencies` 中残留的 `build@^0.1.4`（"An ant-like build program for node"）与 `build/` 目录（代码签名证书）语义混淆，且源码中无任何引用，已从 `package.json` 与 `package-lock.json` 中删除。
+- **macOS 产物由 zip 改为 dmg**：macOS 构建目标改为 `.dmg` 磁盘镜像（含「拖入 /Applications」），不再产出便携 `.zip`。由于 DMG 创建依赖 macOS 专有工具链（`hdiutil`/`sips`/PyObjC，Linux 无可用替代），发布工作流拆分为两个作业：`build-linux-win` 在 `ubuntu-latest` 构建 Linux + Windows（wine、签名校验），`build-mac` 在 `macos-latest` 并依赖前者——拉取已发布的 Linux/Windows 附件，将 macOS dmg 上传到同一 Release，再统一同步到 GitCode 并输出 Gitee 提醒。`electron-builder.yml` 增加 `dmg.backgroundColor` 以禁用默认背景图（避免调用 `sips`）。`build:mac` 脚本改为仅构建 `mac dmg`，删除 `build:mac:zip`，`build:all` 改走 `build:mac`。`scripts/publish-gitcode.mjs` 的上传集增加 `.dmg`。
+
 ## v2.0.8
 
 ### 新功能

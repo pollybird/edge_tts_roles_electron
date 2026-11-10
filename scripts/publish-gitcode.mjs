@@ -59,7 +59,7 @@ async function apiJson(path, init = {}) {
 /** 需要上传的发行产物（源码包由 GitCode 自动生成，不传） */
 function collectReleaseFiles() {
   const yml = new Set(['latest.yml', 'latest-mac.yml', 'latest-linux.yml'])
-  const binExts = new Set(['.appimage', '.deb', '.rpm', '.exe', '.zip', '.blockmap'])
+  const binExts = new Set(['.appimage', '.deb', '.rpm', '.exe', '.zip', '.dmg', '.blockmap'])
   return readdirSync(distDir)
     .filter((name) => yml.has(name) || binExts.has(extname(name).toLowerCase()))
     .sort()

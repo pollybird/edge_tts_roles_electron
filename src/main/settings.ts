@@ -1,3 +1,4 @@
+import { safeStorage } from 'electron'
 import Store from 'electron-store'
 import type {
   AudioFormat,
@@ -22,7 +23,7 @@ export interface SettingsSchema {
   updateSkippedVersion: string
   /** Piper 离线兜底策略（默认 fallback：单段在线重试耗尽后自动离线合成） */
   piperFallback: PiperFallback
-  /** 云服务商凭据（Google/讯飞/火山引擎；用户自行配置，明文存储于 userData/config.json） */
+  /** 云服务商凭据（Google/讯飞/火山引擎；敏感字段经 safeStorage 加密后落盘） */
   cloudProviders: CloudProvidersSettings
   cloudProxy: CloudProxySettings
 }
@@ -47,10 +48,85 @@ const store = new Store<SettingsSchema>({
   }
 })
 
+/**
+ * safeStorage 是否可用（Linux 需系统钥匙串，且需 app.ready 之后；单测中 electron 被 mock
+ * 时 safeStorage 可能为 undefined）。不可用时回退为明文，保证功能不被阻断。
+ */
+function canEncrypt(): boolean {
+  return !!(
+    safeStorage &&
+    typeof safeStorage.isEncryptionAvailable === 'function' &&
+    safeStorage.isEncryptionAvailable()
+  )
+}
+
+/** 加密单个凭据字段：空串不加密，保持默认值可读；加密失败回退明文 */
+function encryptSecret(value: string): string {
+  if (!value) return ''
+  if (!canEncrypt()) return value
+  try {
+    return safeStorage.encryptString(value).toString('base64')
+  } catch {
+    return value
+  }
+}
+
+/** 解密单个凭据字段：空串直接返回；解密失败视为历史明文数据，原样返回（兼容迁移） */
+function decryptSecret(value: string): string {
+  if (!value) return ''
+  if (!canEncrypt()) return value
+  try {
+    return safeStorage.decryptString(Buffer.from(value, 'base64'))
+  } catch {
+    return value
+  }
+}
+
+function encryptCloudProviders(cp: CloudProvidersSettings): CloudProvidersSettings {
+  return {
+    google: { enabled: cp.google.enabled, apiKey: encryptSecret(cp.google.apiKey) },
+    xfyun: {
+      enabled: cp.xfyun.enabled,
+      appId: encryptSecret(cp.xfyun.appId),
+      apiKey: encryptSecret(cp.xfyun.apiKey),
+      apiSecret: encryptSecret(cp.xfyun.apiSecret)
+    },
+    volc: {
+      enabled: cp.volc.enabled,
+      appId: encryptSecret(cp.volc.appId),
+      apiKey: encryptSecret(cp.volc.apiKey)
+    }
+  }
+}
+
+function decryptCloudProviders(cp: CloudProvidersSettings): CloudProvidersSettings {
+  return {
+    google: { enabled: cp.google.enabled, apiKey: decryptSecret(cp.google.apiKey) },
+    xfyun: {
+      enabled: cp.xfyun.enabled,
+      appId: decryptSecret(cp.xfyun.appId),
+      apiKey: decryptSecret(cp.xfyun.apiKey),
+      apiSecret: decryptSecret(cp.xfyun.apiSecret)
+    },
+    volc: {
+      enabled: cp.volc.enabled,
+      appId: decryptSecret(cp.volc.appId),
+      apiKey: decryptSecret(cp.volc.apiKey)
+    }
+  }
+}
+
 export function getSetting<K extends keyof SettingsSchema>(key: K): SettingsSchema[K] {
-  return store.get(key)
+  const value = store.get(key)
+  if (key === 'cloudProviders') {
+    return decryptCloudProviders(value as CloudProvidersSettings) as SettingsSchema[K]
+  }
+  return value
 }
 
 export function setSetting<K extends keyof SettingsSchema>(key: K, value: SettingsSchema[K]): void {
+  if (key === 'cloudProviders') {
+    value = encryptCloudProviders(value as CloudProvidersSettings) as SettingsSchema[K]
+  }
   store.set(key, value)
 }

@@ -159,9 +159,8 @@ npm run build            # typecheck + electron-vite build (bundles into out/)
 npm run build:unpack     # unpacked app in dist/ (fast local test)
 npm run build:linux      # Linux x64 + arm64: AppImage, deb, rpm
 npm run build:win        # Windows x64 + arm64: NSIS installers
-npm run build:mac        # macOS x64 + arm64: DMG + ZIP (run on macOS)
-npm run build:mac:zip    # macOS x64 + arm64 ZIP only (can run on Linux/Windows)
-npm run build:all        # linux + win + mac:zip in sequence (used by release CI)
+npm run build:mac        # macOS x64 + arm64: DMG (run on macOS; DMG needs macOS toolchain)
+npm run build:all        # linux + win + mac:dmg in sequence (run mac on macOS)
 ```
 
 Each platform script automatically runs `prepare:ffmpeg`, which downloads the FFmpeg binaries for **all** target platforms (Linux x64/arm64, Windows x64, macOS x64/arm64, ~320 MB in total) into `resources/ffmpeg/` (git-ignored). They are the same GPL builds used by ffmpeg-static (release `b6.1.1`) and are placed into `resources/ffmpeg/<platform>-<arch>/` by electron-builder; the app selects the matching binary at runtime. If GitHub is slow, override the source with `FFMPEG_BINARIES_URL` (the script also falls back to the npmmirror binary mirror automatically).
@@ -175,18 +174,18 @@ The app checks for updates automatically on startup (5 s delay) and supports a m
 
 #### Automated release (GitHub Actions, recommended)
 
-1. Push a `v*` tag to trigger the [release workflow](./.github/workflows/release.yml): a single Linux runner runs `npm run build:all`, producing installers for all three platforms on both architectures, and publishes every installer, blockmap and the three `latest*.yml` files (17 assets in total) to the GitHub Release.
-2. After adding a `GITCODE_TOKEN` repository secret under **Settings → Secrets and variables → Actions**, the workflow also pushes the tag to GitCode and mirrors all assets there via `scripts/publish-gitcode.mjs` (existing same-name attachments are skipped — GitCode cannot delete or overwrite them through its API).
+1. Push a `v*` tag to trigger the [release workflow](./.github/workflows/release.yml): `build-linux-win` runs on `ubuntu-latest` (Linux packages + Windows NSIS via Wine + signature verification), then `build-mac` runs on `macos-latest` (DMG; DMG creation requires macOS toolchain) and depends on the Linux job. All installers, blockmaps and the three `latest*.yml` files (17 assets in total) are published to the GitHub Release.
+2. After adding a `GITCODE_TOKEN` repository secret under **Settings → Secrets and variables → Actions**, the `build-mac` job also pulls the already-published Linux/Windows assets from the GitHub Release, mirrors all assets to GitCode via `scripts/publish-gitcode.mjs`, and pushes the tag to GitCode (existing same-name attachments are skipped — GitCode cannot delete or overwrite them through its API).
 3. Gitee still requires a manual source-only release due to its 100 MB per-asset limit, with notes directing users to GitHub/GitCode for downloads.
 4. Bilingual release notes are edited on each platform's web page after publishing. Every push to `main` and every pull request is verified by the [ci workflow](./.github/workflows/ci.yml) (typecheck / lint / unit tests).
 
-The release workflow can also be dispatched manually for an existing tag to re-upload missing assets. For a fully local release without CI, run `build:linux`, `build:win` and `build:mac:zip` in sequence and mirror with `GITCODE_TOKEN=xxx npm run release:gitcode`.
+The release workflow can also be dispatched manually for an existing tag to re-upload missing assets. For a fully local release without CI, run `build:linux`, `build:win` (on Linux) and `build:mac` (on macOS) in sequence, then mirror with `GITCODE_TOKEN=xxx npm run release:gitcode`.
 
 `electron-builder.yml` is configured with `publish.provider: github`; running `electron-builder --publish always` (requires `GH_TOKEN`) can also upload artifacts and the `latest*.yml` files to GitHub Releases (the packaging scripts in this repo always pass `--publish never` to prevent accidental publishing in CI).
 
 Platform notes:
 
-- Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages, Windows NSIS installers (Wine is used automatically by electron-builder), and macOS ZIP archives, but **DMG creation requires macOS**. For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS.
+- Installers must be built on their target OS family for native packaging. A Linux host can build Linux packages and Windows NSIS installers (Wine is used automatically by electron-builder), but **macOS DMG creation requires macOS** (it relies on `hdiutil`/`sips`/PyObjC). For signed/notarized macOS apps or signed Windows installers, run the corresponding script on that OS.
 - The NSIS installer is an assisted (non-one-click) installer that displays the full **GNU AGPL v3** license page and lets users choose the installation directory.
 - There is no native FFmpeg build for Windows on ARM. The arm64 installer ships the x64 `ffmpeg.exe`, which runs via Windows 11 on ARM's built-in x64 emulation; if it is absent, the app falls back to a system `ffmpeg` on `PATH`.
 - `npm run build` runs both TypeScript projects with `noUnusedLocals` / strict settings before bundling, so it is the authoritative check. Development itself needs no FFmpeg installation (ffmpeg-static fetches the current platform's binary during `npm install`).
